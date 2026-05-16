@@ -1,0 +1,16 @@
+/* materia-local.css — Estilos propios de Trigonometría */
+
+/* Color de acento de esta materia */
+:root {
+    --mat-color: #dc2626;
+}
+
+/* Header con el color de la materia */
+.mat-header {
+    background: linear-gradient(135deg, #0f172a 0%, #dc262644 100%) !important;
+}
+
+/* Badge y acentos propios */
+.mat-section-title::before {
+    color: #dc2626;
+}
