@@ -43,7 +43,7 @@ const ADMIN_PASS_HASH = "3bc51062973c458d5a6f2d8d64a023246354ad7e96ed28df8eb0e29
 
 async function verificarPassAdmin(passIngresada) {
     // Recalcular hash del admin dinámicamente
-    const h = await hashPassword("admin");
+    const h = await hashPassword("motedit.147258@");
     const hIngresada = await hashPassword(passIngresada);
     return hIngresada === h;
 }
