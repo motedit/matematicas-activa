@@ -3,337 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matemáticas Activa — Plataforma educativa de matemáticas</title>
-    <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos. Contenido para secundaria y universidad.">
+    <title>Juegos Matemáticos — Matemáticas Activa</title>
+    <meta name="description" content="Juegos matemáticos para aprender jugando: lógica, números y diversión.">
     <meta name="theme-color" content="#2563eb">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
-    <meta name="referrer" content="no-referrer">
-    <link rel="icon" href="img/descarga.png" type="image/png">
+    <link rel="icon" href="../../img/descarga.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <!-- Estilos compartidos (raíz) -->
+    <link rel="stylesheet" href="../../materia.css">
+    <!-- Estilos propios de esta materia -->
+    <link rel="stylesheet" href="materia-local.css">
 </head>
-<body>
+<body data-materia="juegos" data-nombre="Juegos Matemáticos" data-emoji="🎮">
 
-    <!-- NAVBAR -->
-    <header>
-    <nav class="navbar" aria-label="Navegación principal">
-        <div class="navbar-inner">
-            <a class="navbar-brand" href="#">
-                <span class="brand-icon" aria-hidden="true">∑</span>
-                <span>Matemáticas<strong>Activa</strong></span>
-            </a>
-            <button type="button" class="menu-toggle" aria-label="Abrir menú" aria-controls="navbar-links" aria-expanded="false" onclick="(function(b){var l=document.getElementById('navbar-links');l.classList.toggle('open');b.setAttribute('aria-expanded', l.classList.contains('open'));})(this)">☰</button>
-            <ul class="navbar-links" id="navbar-links">
-                <li><a href="#materias">Materias</a></li>
-                <li><a href="#videos">Videos</a></li>
-                <li><a href="#PDFs">PDFs</a></li>
-                <li><a href="#suscripcion">Premium</a></li>
-                <li id="nav-admin-link" style="display:none"><a href="#" onclick="abrirAdmin(event)" class="nav-admin-btn">⚙️ Admin</a></li>
-                <li id="nav-salir-link" style="display:none"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
-                <li><a href="#" onclick="abrirAuth(event)" class="nav-cta-btn"><span id="nav-cuenta-label">Ingresar</span></a></li>
-            </ul>
+    <noscript>
+        <div style="max-width:640px;margin:40px auto;padding:20px;border:1px solid #e2e8f0;border-radius:12px;font-family:sans-serif;text-align:center">
+            <h1>Juegos Matemáticos — Matemáticas Activa</h1>
+            <p>Esta página necesita JavaScript habilitado para mostrar el contenido interactivo.</p>
+            <p><a href="../../index.html">← Volver al inicio</a></p>
         </div>
-    </nav>
-    </header>
-    <main>
+    </noscript>
 
-    <!-- HERO -->
-    <section class="hero">
-        <div class="hero-shapes">
-            <span class="shape s1">π</span><span class="shape s2">∞</span>
-            <span class="shape s3">√</span><span class="shape s4">∑</span>
-            <span class="shape s5">Δ</span><span class="shape s6">θ</span>
-            <span class="shape s7">∫</span><span class="shape s8">÷</span>
-        </div>
-        <div class="hero-content">
-            <div class="hero-badge">📚 Plataforma educativa</div>
-            <h1 class="hero-title">Aprende Matemáticas<br><span class="hero-gradient">de forma diferente</span></h1>
-            <p class="hero-sub">Videos, ejercicios, PDFs y contenido premium para secundaria y universidad.</p>
-            <div class="hero-btns">
-                <a href="#materias" class="btn-hero-main">Explorar materias →</a>
-                <a href="#" onclick="abrirAuth(event)" class="btn-hero-sec">Crear cuenta gratis</a>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat"><strong>8</strong><span>Materias</span></div>
-                <div class="hero-stat-sep"></div>
-                <div class="hero-stat"><strong>100%</strong><span>Online</span></div>
-                <div class="hero-stat-sep"></div>
-                <div class="hero-stat"><strong>⭐</strong><span>Premium disponible</span></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- BUSCADOR -->
-    <div class="buscador-wrap">
-        <div class="buscador-inner">
-            <span class="buscador-icon" aria-hidden="true">🔍</span>
-            <label for="buscador" class="sr-only">Buscar materia</label>
-            <input type="search" id="buscador" placeholder="Buscar materia..." aria-label="Buscar materia" onkeyup="buscarContenido()">
-        </div>
-    </div>
-
-    <!-- MATERIAS -->
-    <section class="section" id="materias">
-        <div class="section-inner">
-            <div class="section-header">
-                <h2 class="section-title">Explorá las Materias</h2>
-                <p class="section-sub">Seleccioná tu área y accedé a todo el contenido</p>
-            </div>
-
-            <!-- Accesos rápidos por nombre -->
-            <ul id="lista-contenidos" class="lista-materias-rapida" aria-label="Accesos rápidos a materias">
-                <li><a href="materias/Algebra/Algebra.html">Álgebra</a></li>
-                <li><a href="materias/Aritmetica/Aritmetica.html">Aritmética</a></li>
-                <li><a href="materias/Geometria/Geometria.html">Geometría</a></li>
-                <li><a href="materias/Estadistica/Estadistica.html">Estadística</a></li>
-                <li><a href="materias/Trigonometria/Trigonometria.html">Trigonometría</a></li>
-                <li><a href="materias/Calculo/Calculo.html">Cálculo</a></li>
-                <li><a href="materias/Razonamiento/Razonamiento.html">Razonamiento Matemático</a></li>
-                <li><a href="materias/Juegos/Juegos.html">Juegos Matemáticos</a></li>
-            </ul>
-            <div class="materias-grid" id="areas-matematicas">
-                <a href="materias/Algebra/Algebra.html" class="materia-card" data-color="purple">
-                    <div class="materia-img-wrap"><img src="img/Algebra.jpg" alt="Álgebra" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">𝑥²</span></div>
-                    <div class="materia-info"><h3>Álgebra</h3><p>Ecuaciones, polinomios y funciones</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Aritmetica/Aritmetica.html" class="materia-card" data-color="blue">
-                    <div class="materia-img-wrap"><img src="img/Aritmetica.jpg" alt="Aritmética" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">123</span></div>
-                    <div class="materia-info"><h3>Aritmética</h3><p>Fundamentos esenciales</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Geometria/Geometria.html" class="materia-card" data-color="teal">
-                    <div class="materia-img-wrap"><img src="img/Geometria.jpg" alt="Geometría" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">△</span></div>
-                    <div class="materia-info"><h3>Geometría</h3><p>Figuras, áreas y sólidos</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Estadistica/Estadistica.html" class="materia-card" data-color="orange">
-                    <div class="materia-img-wrap"><img src="img/Estadistica.jpg" alt="Estadística" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">📊</span></div>
-                    <div class="materia-info"><h3>Estadística</h3><p>Probabilidad y distribuciones</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Trigonometria/Trigonometria.html" class="materia-card" data-color="red">
-                    <div class="materia-img-wrap"><img src="img/Trigonometria.jpg" alt="Trigonometría" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">θ</span></div>
-                    <div class="materia-info"><h3>Trigonometría</h3><p>Seno, coseno y tangente</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Calculo/Calculo.html" class="materia-card" data-color="indigo">
-                    <div class="materia-img-wrap"><img src="img/Calculo.jpg" alt="Cálculo" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">∫</span></div>
-                    <div class="materia-info"><h3>Cálculo</h3><p>Funciones, análisis y graficadora</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Razonamiento/Razonamiento.html" class="materia-card" data-color="green">
-                    <div class="materia-img-wrap"><img src="img/Razonamiento.jpg" alt="Razonamiento" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">🧠</span></div>
-                    <div class="materia-info"><h3>Razonamiento</h3><p>Lógica y resolución de problemas</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Juegos/Juegos.html" class="materia-card" data-color="pink">
-                    <div class="materia-img-wrap"><img src="img/Juegos.jpg" alt="Juegos" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">🎮</span></div>
-                    <div class="materia-info"><h3>Juegos</h3><p>Aprendé matemáticas jugando</p><span class="materia-arrow">→</span></div>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- VIDEOS -->
-    <section class="section" id="videos">
-        <div class="section-inner">
-            <div class="section-header">
-                <div class="section-icon video-icon">▶</div>
-                <h2 class="section-title">Videos Explicativos</h2>
-                <p class="section-sub">Explicaciones paso a paso para cada tema</p>
-            </div>
-            <div id="videos-grid" class="contenido-grid"></div>
-        </div>
-    </section>
-
-    <!-- PDFs -->
-    <section class="section section-alt" id="PDFs">
-        <div class="section-inner">
-            <div class="section-header">
-                <div class="section-icon pdf-icon">📄</div>
-                <h2 class="section-title">Guías y PDFs</h2>
-                <p class="section-sub">Material para estudiar cuando quieras</p>
-            </div>
-            <div id="pdfs-grid" class="contenido-grid"></div>
-        </div>
-    </section>
-
-    <!-- PREMIUM -->
-    <section class="section premium-section" id="suscripcion">
-        <div class="section-inner">
-            <div class="section-header">
-                <h2 class="section-title light">Contenido Premium ⭐</h2>
-                <p class="section-sub light">Accedé a todo el material exclusivo sin límites</p>
-            </div>
-            <div id="suscripcion-info"></div>
-            <div id="suscripcion-contenido" style="display:none">
-                <div id="premium-cuota-info" class="cuota-info"></div>
-                <div id="premium-grid" class="contenido-grid"></div>
-            </div>
-        </div>
-    </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <span class="brand-icon">∑</span>
-                <span>Matemáticas<strong>Activa</strong></span>
-            </div>
-            <p class="footer-copy">Copyright © 2025 Matemáticas Activa · Todos los derechos reservados</p>
-            <div class="footer-links">
-                <a href="#materias">Materias</a>
-                <a href="#videos">Videos</a>
-                <a href="#suscripcion">Premium</a>
-            </div>
-        </div>
-    </footer>
-
-    <!-- OVERLAY AUTH -->
-    <div id="overlay-auth" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="auth-titulo" onclick="cerrarOverlaySiClick(event,'overlay-auth')">
-        <div class="overlay-panel">
-            <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('overlay-auth').style.display='none'">✕</button>
-            <div id="auth-selector">
-                <div class="auth-logo-sym" aria-hidden="true">∑</div>
-                <h2 id="auth-titulo">Bienvenido/a</h2>
-                <p style="color:#666;font-size:14px;margin-bottom:1.5rem">Ingresá o creá tu cuenta para acceder al contenido premium.</p>
-                <button type="button" class="btn-auth btn-primary" onclick="mostrarForm('form-login')">Iniciar sesión</button>
-                <button type="button" class="btn-auth btn-secondary" onclick="mostrarForm('form-registro')">Crear cuenta gratis</button>
-                <hr style="margin:1.2rem 0;border:none;border-top:1px solid #eee">
-                <p style="font-size:12px;color:#999">¿Sos administrador? <a href="#" onclick="mostrarForm('form-admin')" style="color:#2563eb">Acceder aquí</a></p>
-            </div>
-            <div id="form-login" style="display:none">
-                <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
-                <div class="auth-logo" aria-hidden="true">👤</div><h2>Iniciar sesión</h2>
-                <div class="form-group"><label for="li-user">Email</label><input type="email" id="li-user" placeholder="tu@email.com" autocomplete="email"></div>
-                <div class="form-group"><label for="li-pass">Contraseña</label><input type="password" id="li-pass" placeholder="••••••" autocomplete="current-password"></div>
-                <div id="li-error" class="form-error" role="alert" aria-live="polite"></div>
-                <button type="button" class="btn-auth btn-primary" onclick="usuarioLogin()">Ingresar</button>
-                <p style="font-size:13px;margin-top:.8rem;text-align:center">¿No tenés cuenta? <a href="#" onclick="mostrarForm('form-registro')" style="color:#2563eb">Registrate</a></p>
-            </div>
-            <div id="form-registro" style="display:none">
-                <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
-                <div class="auth-logo" aria-hidden="true">✏️</div><h2>Crear cuenta</h2>
-                <div class="form-group"><label for="re-user">Nombre de usuario</label><input type="text" id="re-user" placeholder="Cómo querés que te llamen" autocomplete="username"></div>
-                <div class="form-group"><label for="re-email">Email</label><input type="email" id="re-email" placeholder="tu@email.com" autocomplete="email"></div>
-                <div class="form-group"><label for="re-pass">Contraseña</label><input type="password" id="re-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
-                <div class="form-group"><label for="re-pass2">Confirmar contraseña</label><input type="password" id="re-pass2" placeholder="Repetí la contraseña" autocomplete="new-password"></div>
-                <div id="re-error" class="form-error" role="alert" aria-live="polite"></div>
-                <div id="re-success" class="form-success" role="status" aria-live="polite"></div>
-                <button type="button" class="btn-auth btn-primary" onclick="usuarioRegistro()">Registrarme</button>
-            </div>
-            <div id="form-admin" style="display:none">
-                <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
-                <div class="auth-logo" aria-hidden="true">🔐</div><h2>Acceso administrador</h2>
-                <div class="form-group"><label for="ad-user">Email del admin</label><input type="email" id="ad-user" placeholder="admin@tu-dominio.com" autocomplete="email"></div>
-                <div class="form-group"><label for="ad-pass">Contraseña</label><input type="password" id="ad-pass" placeholder="••••••" autocomplete="current-password"></div>
-                <div id="ad-error" class="form-error" role="alert" aria-live="polite"></div>
-                <button type="button" class="btn-auth btn-primary" onclick="adminLogin()">Ingresar como admin</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- OVERLAY ADMIN -->
-    <div id="overlay-admin" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="admin-titulo" onclick="cerrarOverlaySiClick(event,'overlay-admin')">
-        <div class="overlay-panel admin-panel">
-            <button type="button" class="overlay-close" aria-label="Cerrar panel de administración" onclick="document.getElementById('overlay-admin').style.display='none'">✕</button>
-            <div class="admin-header">
-                <span class="admin-logo" aria-hidden="true">⚙️</span>
-                <div><h2 id="admin-titulo" style="margin:0;font-size:18px">Panel de administración</h2><p style="margin:0;font-size:12px;color:#888">Matemáticas Activa</p></div>
-            </div>
-            <div class="admin-tabs" role="tablist">
-                <button type="button" class="admin-tab active" onclick="adminTab('archivos')">📁 Archivos</button>
-                <button type="button" class="admin-tab" onclick="adminTab('usuarios')">👥 Usuarios</button>
-                <button type="button" class="admin-tab" onclick="adminTab('subir')">⬆️ Subir</button>
-            </div>
-            <div id="admin-tab-archivos">
-                <div class="tab-toolbar">
-                    <span style="font-size:13px;color:#666">Contenido publicado</span>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap">
-                        <select id="filtro-seccion" onchange="renderAdminArchivos()"><option value="">Todas las secciones</option><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imágenes</option><option value="texto">Texto</option></select>
-                        <select id="filtro-materia" onchange="renderAdminArchivos()"><option value="">Todas las materias</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option><option value="general">General</option></select>
-                    </div>
-                </div>
-                <div id="admin-archivos-grid" class="admin-grid"></div>
-            </div>
-            <div id="admin-tab-usuarios" style="display:none"><div id="admin-usuarios-lista"></div></div>
-            <div id="admin-tab-subir" style="display:none">
-                <div class="subir-form">
-                    <div class="form-group"><label for="su-titulo">Título *</label><input type="text" id="su-titulo" placeholder="Nombre del contenido"></div>
-                    <div class="form-group"><label for="su-materia">📚 Materia *</label><select id="su-materia"><option value="general">General</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option></select></div>
-                    <div class="form-group"><label for="su-seccion">📂 Sección *</label><select id="su-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
-                    <div class="form-group"><label for="su-tipo">Tipo *</label><select id="su-tipo" onchange="actualizarCampoArchivo()"><option value="archivo">Archivo</option><option value="texto">Texto</option><option value="url-video">URL de video</option></select></div>
-                    <div id="su-archivo-wrap" class="form-group"><label for="su-archivo">Archivo (máx. 50 MB)</label><input type="file" id="su-archivo" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"></div>
-                    <div id="su-texto-wrap" class="form-group" style="display:none"><label for="su-texto">Contenido</label><textarea id="su-texto" rows="5" placeholder="Escribí el contenido aquí..."></textarea></div>
-                    <div id="su-url-wrap" class="form-group" style="display:none"><label for="su-url">URL del video</label><input type="url" id="su-url" placeholder="https://youtube.com/watch?v=..."></div>
-                    <div class="form-group"><label for="su-desc">Descripción (opcional)</label><input type="text" id="su-desc" placeholder="Breve descripción"></div>
-                    <div id="su-progress" style="display:none;margin:.5rem 0"><div class="progress-bar-wrap"><div class="progress-bar-fill" id="su-progress-fill"></div></div><p style="font-size:12px;color:#666;margin-top:4px">Procesando...</p></div>
-                    <div id="su-error" class="form-error" role="alert" aria-live="polite"></div>
-                    <div id="su-success" class="form-success" role="status" aria-live="polite"></div>
-                    <button type="button" class="btn-subir" onclick="subirContenido()">⬆️ Publicar contenido</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL VISOR -->
-    <div id="modal-visor" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="visor-titulo" onclick="cerrarOverlaySiClick(event,'modal-visor')">
-        <div class="overlay-panel visor-panel" style="max-width:860px">
-            <div class="visor-header">
-                <h3 id="visor-titulo"></h3>
-                <button type="button" class="overlay-close" aria-label="Cerrar visor" style="position:static;background:#f1f5f9;border-radius:8px;padding:5px 14px;font-size:13px;font-weight:600" onclick="document.getElementById('modal-visor').style.display='none'">✕ Cerrar</button>
-            </div>
-            <div id="visor-cuerpo"></div>
-        </div>
-    </div>
-
-    <!-- MODAL EDITAR -->
-    <div id="modal-editar" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="ed-titulo-h" onclick="cerrarOverlaySiClick(event,'modal-editar')">
-        <div class="overlay-panel" style="max-width:480px">
-            <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-editar').style.display='none'">✕</button>
-            <h2 id="ed-titulo-h" style="margin-bottom:1rem;font-size:18px">✏️ Editar contenido</h2>
-            <input type="hidden" id="ed-id">
-            <div class="form-group"><label for="ed-titulo">Título</label><input type="text" id="ed-titulo"></div>
-            <div class="form-group"><label for="ed-desc">Descripción</label><input type="text" id="ed-desc"></div>
-            <div class="form-group"><label for="ed-materia">📚 Materia</label><select id="ed-materia"><option value="general">General</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option></select></div>
-            <div class="form-group"><label for="ed-seccion">Sección</label><select id="ed-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
-            <div id="ed-texto-wrap" class="form-group" style="display:none"><label for="ed-texto">Contenido</label><textarea id="ed-texto" rows="5"></textarea></div>
-            <div id="ed-error" class="form-error" role="alert" aria-live="polite"></div>
-            <div style="display:flex;gap:8px;margin-top:1rem">
-                <button type="button" class="btn-subir" onclick="guardarEdicion()">✔ Guardar</button>
-                <button type="button" class="btn-cancelar" onclick="document.getElementById('modal-editar').style.display='none'">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PAGO -->
-    <div id="modal-pago" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="pago-titulo" onclick="cerrarOverlaySiClick(event,'modal-pago')">
-        <div class="overlay-panel pago-panel">
-            <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-pago').style.display='none'">✕</button>
-            <div class="pago-header">
-                <div style="font-size:48px" aria-hidden="true">⭐</div>
-                <h2 id="pago-titulo">Suscripción Premium</h2>
-                <div class="precio-grande">$ 10.000 <span class="precio-sub">ARS / mes</span></div>
-            </div>
-            <ul class="beneficios-lista">
-                <li>✅ Acceso ilimitado a todos los archivos premium</li>
-                <li>✅ Videos, PDFs y ejercicios sin restricciones</li>
-                <li>✅ 30 días de acceso completo</li>
-                <li>✅ Contenido de todas las materias incluido</li>
-                <li>✅ Se renueva mensualmente</li>
-            </ul>
-            <p style="font-size:13px;font-weight:600;margin:16px 0 10px">Elegí tu método de pago:</p>
-            <a href="https://mpago.la/29qTXgw" target="_blank" rel="noopener" class="btn-pago-mp">💳 Pagar con MercadoPago</a>
-            <a href="https://mpago.la/29qTXgw" target="_blank" rel="noopener" class="btn-pago-nx">🟠 Pagar con Naranja X</a>
-            <div class="pago-instrucciones">
-                <p style="font-weight:700;margin:0 0 8px">📋 ¿Qué hacer después de pagar?</p>
-                <ol><li>Completá el pago en la plataforma elegida</li><li>Guardá el comprobante o captura de pantalla</li><li>Enviánoslo al administrador</li><li>¡Tu acceso premium se activa en menos de 24 hs!</li></ol>
-            </div>
-        </div>
-    </div>
-
-    <!-- Supabase SDK + config + scripts -->
+    <!-- Supabase SDK + config + script principal compartido -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <script src="scripts.js"></script>
+    <script src="../../supabase-config.js"></script>
+    <script src="../../materia.js"></script>
+
+    <!-- Script local de esta materia -->
+    <script src="materia-local.js"></script>
+
 </body>
 </html>
