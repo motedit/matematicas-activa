@@ -1,67 +1,75 @@
-# Guía de publicación — Matemáticas Activa
+# Cómo publicar Matemáticas Activa en GitHub Pages
 
-Sitio estático listo para publicarse en cualquier hosting de archivos estáticos (GitHub Pages, Netlify, Vercel, etc.).
+**Tiempo total: ~10 minutos. No necesitás instalar nada.**
 
-## Opción recomendada: GitHub Pages (gratis y simple)
+Ya te preparé un archivo `matematicas-activa.zip` en esta misma carpeta con todo lo necesario. Solo seguí estos pasos:
 
-### 1) Crear cuenta y repositorio
-1. Andá a https://github.com y creá una cuenta si no tenés.
-2. Clic en el botón verde **New** (o https://github.com/new) para crear un nuevo repositorio.
-3. Nombre sugerido: `matematicas-activa` (todo en minúscula, sin espacios).
-4. Marcá **Public**.
-5. **No** marques "Add a README", "Add .gitignore" ni "Choose a license" (ya están en el proyecto).
-6. Clic en **Create repository**.
+---
 
-### 2) Subir los archivos (sin terminal — desde el navegador)
-1. En la pantalla del repo recién creado, hacé clic en **uploading an existing file** (link azul).
-2. Abrí la carpeta `MA_Proyecto` en el Explorador de Windows.
-3. Seleccioná **todos** los archivos y carpetas (Ctrl+A) y arrastralos a la ventana de GitHub.
-   - Incluí: `index.html`, `styles.css`, `scripts.js`, `materia.js`, `materia.css`, `calculadora.js`, `funciones.js`, `graficadora.js`, la carpeta `img/`, la carpeta `materias/`, `.nojekyll` y `.gitignore`.
-   - **No** subas la carpeta `docs/` si querés mantenerla privada (es opcional).
-4. Esperá a que termine la subida (la barra azul al pie).
-5. En el campo "Commit changes" abajo, dejá el mensaje por defecto y clic en **Commit changes**.
+## Paso 1 — Crear cuenta de GitHub (3 min)
 
-### 3) Activar GitHub Pages
-1. En el repo, clic en la pestaña **Settings** (engranaje, arriba a la derecha).
-2. En el menú lateral izquierdo, clic en **Pages**.
-3. En **Source**, elegí **Deploy from a branch**.
-4. En **Branch**, elegí `main` y carpeta `/ (root)`. Clic en **Save**.
-5. Esperá ~1-2 minutos. GitHub te mostrará la URL del sitio arriba, algo así como:
+1. Entrá a https://github.com/signup
+2. Ingresá tu email (podés usar `marcos_diaz_97@hotmail.com`).
+3. Elegí una contraseña segura.
+4. Elegí un nombre de usuario corto y en minúscula. **Importante:** este nombre va a aparecer en la URL final del sitio. Ejemplo: si elegís `marcosdiaz97`, tu sitio va a quedar en:
    ```
-   https://TU-USUARIO.github.io/matematicas-activa/
+   https://marcosdiaz97.github.io/matematicas-activa/
    ```
-6. ¡Listo! Compartí ese link.
-
-### 4) Actualizar el sitio en el futuro
-Cada vez que modifiques un archivo:
-1. Entrá al repo en GitHub → abrí el archivo → clic en el lápiz ✏️ → editá → **Commit changes**.
-2. O subí archivos nuevos con **Add file → Upload files**.
-3. El sitio se republica solo en ~30 segundos.
+5. Verificá tu email haciendo clic en el link que GitHub te envía.
+6. Cuando te pregunte "How many team members?" elegí "Just me" (o cualquier opción, no importa).
+7. En "Are you a student or a teacher?" elegí cualquier respuesta y seguí.
+8. Listo, ya tenés cuenta.
 
 ---
 
-## Opción alternativa: Netlify (drag-and-drop)
-1. https://app.netlify.com/drop
-2. Arrastrá la carpeta `MA_Proyecto` entera.
-3. En segundos te da una URL `https://nombre-random.netlify.app`. Podés cambiar el nombre desde "Site settings".
+## Paso 2 — Descomprimir el ZIP (1 min)
+
+1. Abrí el Explorador de Windows en `C:\Users\marco\OneDrive\Desktop\MA_Proyecto`.
+2. Vas a ver el archivo `matematicas-activa.zip`.
+3. Clic derecho sobre él → **Extraer todo...** → **Extraer**.
+4. Se creará una carpeta `matematicas-activa` con todos los archivos del sitio.
 
 ---
 
-## Consideraciones de seguridad
+## Paso 3 — Crear el repositorio (2 min)
 
-El proyecto guarda usuarios/contraseñas (hash SHA-256) en `localStorage` del navegador. Esto significa:
-- Los datos viven **en el navegador de cada visitante**, no en un servidor.
-- Cada navegador/dispositivo ve sus propios usuarios (no se comparten).
-- Para una versión multi-usuario real, harían falta backend + base de datos (Firebase, Supabase, etc.).
-
-Para el panel de administración, la contraseña por defecto es `admin`. **Cambiala** antes de publicar editando en `scripts.js` la función `verificarPassAdmin` o el valor de `ADMIN_PASS_HASH`.
+1. Entrá a https://github.com/new (tenés que estar logueado).
+2. **Repository name:** escribí `matematicas-activa` (igual a la carpeta, en minúscula y con guión).
+3. **Description (opcional):** "Plataforma educativa de matemáticas".
+4. Marcá la opción **Public** (necesario para que GitHub Pages funcione gratis).
+5. **NO marques** "Add a README", "Add .gitignore" ni "Choose a license" — todo eso ya viene en el ZIP.
+6. Clic en **Create repository** (botón verde abajo).
 
 ---
 
-## Comprobaciones antes de publicar
-- [x] Errores HTML corregidos (`<a>` envueltos en `<li>`, atributos sintácticos válidos).
-- [x] Accesibilidad mejorada (`label for=`, `aria-label`, `role` en modales, `noscript` en páginas de materia).
-- [x] Bug crítico de `scripts.js` resuelto (referencia a `#ejercicios` inexistente).
-- [x] CSS duplicado limpiado.
-- [x] Meta tags SEO (description, theme-color, favicon) agregados.
-- [x] Archivo `.nojekyll` presente.
+## Paso 4 — Subir los archivos al repo (3 min)
+
+1. Apenas creés el repo vas a ver una pantalla con título "Quick setup". Buscá el link azul que dice **uploading an existing file** (está en la parte de "...or push an existing repository from the command line").
+
+   Si no lo ves, también funciona: arriba a la izquierda hay un botón **Add file → Upload files**.
+
+2. Vas a entrar a la pantalla de carga. Vas a ver un cuadro grande gris que dice "Drag files here to add them to your repository".
+
+3. Volvé al Explorador de Windows, abrí la carpeta `matematicas-activa` que descomprimiste en el Paso 2.
+
+4. **Importante:** seleccioná todo el **contenido** de la carpeta (no la carpeta entera). Usá `Ctrl+A` dentro de la carpeta para seleccionar:
+   - `index.html`, `styles.css`, `scripts.js`, `materia.css`, `materia.js`
+   - `calculadora.js`, `funciones.js`, `graficadora.js`
+   - `.nojekyll`, `.gitignore`, `PUBLICAR.md`
+   - las carpetas `img/` y `materias/`
+
+5. Arrastrá todo eso al cuadro gris de GitHub. Vas a ver que aparecen los archivos en una lista (esto puede tardar 1-2 minutos por las imágenes).
+
+6. Cuando termine la carga, bajá hasta abajo de la página. Vas a ver:
+   - Una caja "Commit changes" con un mensaje por defecto. Dejalo así.
+   - Clic en el botón verde **Commit changes**.
+
+7. GitHub procesa por ~30 segundos y te lleva a la página principal del repo. Vas a ver todos tus archivos listados.
+
+---
+
+## Paso 5 — Activar GitHub Pages (1 min)
+
+1. En tu repo, clic en **Settings** (engranaje, arriba a la derecha de la barra de pestañas).
+2. En el menú lateral izquierdo, scroll hasta encontrar la sección "Code and automation".
+3. Clic en

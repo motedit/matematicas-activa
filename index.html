@@ -6,7 +6,6 @@
     <title>Matemáticas Activa — Plataforma educativa de matemáticas</title>
     <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos. Contenido para secundaria y universidad.">
     <meta name="theme-color" content="#2563eb">
-    <!-- Seguridad: evitar clickjacking y sniffing -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
     <meta name="referrer" content="no-referrer">
@@ -205,7 +204,7 @@
             <div id="form-login" style="display:none">
                 <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
                 <div class="auth-logo" aria-hidden="true">👤</div><h2>Iniciar sesión</h2>
-                <div class="form-group"><label for="li-user">Usuario</label><input type="text" id="li-user" placeholder="Tu nombre de usuario" autocomplete="username"></div>
+                <div class="form-group"><label for="li-user">Email</label><input type="email" id="li-user" placeholder="tu@email.com" autocomplete="email"></div>
                 <div class="form-group"><label for="li-pass">Contraseña</label><input type="password" id="li-pass" placeholder="••••••" autocomplete="current-password"></div>
                 <div id="li-error" class="form-error" role="alert" aria-live="polite"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="usuarioLogin()">Ingresar</button>
@@ -214,8 +213,9 @@
             <div id="form-registro" style="display:none">
                 <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
                 <div class="auth-logo" aria-hidden="true">✏️</div><h2>Crear cuenta</h2>
-                <div class="form-group"><label for="re-user">Usuario</label><input type="text" id="re-user" placeholder="Mínimo 3 caracteres" autocomplete="username"></div>
-                <div class="form-group"><label for="re-pass">Contraseña</label><input type="password" id="re-pass" placeholder="Mínimo 4 caracteres" autocomplete="new-password"></div>
+                <div class="form-group"><label for="re-user">Nombre de usuario</label><input type="text" id="re-user" placeholder="Cómo querés que te llamen" autocomplete="username"></div>
+                <div class="form-group"><label for="re-email">Email</label><input type="email" id="re-email" placeholder="tu@email.com" autocomplete="email"></div>
+                <div class="form-group"><label for="re-pass">Contraseña</label><input type="password" id="re-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
                 <div class="form-group"><label for="re-pass2">Confirmar contraseña</label><input type="password" id="re-pass2" placeholder="Repetí la contraseña" autocomplete="new-password"></div>
                 <div id="re-error" class="form-error" role="alert" aria-live="polite"></div>
                 <div id="re-success" class="form-success" role="status" aria-live="polite"></div>
@@ -224,7 +224,7 @@
             <div id="form-admin" style="display:none">
                 <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
                 <div class="auth-logo" aria-hidden="true">🔐</div><h2>Acceso administrador</h2>
-                <div class="form-group"><label for="ad-user">Usuario</label><input type="text" id="ad-user" placeholder="admin" autocomplete="username"></div>
+                <div class="form-group"><label for="ad-user">Email del admin</label><input type="email" id="ad-user" placeholder="admin@tu-dominio.com" autocomplete="email"></div>
                 <div class="form-group"><label for="ad-pass">Contraseña</label><input type="password" id="ad-pass" placeholder="••••••" autocomplete="current-password"></div>
                 <div id="ad-error" class="form-error" role="alert" aria-live="polite"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="adminLogin()">Ingresar como admin</button>
@@ -262,7 +262,7 @@
                     <div class="form-group"><label for="su-materia">📚 Materia *</label><select id="su-materia"><option value="general">General</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option></select></div>
                     <div class="form-group"><label for="su-seccion">📂 Sección *</label><select id="su-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
                     <div class="form-group"><label for="su-tipo">Tipo *</label><select id="su-tipo" onchange="actualizarCampoArchivo()"><option value="archivo">Archivo</option><option value="texto">Texto</option><option value="url-video">URL de video</option></select></div>
-                    <div id="su-archivo-wrap" class="form-group"><label for="su-archivo">Archivo (máx. 3 GB)</label><input type="file" id="su-archivo" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"></div>
+                    <div id="su-archivo-wrap" class="form-group"><label for="su-archivo">Archivo (máx. 50 MB)</label><input type="file" id="su-archivo" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"></div>
                     <div id="su-texto-wrap" class="form-group" style="display:none"><label for="su-texto">Contenido</label><textarea id="su-texto" rows="5" placeholder="Escribí el contenido aquí..."></textarea></div>
                     <div id="su-url-wrap" class="form-group" style="display:none"><label for="su-url">URL del video</label><input type="url" id="su-url" placeholder="https://youtube.com/watch?v=..."></div>
                     <div class="form-group"><label for="su-desc">Descripción (opcional)</label><input type="text" id="su-desc" placeholder="Breve descripción"></div>
@@ -322,8 +322,8 @@
                 <li>✅ Se renueva mensualmente</li>
             </ul>
             <p style="font-size:13px;font-weight:600;margin:16px 0 10px">Elegí tu método de pago:</p>
-            <a href="https://mpago.la/29qTXgw" target="_blank" class="btn-pago-mp">💳 Pagar con MercadoPago</a>
-            <a href="https://mpago.la/29qTXgw" target="_blank" class="btn-pago-nx">🟠 Pagar con Naranja X</a>
+            <a href="https://mpago.la/29qTXgw" target="_blank" rel="noopener" class="btn-pago-mp">💳 Pagar con MercadoPago</a>
+            <a href="https://mpago.la/29qTXgw" target="_blank" rel="noopener" class="btn-pago-nx">🟠 Pagar con Naranja X</a>
             <div class="pago-instrucciones">
                 <p style="font-weight:700;margin:0 0 8px">📋 ¿Qué hacer después de pagar?</p>
                 <ol><li>Completá el pago en la plataforma elegida</li><li>Guardá el comprobante o captura de pantalla</li><li>Enviánoslo al administrador</li><li>¡Tu acceso premium se activa en menos de 24 hs!</li></ol>
@@ -331,6 +331,9 @@
         </div>
     </div>
 
+    <!-- Supabase SDK + config + scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <script src="scripts.js"></script>
 </body>
 </html>
