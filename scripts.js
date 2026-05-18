@@ -808,6 +808,28 @@ document.addEventListener("DOMContentLoaded", function () {
     inicializarSistema();
 });
 
+
+// ============ FAB DE CONTACTO ============
+function toggleFabContacto() {
+    const btn  = document.getElementById("fab-contacto-btn");
+    const menu = document.getElementById("fab-menu-contacto");
+    if (!btn || !menu) return;
+    const abierto = menu.classList.toggle("open");
+    btn.classList.toggle("abierto", abierto);
+    btn.textContent = abierto ? "✕" : "💬";
+}
+// Cerrar el FAB al clickear fuera
+document.addEventListener("click", (e) => {
+    const menu = document.getElementById("fab-menu-contacto");
+    const btn  = document.getElementById("fab-contacto-btn");
+    if (!menu || !btn) return;
+    if (!menu.contains(e.target) && !btn.contains(e.target) && menu.classList.contains("open")) {
+        menu.classList.remove("open");
+        btn.classList.remove("abierto");
+        btn.textContent = "💬";
+    }
+});
+
 // Expose
 Object.assign(window, {
     buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
@@ -816,7 +838,7 @@ Object.assign(window, {
     adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
     verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
     activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
-    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick,
+    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto,
     enviarComentario, borrarComentario,
     adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
 });
