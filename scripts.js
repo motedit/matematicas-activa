@@ -1,11 +1,7 @@
 // ================================================================
-//  MATEMÁTICAS ACTIVA — scripts.js (v2 con Supabase backend)
-//  Auth + DB + Storage server-side. Sin contraseñas en el cliente.
+//  MATEMÁTICAS ACTIVA — scripts.js v3 (Supabase + features)
 // ================================================================
 
-// ----------------------------------------------------------------
-//  ⚙️  CONFIGURACIÓN
-// ----------------------------------------------------------------
 const PRECIO_SUSCRIPCION = "$ 10.000";
 const MONEDA             = "ARS / mes";
 const DURACION_DIAS      = 30;
@@ -13,607 +9,488 @@ const LINK_MERCADOPAGO   = "https://mpago.la/29qTXgw";
 const LINK_NARANJAX      = "https://mpago.la/29qTXgw";
 window.PRECIO_SUSCRIPCION = PRECIO_SUSCRIPCION;
 
-const SEG = {
-    SESION_TIMEOUT_MIN : 30,   // Supabase ya maneja JWT; este es el timeout adicional por inactividad
-    PASS_MIN_LENGTH    : 6,
-};
-
+const SEG = { SESION_TIMEOUT_MIN: 30, PASS_MIN_LENGTH: 6 };
 const MAX_ARCHIVOS_GRATIS = 3;
-const MAX_FILE_SIZE       = 50 * 1024 * 1024; // 50 MB (límite del free tier de Supabase Storage)
+const MAX_FILE_SIZE       = 50 * 1024 * 1024;
 const MATERIAS = {
     general:"General", algebra:"Álgebra", aritmetica:"Aritmética",
     geometria:"Geometría", estadistica:"Estadística", trigonometria:"Trigonometría",
     calculo:"Cálculo", razonamiento:"Razonamiento Mat.", juegos:"Juegos Matemáticos"
 };
 
-// Cache local (se refresca después de cada operación que cambia datos)
 let appState = {
-    perfilActual: null,    // perfil del usuario logueado (o null)
-    archivos:     [],      // lista de archivos cacheada
-    perfiles:     [],      // (solo admin) lista de usuarios
+    perfilActual: null,
+    archivos: [],         // todos los archivos visibles (públicos + mis personales si soy user; todo si soy admin)
+    archivosPublicos: [], // solo públicos
+    misArchivos: [],      // solo del usuario logueado
+    perfiles: [],
 };
 
-// Alias rápidos al SDK helper
 const MA = () => window.MA_SUPABASE;
 
-// ----------------------------------------------------------------
-//  🧹 SANITIZACIÓN
-// ----------------------------------------------------------------
-function sanitizar(str) {
-    return String(str)
-        .replace(/[<>"'`]/g, "")
-        .replace(/javascript:/gi, "")
-        .replace(/on\w+=/gi, "")
-        .trim()
-        .substring(0, 200);
+// ============ UTILS ============
+function sanitizar(s) {
+    return String(s).replace(/[<>"'`]/g, "").replace(/javascript:/gi,"").replace(/on\w+=/gi,"").trim().substring(0,200);
 }
-function validarUsuario(nombre) {
-    return /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ._-]{3,40}$/.test(nombre);
-}
-function validarEmail(e) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-}
-function esc(s) {
-    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
+function validarUsuario(n) { return /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ._-]{3,40}$/.test(n); }
+function validarEmail(e)   { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function formatearFecha(ts){ if(!ts)return"—"; return new Date(ts).toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}); }
+function formatearFechaHora(ts){ if(!ts)return"—"; return new Date(ts).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+function formatearTamano(b){ if(!b)return""; if(b<1024)return b+" B"; if(b<1024**2)return(b/1024).toFixed(1)+" KB"; if(b<1024**3)return(b/1024**2).toFixed(1)+" MB"; return(b/1024**3).toFixed(2)+" GB"; }
 
-// ----------------------------------------------------------------
-//  🔔 TOAST
-// ----------------------------------------------------------------
+// ============ TOAST ============
 function mostrarToast(msg, tipo = "info") {
     let t = document.getElementById("ma-toast");
     if (!t) {
-        t = document.createElement("div");
-        t.id = "ma-toast";
-        t.style.cssText = `
-            position:fixed;bottom:24px;right:24px;z-index:9999;
-            padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;
-            max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.25);
-            transition:opacity .3s,transform .3s;opacity:0;transform:translateY(12px);
-            font-family:'Inter',sans-serif;
-        `;
+        t = document.createElement("div"); t.id = "ma-toast";
+        t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.25);transition:opacity .3s,transform .3s;opacity:0;transform:translateY(12px);font-family:'Inter',sans-serif;`;
         document.body.appendChild(t);
     }
-    const colores = {
-        info  : "background:#1e293b;color:white;",
-        ok    : "background:#16a34a;color:white;",
-        warn  : "background:#f59e0b;color:#1a1a1a;",
-        error : "background:#dc2626;color:white;",
-    };
-    t.style.cssText += colores[tipo] || colores.info;
+    const c = {info:"background:#1e293b;color:white;", ok:"background:#16a34a;color:white;", warn:"background:#f59e0b;color:#1a1a1a;", error:"background:#dc2626;color:white;"};
+    t.style.cssText += c[tipo] || c.info;
     t.textContent = msg;
     t.style.opacity = "1"; t.style.transform = "translateY(0)";
     clearTimeout(t._timer);
     t._timer = setTimeout(() => { t.style.opacity="0"; t.style.transform="translateY(12px)"; }, 4000);
 }
 
-// ----------------------------------------------------------------
-//  ⏱️ TIMEOUT DE INACTIVIDAD (capa adicional al JWT de Supabase)
-// ----------------------------------------------------------------
-let _sesionTimer = null, _warnTimer = null, _warnInterval = null;
-
-function ocultarWarning() {
-    clearInterval(_warnInterval); _warnInterval = null;
-    const w = document.getElementById('ma-timeout-modal');
-    if (w) w.style.display = 'none';
-}
-
-function mostrarWarningTimeout() {
-    let modal = document.getElementById('ma-timeout-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'ma-timeout-modal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px';
-        modal.innerHTML = `
-            <div style="background:white;border-radius:16px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-                <div style="font-size:48px;margin-bottom:12px">⏱️</div>
-                <h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 8px">¿Seguís ahí?</h3>
-                <p style="font-size:14px;color:#64748b;margin:0 0 16px">Tu sesión se cerrará en <strong id="ma-countdown" style="color:#dc2626;font-size:20px">15</strong> segundos por inactividad.</p>
-                <button type="button" onclick="resetSesionTimer()" style="width:100%;padding:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✅ Seguir navegando</button>
-                <button type="button" onclick="cerrarSesion()" style="width:100%;padding:10px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px">Cerrar sesión ahora</button>
-            </div>`;
-        document.body.appendChild(modal);
+// ============ TIMEOUT INACTIVIDAD ============
+let _sesionTimer=null, _warnTimer=null, _warnInterval=null;
+function ocultarWarning(){ clearInterval(_warnInterval); _warnInterval=null; const w=document.getElementById('ma-timeout-modal'); if(w) w.style.display='none'; }
+function mostrarWarningTimeout(){
+    let m = document.getElementById('ma-timeout-modal');
+    if(!m){
+        m = document.createElement('div'); m.id='ma-timeout-modal';
+        m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px';
+        m.innerHTML = `<div style="background:white;border-radius:16px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div style="font-size:48px;margin-bottom:12px">⏱️</div><h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 8px">¿Seguís ahí?</h3><p style="font-size:14px;color:#64748b;margin:0 0 16px">Tu sesión se cerrará en <strong id="ma-countdown" style="color:#dc2626;font-size:20px">15</strong> segundos.</p><button type="button" onclick="resetSesionTimer()" style="width:100%;padding:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">✅ Seguir</button><button type="button" onclick="cerrarSesion()" style="width:100%;padding:10px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;cursor:pointer;margin-top:8px">Cerrar sesión</button></div>`;
+        document.body.appendChild(m);
     }
-    modal.style.display = 'flex';
-    let count = 15;
-    clearInterval(_warnInterval);
-    _warnInterval = setInterval(() => {
-        count--;
-        const el = document.getElementById('ma-countdown');
-        if (el) el.textContent = count;
-        if (count <= 0) clearInterval(_warnInterval);
-    }, 1000);
+    m.style.display='flex';
+    let c=15; clearInterval(_warnInterval);
+    _warnInterval = setInterval(()=>{ c--; const el=document.getElementById('ma-countdown'); if(el) el.textContent=c; if(c<=0) clearInterval(_warnInterval); },1000);
 }
-
-function resetSesionTimer() {
-    if (!appState.perfilActual) return;
-    ocultarWarning();
-    clearTimeout(_sesionTimer); clearTimeout(_warnTimer);
-    const totalMs = SEG.SESION_TIMEOUT_MIN * 60 * 1000;
-    const warnMs = totalMs - 15000;
-    _warnTimer  = setTimeout(mostrarWarningTimeout, warnMs);
-    _sesionTimer = setTimeout(async () => {
-        if (appState.perfilActual) {
-            await cerrarSesion();
-            mostrarToast(`⏱️ Sesión cerrada por inactividad`, "warn");
-        }
-    }, totalMs);
+function resetSesionTimer(){
+    if(!appState.perfilActual) return;
+    ocultarWarning(); clearTimeout(_sesionTimer); clearTimeout(_warnTimer);
+    const t = SEG.SESION_TIMEOUT_MIN*60*1000;
+    _warnTimer = setTimeout(mostrarWarningTimeout, t-15000);
+    _sesionTimer = setTimeout(async()=>{ if(appState.perfilActual){ await cerrarSesion(); mostrarToast("⏱️ Sesión cerrada por inactividad","warn"); } }, t);
 }
-
-function iniciarMonitoreoSesion() {
-    ["click", "keydown", "scroll", "mousemove", "touchstart"].forEach(ev =>
-        document.addEventListener(ev, () => { if (appState.perfilActual) resetSesionTimer(); }, { passive: true })
+function iniciarMonitoreoSesion(){
+    ["click","keydown","scroll","mousemove","touchstart"].forEach(ev=>
+        document.addEventListener(ev, ()=>{ if(appState.perfilActual) resetSesionTimer(); }, {passive:true})
     );
 }
 
-// ----------------------------------------------------------------
-//  🔍 BÚSQUEDA (lista rápida en el index)
-// ----------------------------------------------------------------
+// ============ BÚSQUEDA ============
 function buscarContenido() {
     const input = sanitizar(document.getElementById("buscador").value).toLowerCase();
-    const cont = document.getElementById("lista-contenidos");
-    if (!cont) return;
-    const enlaces = cont.getElementsByTagName("a");
-    for (let i = 0; i < enlaces.length; i++) {
-        const visible = enlaces[i].innerText.toLowerCase().includes(input);
-        const target = enlaces[i].parentElement?.tagName === "LI" ? enlaces[i].parentElement : enlaces[i];
-        target.style.display = visible ? "" : "none";
-    }
+    const cont = document.getElementById("lista-contenidos"); if (!cont) return;
+    [...cont.getElementsByTagName("a")].forEach(a => {
+        const visible = a.innerText.toLowerCase().includes(input);
+        const t = a.parentElement?.tagName === "LI" ? a.parentElement : a;
+        t.style.display = visible ? "" : "none";
+    });
 }
 
-// ----------------------------------------------------------------
-//  🎯 EJERCICIOS (solo si existe el contenedor)
-// ----------------------------------------------------------------
-function inicializarEjercicios() {
-    const ejerciciosSection = document.getElementById("ejercicios");
-    if (!ejerciciosSection) return;
-
-    let ejercicios = [
-        { titulo: "Ejercicio 1", descripcion: "2 + 3 =",  solucion: "5"  },
-        { titulo: "Ejercicio 2", descripcion: "8 - 4 =",  solucion: "4"  },
-        { titulo: "Ejercicio 3", descripcion: "5 × 3 =",  solucion: "15" },
-        { titulo: "Ejercicio 4", descripcion: "12 ÷ 4 =", solucion: "3"  }
-    ];
-
-    const botonAleatorio = document.createElement("button");
-    botonAleatorio.type = "button";
-    botonAleatorio.textContent = "Generar Ejercicio Aleatorio";
-    botonAleatorio.classList.add("boton-solucion");
-    botonAleatorio.addEventListener("click", () => { ejercicios.push(generarEjercicioAleatorio()); mostrarEjercicios(); });
-
-    function mostrarEjercicios() {
-        ejerciciosSection.innerHTML = "";
-        ejercicios.forEach((ej, index) => {
-            const div = document.createElement("div");
-            div.classList.add("ejercicio");
-            div.innerHTML = `<h3>${esc(ej.titulo)}</h3><p>${esc(ej.descripcion)}</p>
-                <label for="respuesta-${index}" class="sr-only">Respuesta del ${esc(ej.titulo)}</label>
-                <input type="text" id="respuesta-${index}" placeholder="Tu respuesta" autocomplete="off">
-                <button type="button" class="boton-verificar" data-index="${index}">Verificar</button>
-                <p class="resultado" id="resultado-${index}" role="status" aria-live="polite"></p>`;
-            ejerciciosSection.appendChild(div);
-        });
-        document.querySelectorAll(".boton-verificar").forEach(btn => {
-            btn.addEventListener("click", function () {
-                const i = this.getAttribute("data-index");
-                const res = document.getElementById(`resultado-${i}`);
-                const val = sanitizar(document.getElementById(`respuesta-${i}`).value);
-                if (val === ejercicios[i].solucion) {
-                    res.textContent = "✅ ¡Correcto!"; res.style.color = "#16a34a";
-                } else {
-                    res.textContent = "❌ Incorrecto. Intenta de nuevo."; res.style.color = "#dc2626";
-                }
-            });
-        });
-        ejerciciosSection.appendChild(botonAleatorio);
-    }
-    function generarEjercicioAleatorio() {
-        const n1 = Math.floor(Math.random()*10)+1, n2 = Math.floor(Math.random()*10)+1;
-        const ops = ["+","-","×","÷"], op = ops[Math.floor(Math.random()*4)];
-        let res;
-        switch (op) { case "+": res = n1+n2; break; case "-": res = n1-n2; break; case "×": res = n1*n2; break; case "÷": res = (n1/n2).toFixed(2); break; }
-        return { titulo: "Ejercicio Aleatorio", descripcion: `${n1} ${op} ${n2} =`, solucion: res.toString() };
-    }
-    mostrarEjercicios();
+// ============ PREMIUM helpers ============
+function esPremiumActivo(p) { return p?.premium_hasta && new Date(p.premium_hasta).getTime() > Date.now(); }
+function diasRestantes(p) {
+    if (!p?.premium_hasta) return 0;
+    const ms = new Date(p.premium_hasta).getTime() - Date.now();
+    return ms > 0 ? Math.ceil(ms / 86400000) : 0;
 }
 
-// ----------------------------------------------------------------
-//  💎 PREMIUM helpers
-// ----------------------------------------------------------------
-function esPremiumActivo(perfil) {
-    if (!perfil?.premium_hasta) return false;
-    return new Date(perfil.premium_hasta).getTime() > Date.now();
-}
-function diasRestantes(perfil) {
-    if (!perfil?.premium_hasta) return 0;
-    const ms = new Date(perfil.premium_hasta).getTime() - Date.now();
-    return ms > 0 ? Math.ceil(ms / (1000*60*60*24)) : 0;
-}
-function formatearFecha(ts) {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit", year:"numeric" });
-}
-function formatearTamano(b) {
-    if (!b) return "";
-    if (b < 1024) return b + " B";
-    if (b < 1024**2) return (b/1024).toFixed(1) + " KB";
-    if (b < 1024**3) return (b/1024**2).toFixed(1) + " MB";
-    return (b/1024**3).toFixed(2) + " GB";
-}
-
-// ----------------------------------------------------------------
-//  🔄 ESTADO: carga/refresco
-// ----------------------------------------------------------------
+// ============ ESTADO ============
 async function refrescarEstado() {
-    if (!MA()?.sb) {
-        appState.perfilActual = null;
-        appState.archivos = [];
-        appState.perfiles = [];
-        return;
-    }
+    if (!MA()?.sb) { appState = { perfilActual:null, archivos:[], archivosPublicos:[], misArchivos:[], perfiles:[] }; return; }
     appState.perfilActual = await MA().sbPerfil();
     appState.archivos     = await MA().sbListarArchivos();
-    if (appState.perfilActual?.rol === "admin") {
-        appState.perfiles = await MA().sbListarPerfiles();
-    } else {
-        appState.perfiles = [];
-    }
+    appState.archivosPublicos = appState.archivos.filter(a => !a.es_personal);
+    appState.misArchivos  = appState.perfilActual
+        ? appState.archivos.filter(a => a.es_personal && a.creado_por === appState.perfilActual.id)
+        : [];
+    if (appState.perfilActual?.rol === "admin") appState.perfiles = await MA().sbListarPerfiles();
+    else appState.perfiles = [];
 }
 
 async function inicializarSistema() {
+    await detectarRecuperacionPassword();
     await refrescarEstado();
     actualizarNavbar();
     renderSeccionVideos();
     renderSeccionPDFs();
     renderSeccionPremium();
+    renderSeccionMisArchivos();
+    renderRankingPublico();
     if (appState.perfilActual) resetSesionTimer();
 
-    // Escuchar cambios de auth (login/logout/refresh)
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
-        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
             await refrescarEstado();
             actualizarNavbar();
-            renderSeccionVideos();
-            renderSeccionPDFs();
-            renderSeccionPremium();
+            renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium();
+            renderSeccionMisArchivos(); renderRankingPublico();
         }
     });
 }
 
-// ----------------------------------------------------------------
-//  🧭 NAVBAR
-// ----------------------------------------------------------------
+// ============ Recuperación de password ============
+async function detectarRecuperacionPassword() {
+    // Si la URL viene de un link de recovery (#access_token=...&type=recovery), abrimos el modal
+    const hash = window.location.hash || "";
+    if (hash.includes("type=recovery")) {
+        // Esperamos a que Supabase detecte la sesión
+        setTimeout(() => {
+            document.getElementById("modal-recovery").style.display = "flex";
+        }, 600);
+    }
+}
+
+async function setearPasswordRecovery() {
+    const p1 = document.getElementById("rec-pass").value;
+    const p2 = document.getElementById("rec-pass2").value;
+    if (p1.length < SEG.PASS_MIN_LENGTH) return mostrarError("rec-error", `Mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
+    if (p1 !== p2) return mostrarError("rec-error", "Las contraseñas no coinciden.");
+    const { error } = await MA().sbSetPasswordEnRecovery(p1);
+    if (error) return mostrarError("rec-error", traducirError(error.message));
+    mostrarToast("✅ Contraseña actualizada. Iniciá sesión con la nueva.", "ok");
+    document.getElementById("modal-recovery").style.display = "none";
+    history.replaceState(null, "", window.location.pathname);
+    await MA().sbLogout();
+}
+
+// ============ NAVBAR ============
 function actualizarNavbar() {
     const p = appState.perfilActual;
     const lbl = document.getElementById("nav-cuenta-label");
     const navAdmin = document.getElementById("nav-admin-link");
     const navSalir = document.getElementById("nav-salir-link");
+    const navPerfil = document.getElementById("nav-perfil-link");
+    const navPuntos = document.getElementById("nav-puntos");
+    const navMisArchivos = document.getElementById("nav-mis-archivos-link");
+
     if (lbl) lbl.textContent = p ? (p.username || "Mi cuenta") : "Ingresar";
-    if (navAdmin) navAdmin.style.display = (p?.rol === "admin") ? "inline" : "none";
-    if (navSalir) navSalir.style.display = p ? "inline" : "none";
+    if (navAdmin)  navAdmin.style.display  = (p?.rol === "admin") ? "inline" : "none";
+    if (navSalir)  navSalir.style.display  = p ? "inline" : "none";
+    if (navPerfil) navPerfil.style.display = p ? "inline" : "none";
+    if (navMisArchivos) navMisArchivos.style.display = p ? "inline" : "none";
+    if (navPuntos) {
+        navPuntos.style.display = p ? "inline-flex" : "none";
+        navPuntos.innerHTML = p ? `⭐ ${p.puntos || 0} · 🔥 ${p.racha || 0}` : "";
+    }
 }
 
-// ----------------------------------------------------------------
-//  🔐 OVERLAYS / FORMULARIOS
-// ----------------------------------------------------------------
+// ============ OVERLAYS / FORMS ============
 function abrirAuth(e) {
     if (e) e.preventDefault();
-    if (appState.perfilActual) {
-        // Si ya está logueado, mostrar info (o redirigir a perfil)
-        mostrarToast(`Ya estás logueado como ${appState.perfilActual.username}`, "info");
-        return;
-    }
+    if (appState.perfilActual) return mostrarToast(`Ya estás logueado como ${appState.perfilActual.username}`, "info");
     document.getElementById("overlay-auth").style.display = "flex";
     mostrarForm("auth-selector");
 }
-
 function abrirAdmin(e) {
     if (e) e.preventDefault();
-    if (appState.perfilActual?.rol !== "admin") {
-        mostrarToast("Solo el administrador puede ver este panel", "warn");
-        return;
-    }
+    if (appState.perfilActual?.rol !== "admin") return mostrarToast("Solo el admin puede ver este panel", "warn");
     document.getElementById("overlay-admin").style.display = "flex";
     adminTab("archivos");
 }
-
-function cerrarOverlaySiClick(e, id) {
-    if (e.target.id === id) document.getElementById(id).style.display = "none";
+function abrirPerfil(e) {
+    if (e) e.preventDefault();
+    if (!appState.perfilActual) return abrirAuth();
+    document.getElementById("perfil-username").value = appState.perfilActual.username || "";
+    document.getElementById("perfil-email-display").textContent = (appState.perfilActual.id ? "ID: " + appState.perfilActual.id.slice(0,8) + "..." : "");
+    document.getElementById("perfil-puntos-display").textContent = `⭐ ${appState.perfilActual.puntos || 0} puntos · 🔥 racha ${appState.perfilActual.racha || 0} días`;
+    document.getElementById("pf-error").textContent = "";
+    document.getElementById("pf-success").textContent = "";
+    document.getElementById("modal-perfil").style.display = "flex";
 }
-
+function abrirMisArchivos(e) {
+    if (e) e.preventDefault();
+    if (!appState.perfilActual) return abrirAuth();
+    renderSeccionMisArchivos();
+    document.getElementById("mis-archivos-section")?.scrollIntoView({ behavior: "smooth" });
+}
+function cerrarOverlaySiClick(e, id) { if (e.target.id === id) document.getElementById(id).style.display = "none"; }
 function mostrarForm(id) {
-    ["auth-selector", "form-login", "form-registro", "form-admin"].forEach(f => {
+    ["auth-selector","form-login","form-registro","form-admin","form-olvide"].forEach(f => {
         const el = document.getElementById(f);
         if (el) el.style.display = (f === id) ? "block" : "none";
     });
-    ["li-error", "re-error", "ad-error", "re-success"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = "";
+    ["li-error","re-error","ad-error","re-success","ol-error","ol-success"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = "";
     });
 }
+function mostrarError(id, msg) { const el = document.getElementById(id); if (el) el.textContent = msg; }
+function mostrarExito(id, msg) { const el = document.getElementById(id); if (el) el.textContent = msg; }
 
-function mostrarError(id, msg) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = msg;
-}
-function mostrarExito(id, msg) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = msg;
-}
-
-// ----------------------------------------------------------------
-//  👤 REGISTRO
-// ----------------------------------------------------------------
+// ============ REGISTRO / LOGIN / LOGOUT ============
 async function usuarioRegistro() {
-    mostrarError("re-error", "");
-    mostrarExito("re-success", "");
-
+    mostrarError("re-error",""); mostrarExito("re-success","");
     const username = sanitizar(document.getElementById("re-user").value);
     const email    = sanitizar(document.getElementById("re-email").value);
     const pass     = document.getElementById("re-pass").value;
     const pass2    = document.getElementById("re-pass2").value;
-
-    if (!validarUsuario(username)) return mostrarError("re-error", "El usuario debe tener 3-40 caracteres alfanuméricos.");
-    if (!validarEmail(email))      return mostrarError("re-error", "Email inválido.");
-    if (pass.length < SEG.PASS_MIN_LENGTH) return mostrarError("re-error", `La contraseña debe tener al menos ${SEG.PASS_MIN_LENGTH} caracteres.`);
-    if (pass !== pass2)            return mostrarError("re-error", "Las contraseñas no coinciden.");
-    if (!MA()?.sb)                 return mostrarError("re-error", "Supabase no está configurado. Avisá al administrador.");
-
+    if (!validarUsuario(username)) return mostrarError("re-error","Usuario 3-40 caracteres alfanuméricos.");
+    if (!validarEmail(email))      return mostrarError("re-error","Email inválido.");
+    if (pass.length < SEG.PASS_MIN_LENGTH) return mostrarError("re-error",`Contraseña mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
+    if (pass !== pass2)            return mostrarError("re-error","Las contraseñas no coinciden.");
+    if (!MA()?.sb)                 return mostrarError("re-error","Supabase no configurado.");
     const { data, error } = await MA().sbRegistro({ email, password: pass, username });
     if (error) return mostrarError("re-error", traducirError(error.message));
-
-    // Según la configuración de Supabase puede pedir confirmación por email
-    if (data?.user && !data?.session) {
-        mostrarExito("re-success", "✅ Cuenta creada. Revisá tu email para confirmar la dirección antes de iniciar sesión.");
-    } else {
-        mostrarExito("re-success", "✅ Cuenta creada e iniciada sesión.");
-        setTimeout(() => document.getElementById("overlay-auth").style.display = "none", 1500);
-    }
-    document.getElementById("re-user").value  = "";
-    document.getElementById("re-email").value = "";
-    document.getElementById("re-pass").value  = "";
-    document.getElementById("re-pass2").value = "";
+    if (data?.user && !data?.session) mostrarExito("re-success","✅ Cuenta creada. Revisá tu email para confirmar.");
+    else { mostrarExito("re-success","✅ Cuenta creada."); setTimeout(()=>document.getElementById("overlay-auth").style.display="none", 1500); }
+    ["re-user","re-email","re-pass","re-pass2"].forEach(id=>document.getElementById(id).value="");
 }
 
-// ----------------------------------------------------------------
-//  🔑 LOGIN (usuario normal)
-// ----------------------------------------------------------------
 async function usuarioLogin() {
-    mostrarError("li-error", "");
+    mostrarError("li-error","");
     const email = sanitizar(document.getElementById("li-user").value);
     const pass  = document.getElementById("li-pass").value;
-
-    if (!validarEmail(email)) return mostrarError("li-error", "Ingresá un email válido.");
-    if (!pass)                return mostrarError("li-error", "Ingresá tu contraseña.");
-    if (!MA()?.sb)            return mostrarError("li-error", "Supabase no está configurado.");
-
+    if (!validarEmail(email)) return mostrarError("li-error","Email inválido.");
+    if (!pass)                return mostrarError("li-error","Ingresá tu contraseña.");
     const { data, error } = await MA().sbLogin({ email, password: pass });
     if (error) return mostrarError("li-error", traducirError(error.message));
-
     mostrarToast(`¡Hola ${data.user.user_metadata?.username || data.user.email}!`, "ok");
     document.getElementById("overlay-auth").style.display = "none";
-    document.getElementById("li-user").value = "";
-    document.getElementById("li-pass").value = "";
+    document.getElementById("li-user").value = ""; document.getElementById("li-pass").value = "";
 }
 
-// ----------------------------------------------------------------
-//  🔐 LOGIN ADMIN — usa el mismo Supabase Auth + check de rol
-// ----------------------------------------------------------------
 async function adminLogin() {
-    mostrarError("ad-error", "");
+    mostrarError("ad-error","");
     const email = sanitizar(document.getElementById("ad-user").value);
     const pass  = document.getElementById("ad-pass").value;
-
-    if (!validarEmail(email)) return mostrarError("ad-error", "Ingresá el email del administrador.");
-    if (!pass)                return mostrarError("ad-error", "Ingresá la contraseña.");
-    if (!MA()?.sb)            return mostrarError("ad-error", "Supabase no está configurado.");
-
+    if (!validarEmail(email)) return mostrarError("ad-error","Email del admin.");
+    if (!pass)                return mostrarError("ad-error","Ingresá la contraseña.");
     const { error } = await MA().sbLogin({ email, password: pass });
     if (error) return mostrarError("ad-error", traducirError(error.message));
-
     await refrescarEstado();
     if (appState.perfilActual?.rol !== "admin") {
         await MA().sbLogout();
-        return mostrarError("ad-error", "Esta cuenta no tiene permisos de administrador.");
+        return mostrarError("ad-error","Esta cuenta no es admin.");
     }
-    mostrarToast("👋 Bienvenido administrador", "ok");
+    mostrarToast("👋 Bienvenido administrador","ok");
     document.getElementById("overlay-auth").style.display = "none";
-    document.getElementById("ad-user").value = "";
-    document.getElementById("ad-pass").value = "";
 }
 
-// ----------------------------------------------------------------
-//  🚪 LOGOUT
-// ----------------------------------------------------------------
 async function cerrarSesion(e) {
     if (e) e.preventDefault();
     clearTimeout(_sesionTimer); clearTimeout(_warnTimer); ocultarWarning();
     if (MA()?.sb) await MA().sbLogout();
     appState.perfilActual = null;
-    actualizarNavbar();
-    renderSeccionPremium();
-    mostrarToast("Sesión cerrada", "info");
+    actualizarNavbar(); renderSeccionPremium(); renderSeccionMisArchivos();
+    mostrarToast("Sesión cerrada","info");
 }
 
-// ----------------------------------------------------------------
-//  🛠️ ADMIN — TABS
-// ----------------------------------------------------------------
+// ============ OLVIDÉ CONTRASEÑA ============
+async function enviarOlvideContrasena() {
+    const email = sanitizar(document.getElementById("ol-email").value);
+    if (!validarEmail(email)) return mostrarError("ol-error","Ingresá un email válido.");
+    const { error } = await MA().sbOlvidePassword(email);
+    if (error) return mostrarError("ol-error", traducirError(error.message));
+    mostrarExito("ol-success","✅ Si el email está registrado, vas a recibir un link en breve.");
+}
+
+// ============ MI PERFIL ============
+async function guardarUsername() {
+    mostrarError("pf-error",""); mostrarExito("pf-success","");
+    const nuevo = sanitizar(document.getElementById("perfil-username").value);
+    if (!validarUsuario(nuevo)) return mostrarError("pf-error","Usuario 3-40 caracteres alfanuméricos.");
+    const { error } = await MA().sbCambiarUsername(nuevo);
+    if (error) return mostrarError("pf-error", error.message);
+    appState.perfilActual.username = nuevo;
+    actualizarNavbar();
+    mostrarExito("pf-success","✅ Nombre de usuario actualizado.");
+}
+
+async function cambiarMiPassword() {
+    mostrarError("pf-error",""); mostrarExito("pf-success","");
+    const actual = document.getElementById("perfil-pass-actual").value;
+    const nueva  = document.getElementById("perfil-pass-nueva").value;
+    const nueva2 = document.getElementById("perfil-pass-nueva2").value;
+    if (!actual) return mostrarError("pf-error","Ingresá tu contraseña actual.");
+    if (nueva.length < SEG.PASS_MIN_LENGTH) return mostrarError("pf-error",`Nueva contraseña mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
+    if (nueva !== nueva2) return mostrarError("pf-error","Las contraseñas nuevas no coinciden.");
+    const { error } = await MA().sbCambiarPassword(actual, nueva);
+    if (error) return mostrarError("pf-error", error.message);
+    ["perfil-pass-actual","perfil-pass-nueva","perfil-pass-nueva2"].forEach(id=>document.getElementById(id).value="");
+    mostrarExito("pf-success","✅ Contraseña cambiada exitosamente.");
+}
+
+// ============ ADMIN ============
 function adminTab(tab) {
-    ["archivos", "usuarios", "subir"].forEach(t => {
-        const el = document.getElementById("admin-tab-" + t);
-        if (el) el.style.display = (t === tab) ? "block" : "none";
+    ["archivos","usuarios","subir","ejercicios"].forEach(t => {
+        const el = document.getElementById("admin-tab-"+t);
+        if (el) el.style.display = (t===tab) ? "block" : "none";
     });
     document.querySelectorAll(".admin-tab").forEach(b => b.classList.remove("active"));
     const btn = [...document.querySelectorAll(".admin-tab")].find(b => b.textContent.toLowerCase().includes(tab));
     if (btn) btn.classList.add("active");
-    if (tab === "archivos") renderAdminArchivos();
-    if (tab === "usuarios") renderAdminUsuarios();
+    if (tab==="archivos") renderAdminArchivos();
+    if (tab==="usuarios") renderAdminUsuarios();
+    if (tab==="ejercicios") renderAdminEjercicios();
 }
 
-// ----------------------------------------------------------------
-//  📁 ADMIN — LISTA DE ARCHIVOS
-// ----------------------------------------------------------------
 async function renderAdminArchivos() {
-    const grid = document.getElementById("admin-archivos-grid");
-    if (!grid) return;
+    const grid = document.getElementById("admin-archivos-grid"); if (!grid) return;
     grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b">Cargando...</p>`;
     appState.archivos = await MA().sbListarArchivos();
     const fSec = document.getElementById("filtro-seccion")?.value || "";
     const fMat = document.getElementById("filtro-materia")?.value || "";
-    const lista = appState.archivos.filter(a =>
-        (!fSec || a.seccion === fSec) && (!fMat || a.materia === fMat)
-    );
-    if (!lista.length) {
-        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px">No hay archivos para mostrar.</p>`;
-        return;
-    }
+    const lista = appState.archivos.filter(a => (!fSec || a.seccion===fSec) && (!fMat || a.materia===fMat));
+    if (!lista.length) { grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px">No hay archivos.</p>`; return; }
     grid.innerHTML = lista.map(a => `
         <div class="admin-card">
             <div class="admin-card-mini">${miniPreview(a)}</div>
             <div class="admin-card-body">
                 <span class="seccion-tag seccion-${a.seccion}">${etiquetaSeccion(a.seccion)}</span>
-                <span class="materia-tag">${esc(MATERIAS[a.materia] || a.materia)}</span>
+                <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
+                ${a.es_personal ? '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">PERSONAL</span>' : ""}
                 <h4>${esc(a.titulo)}</h4>
                 ${a.descripcion ? `<p>${esc(a.descripcion)}</p>` : ""}
                 <p style="font-size:11px;color:#94a3b8">${formatearFecha(a.creado_en)} · ${formatearTamano(a.tamano_bytes)}</p>
                 <div class="admin-card-actions">
                     <button type="button" onclick="verContenido('${a.id}')">👁 Ver</button>
                     <button type="button" onclick="abrirEdicion('${a.id}')">✏ Editar</button>
-                    <button type="button" onclick="eliminarArchivo('${a.id}')" class="btn-rojo">🗑 Borrar</button>
+                    <button type="button" onclick="eliminarArchivo('${a.id}')" class="btn-rojo">🗑</button>
                 </div>
             </div>
-        </div>
-    `).join("");
+        </div>`).join("");
 }
 
-function etiquetaSeccion(s) {
-    return ({video:"🎬 Video", pdf:"📄 PDF", premium:"⭐ Premium", imagen:"🖼 Imagen", texto:"📝 Texto"})[s] || s;
-}
-
+function etiquetaSeccion(s){ return ({video:"🎬 Video",pdf:"📄 PDF",premium:"⭐ Premium",imagen:"🖼 Imagen",texto:"📝 Texto"})[s]||s; }
 function miniPreview(a) {
     if (a.miniatura) return `<img src="${a.miniatura}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px">`;
-    const icono = ({video:"🎬", pdf:"📄", premium:"⭐", imagen:"🖼", texto:"📝"})[a.seccion] || "📦";
-    return `<div style="display:flex;align-items:center;justify-content:center;height:120px;background:#f1f5f9;border-radius:8px;font-size:48px">${icono}</div>`;
+    const i = ({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion] || "📦";
+    return `<div style="display:flex;align-items:center;justify-content:center;height:120px;background:#f1f5f9;border-radius:8px;font-size:48px">${i}</div>`;
 }
 
-// ----------------------------------------------------------------
-//  👥 ADMIN — LISTA DE USUARIOS
-// ----------------------------------------------------------------
 async function renderAdminUsuarios() {
-    const cont = document.getElementById("admin-usuarios-lista");
-    if (!cont) return;
+    const cont = document.getElementById("admin-usuarios-lista"); if (!cont) return;
     cont.innerHTML = `<p style="text-align:center;color:#64748b">Cargando...</p>`;
     appState.perfiles = await MA().sbListarPerfiles();
-    if (!appState.perfiles.length) {
-        cont.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">Aún no hay usuarios registrados.</p>`;
-        return;
-    }
+    if (!appState.perfiles.length) { cont.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">No hay usuarios.</p>`; return; }
     cont.innerHTML = appState.perfiles.map(p => {
         const premium = esPremiumActivo(p);
-        const dias    = diasRestantes(p);
-        return `
-        <div class="usuario-card">
+        const dias = diasRestantes(p);
+        return `<div class="usuario-card">
             <div class="usuario-info">
-                <h4>👤 ${esc(p.username || "(sin username)")} ${p.rol === "admin" ? '<span style="background:#7c3aed;color:white;padding:2px 8px;border-radius:99px;font-size:11px">ADMIN</span>' : ""}</h4>
-                <p style="font-size:12px;color:#64748b">Creado: ${formatearFecha(p.creado_en)} · Último login: ${formatearFecha(p.ultimo_login)}</p>
-                <p style="font-size:13px">${premium ? `⭐ Premium activo · ${dias} días restantes (hasta ${formatearFecha(p.premium_hasta)})` : "🆓 Plan gratis"}</p>
+                <h4>👤 ${esc(p.username||"(sin username)")} ${p.rol==="admin"?'<span style="background:#7c3aed;color:white;padding:2px 8px;border-radius:99px;font-size:11px">ADMIN</span>':""}</h4>
+                <p style="font-size:12px;color:#64748b">Creado: ${formatearFecha(p.creado_en)} · ⭐ ${p.puntos||0} pts · 🔥 racha ${p.racha||0}</p>
+                <p style="font-size:13px">${premium ? `⭐ Premium · ${dias} días (hasta ${formatearFecha(p.premium_hasta)})` : "🆓 Plan gratis"}</p>
             </div>
             <div class="usuario-actions">
                 ${premium
                     ? `<button type="button" onclick="renovarSuscripcion('${p.id}')">🔁 Renovar +30d</button>
                        <button type="button" onclick="desactivarSuscripcion('${p.id}')" class="btn-rojo">❌ Desactivar</button>`
                     : `<button type="button" onclick="activarSuscripcion('${p.id}')">⭐ Activar Premium</button>`}
+                <button type="button" onclick="adminResetPassword('${p.id}')">🔑 Reset password</button>
+                <button type="button" onclick="adminAsignarPasswordTemp('${p.id}', '${esc(p.username)}')">🎟️ Asignar temporal</button>
                 ${p.rol !== "admin" ? `<button type="button" onclick="eliminarUsuario('${p.id}', '${esc(p.username)}')" class="btn-rojo">🗑 Eliminar</button>` : ""}
             </div>
         </div>`;
     }).join("");
 }
 
-// ----------------------------------------------------------------
-//  ⬆️ ADMIN — SUBIR CONTENIDO
-// ----------------------------------------------------------------
+async function adminResetPassword(usuarioId) {
+    const p = appState.perfiles.find(x => x.id === usuarioId); if (!p) return;
+    const email = prompt(`Vamos a mandar un email de reset a "${p.username}".\nIngresá su email (lo encontrás en Supabase Dashboard → Authentication → Users):`);
+    if (!email) return;
+    const { error } = await MA().sbOlvidePassword(sanitizar(email));
+    if (error) return mostrarToast("Error: " + error.message, "error");
+    mostrarToast("✅ Email de reset enviado", "ok");
+}
+
+async function adminAsignarPasswordTemp(usuarioId, nombre) {
+    mostrarToast(`Para asignar una contraseña temporal al usuario "${nombre}" abrí Supabase Dashboard → Authentication → Users → click en el usuario → "Reset password". Esa opción te permite setear una password directamente.`, "info");
+    // Razón: cambiar password de OTRO usuario requiere service_role key (admin API),
+    // que no está disponible en el front-end por seguridad.
+    setTimeout(() => {
+        window.open(`https://supabase.com/dashboard/project/yidrpuizgtqpswefwdaa/auth/users`, "_blank");
+    }, 600);
+}
+
+// ============ SUBIR CONTENIDO ============
 function actualizarCampoArchivo() {
     const tipo = document.getElementById("su-tipo").value;
-    document.getElementById("su-archivo-wrap").style.display = tipo === "archivo" ? "block" : "none";
-    document.getElementById("su-texto-wrap").style.display   = tipo === "texto"   ? "block" : "none";
-    document.getElementById("su-url-wrap").style.display     = tipo === "url-video" ? "block" : "none";
+    document.getElementById("su-archivo-wrap").style.display = tipo==="archivo" ? "block" : "none";
+    document.getElementById("su-texto-wrap").style.display   = tipo==="texto" ? "block" : "none";
+    document.getElementById("su-url-wrap").style.display     = tipo==="url-video" ? "block" : "none";
 }
 
 async function subirContenido() {
-    mostrarError("su-error", ""); mostrarExito("su-success", "");
-    if (appState.perfilActual?.rol !== "admin") return mostrarError("su-error", "Solo el admin puede subir contenido.");
+    mostrarError("su-error",""); mostrarExito("su-success","");
+    if (appState.perfilActual?.rol !== "admin") return mostrarError("su-error","Solo el admin.");
+    await _subirArchivoComun({
+        prefixIds: { titulo:"su-titulo", desc:"su-desc", tipo:"su-tipo", texto:"su-texto", url:"su-url", archivo:"su-archivo",
+                     materia:"su-materia", seccion:"su-seccion", error:"su-error", success:"su-success", progress:"su-progress", progressFill:"su-progress-fill" },
+        esPersonal: false,
+    });
+    renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium(); renderAdminArchivos();
+}
 
-    const titulo  = sanitizar(document.getElementById("su-titulo").value);
-    const materia = document.getElementById("su-materia").value;
-    const seccion = document.getElementById("su-seccion").value;
-    const tipo    = document.getElementById("su-tipo").value;
-    const desc    = sanitizar(document.getElementById("su-desc").value);
+async function subirMiArchivo() {
+    mostrarError("mu-error",""); mostrarExito("mu-success","");
+    if (!appState.perfilActual) return mostrarError("mu-error","Necesitás iniciar sesión.");
+    await _subirArchivoComun({
+        prefixIds: { titulo:"mu-titulo", desc:"mu-desc", tipo:"mu-tipo", texto:"mu-texto", url:"mu-url", archivo:"mu-archivo",
+                     materia:"mu-materia", seccion:"mu-seccion", error:"mu-error", success:"mu-success", progress:"mu-progress", progressFill:"mu-progress-fill" },
+        esPersonal: true,
+    });
+    renderSeccionMisArchivos();
+}
 
-    if (!titulo) return mostrarError("su-error", "Ingresá un título.");
-
-    let meta = { titulo, descripcion: desc, materia, seccion, tipo, creado_por: appState.perfilActual.id };
-
+async function _subirArchivoComun({ prefixIds, esPersonal }) {
+    const get = id => document.getElementById(id);
+    const titulo = sanitizar(get(prefixIds.titulo).value);
+    const desc   = sanitizar(get(prefixIds.desc).value);
+    const tipo   = get(prefixIds.tipo).value;
+    const materia = get(prefixIds.materia)?.value || "general";
+    const seccion = get(prefixIds.seccion)?.value || "pdf";
+    if (!titulo) return mostrarError(prefixIds.error, "Ingresá un título.");
+    let meta = { titulo, descripcion:desc, materia, seccion, tipo, creado_por: appState.perfilActual.id, es_personal: esPersonal };
     if (tipo === "texto") {
-        const texto = document.getElementById("su-texto").value.trim();
-        if (!texto) return mostrarError("su-error", "Ingresá el contenido.");
-        meta.contenido_texto = texto;
+        const t = get(prefixIds.texto).value.trim();
+        if (!t) return mostrarError(prefixIds.error,"Ingresá el contenido.");
+        meta.contenido_texto = t;
     } else if (tipo === "url-video") {
-        const url = document.getElementById("su-url").value.trim();
-        if (!url) return mostrarError("su-error", "Ingresá la URL del video.");
-        meta.url_video = url;
-    } else if (tipo === "archivo") {
-        const file = document.getElementById("su-archivo").files[0];
-        if (!file) return mostrarError("su-error", "Seleccioná un archivo.");
-        if (file.size > MAX_FILE_SIZE) return mostrarError("su-error", `Archivo muy grande. Máx ${formatearTamano(MAX_FILE_SIZE)}.`);
-
-        document.getElementById("su-progress").style.display = "block";
-        const fill = document.getElementById("su-progress-fill");
-        if (fill) fill.style.width = "30%";
-
-        // Subir a Storage con nombre único
+        const u = get(prefixIds.url).value.trim();
+        if (!u) return mostrarError(prefixIds.error,"Ingresá la URL.");
+        meta.url_video = u;
+    } else {
+        const file = get(prefixIds.archivo).files[0];
+        if (!file) return mostrarError(prefixIds.error,"Seleccioná un archivo.");
+        if (file.size > MAX_FILE_SIZE) return mostrarError(prefixIds.error,`Máx ${formatearTamano(MAX_FILE_SIZE)}.`);
+        get(prefixIds.progress).style.display = "block";
+        const fill = get(prefixIds.progressFill); if (fill) fill.style.width = "30%";
         const ext  = file.name.split(".").pop().toLowerCase();
-        const path = `${materia}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-        const { error: errUp } = await MA().sbSubirBlob(path, file, file.type);
-        if (errUp) {
-            document.getElementById("su-progress").style.display = "none";
-            return mostrarError("su-error", "Error al subir: " + errUp.message);
-        }
+        const carpeta = esPersonal ? `personales/${appState.perfilActual.id}` : materia;
+        const path = `${carpeta}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+        const { error: eUp } = await MA().sbSubirBlob(path, file, file.type);
+        if (eUp) { get(prefixIds.progress).style.display="none"; return mostrarError(prefixIds.error,"Error: "+eUp.message); }
         if (fill) fill.style.width = "70%";
-
         meta.storage_path  = path;
         meta.nombre_archivo = file.name;
         meta.mime_type     = file.type;
         meta.tamano_bytes  = file.size;
-
-        // Miniatura para imágenes
-        if (file.type.startsWith("image/")) {
-            meta.miniatura = await generarMiniaturaDesdeBlob(file);
-        }
+        if (file.type.startsWith("image/")) meta.miniatura = await generarMiniaturaDesdeBlob(file);
     }
-
     const { error } = await MA().sbCrearArchivo(meta);
-    document.getElementById("su-progress").style.display = "none";
-    if (error) return mostrarError("su-error", "Error al guardar: " + error.message);
-
-    mostrarExito("su-success", "✅ Contenido publicado correctamente.");
-    document.getElementById("su-titulo").value = "";
-    document.getElementById("su-desc").value   = "";
-    document.getElementById("su-texto").value  = "";
-    document.getElementById("su-url").value    = "";
-    document.getElementById("su-archivo").value = "";
-    setTimeout(() => mostrarExito("su-success", ""), 3000);
-    renderAdminArchivos();
-    renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium();
+    get(prefixIds.progress).style.display = "none";
+    if (error) return mostrarError(prefixIds.error,"Error: "+error.message);
+    mostrarExito(prefixIds.success,"✅ Publicado.");
+    [prefixIds.titulo, prefixIds.desc, prefixIds.texto, prefixIds.url, prefixIds.archivo].forEach(id => { if (get(id)) get(id).value=""; });
+    await refrescarEstado();
+    setTimeout(() => mostrarExito(prefixIds.success,""), 3000);
 }
 
-function generarMiniaturaDesdeBlob(blob, maxW = 340) {
+function generarMiniaturaDesdeBlob(blob, maxW=340) {
     return new Promise(resolve => {
         const img = new Image(), url = URL.createObjectURL(blob);
         img.onload = () => {
-            const r = Math.min(maxW / img.width, 1);
+            const r = Math.min(maxW/img.width, 1);
             const c = document.createElement("canvas");
-            c.width  = Math.round(img.width * r);
-            c.height = Math.round(img.height * r);
+            c.width=Math.round(img.width*r); c.height=Math.round(img.height*r);
             c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
             URL.revokeObjectURL(url);
             resolve(c.toDataURL("image/jpeg", 0.75));
@@ -623,114 +500,107 @@ function generarMiniaturaDesdeBlob(blob, maxW = 340) {
     });
 }
 
-// ----------------------------------------------------------------
-//  ✏️ EDITAR archivo
-// ----------------------------------------------------------------
+// ============ EDITAR / BORRAR ============
 function abrirEdicion(id) {
-    const a = appState.archivos.find(x => x.id === id);
-    if (!a) return;
-    document.getElementById("ed-id").value      = a.id;
-    document.getElementById("ed-titulo").value  = a.titulo || "";
-    document.getElementById("ed-desc").value    = a.descripcion || "";
-    document.getElementById("ed-materia").value = a.materia || "general";
-    document.getElementById("ed-seccion").value = a.seccion || "video";
-    const wrapT = document.getElementById("ed-texto-wrap");
-    if (a.tipo === "texto") { wrapT.style.display = "block"; document.getElementById("ed-texto").value = a.contenido_texto || ""; }
-    else { wrapT.style.display = "none"; }
-    document.getElementById("modal-editar").style.display = "flex";
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
+    document.getElementById("ed-id").value=a.id;
+    document.getElementById("ed-titulo").value=a.titulo||"";
+    document.getElementById("ed-desc").value=a.descripcion||"";
+    document.getElementById("ed-materia").value=a.materia||"general";
+    document.getElementById("ed-seccion").value=a.seccion||"video";
+    const w = document.getElementById("ed-texto-wrap");
+    if (a.tipo==="texto") { w.style.display="block"; document.getElementById("ed-texto").value=a.contenido_texto||""; }
+    else w.style.display="none";
+    document.getElementById("modal-editar").style.display="flex";
 }
-
 async function guardarEdicion() {
-    const id     = document.getElementById("ed-id").value;
-    const titulo = sanitizar(document.getElementById("ed-titulo").value);
-    const desc   = sanitizar(document.getElementById("ed-desc").value);
-    const materia = document.getElementById("ed-materia").value;
-    const seccion = document.getElementById("ed-seccion").value;
-    const cambios = { titulo, descripcion: desc, materia, seccion };
-    const a = appState.archivos.find(x => x.id === id);
-    if (a?.tipo === "texto") cambios.contenido_texto = document.getElementById("ed-texto").value;
+    const id = document.getElementById("ed-id").value;
+    const cambios = {
+        titulo: sanitizar(document.getElementById("ed-titulo").value),
+        descripcion: sanitizar(document.getElementById("ed-desc").value),
+        materia: document.getElementById("ed-materia").value,
+        seccion: document.getElementById("ed-seccion").value,
+    };
+    const a = appState.archivos.find(x => x.id===id);
+    if (a?.tipo==="texto") cambios.contenido_texto = document.getElementById("ed-texto").value;
     const { error } = await MA().sbActualizarArchivo(id, cambios);
     if (error) return mostrarError("ed-error", error.message);
-    document.getElementById("modal-editar").style.display = "none";
-    mostrarToast("✅ Cambios guardados", "ok");
+    document.getElementById("modal-editar").style.display="none";
+    mostrarToast("✅ Guardado","ok");
+    await refrescarEstado();
     renderAdminArchivos(); renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium();
 }
-
-// ----------------------------------------------------------------
-//  🗑 BORRAR archivo / usuario
-// ----------------------------------------------------------------
 async function eliminarArchivo(id) {
-    const a = appState.archivos.find(x => x.id === id);
-    if (!a) return;
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
     if (!confirm(`¿Borrar "${a.titulo}"?`)) return;
     const { error } = await MA().sbBorrarArchivo(id, a.storage_path);
-    if (error) return mostrarToast("Error al borrar: " + error.message, "error");
-    mostrarToast("🗑 Archivo borrado", "ok");
-    renderAdminArchivos(); renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium();
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    mostrarToast("🗑 Borrado","ok");
+    await refrescarEstado();
+    renderAdminArchivos(); renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium(); renderSeccionMisArchivos();
 }
-
 async function eliminarUsuario(usuarioId, nombre) {
-    if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nNOTA: esto borra su perfil pero la cuenta de Auth queda en Supabase (debés borrarla desde el Dashboard si querés liberar el email).`)) return;
+    if (!confirm(`¿Eliminar a "${nombre}"?\nNota: borra el perfil pero la cuenta de Auth queda en Supabase.`)) return;
     const { error } = await MA().sb.from("perfiles").delete().eq("id", usuarioId);
-    if (error) return mostrarToast("Error: " + error.message, "error");
-    mostrarToast("🗑 Perfil eliminado", "ok");
-    renderAdminUsuarios();
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    mostrarToast("🗑 Eliminado","ok"); renderAdminUsuarios();
 }
 
-// ----------------------------------------------------------------
-//  💎 PREMIUM (acciones admin)
-// ----------------------------------------------------------------
-async function activarSuscripcion(usuarioId) {
-    const { error } = await MA().sbActivarPremium(usuarioId, DURACION_DIAS, "activacion");
-    if (error) return mostrarToast("Error: " + (error.message || error), "error");
-    mostrarToast(`⭐ Premium activado (+${DURACION_DIAS} días)`, "ok");
-    renderAdminUsuarios();
+// ============ PREMIUM (acciones) ============
+async function activarSuscripcion(uid) {
+    const { error } = await MA().sbActivarPremium(uid, DURACION_DIAS, "activacion");
+    if (error) return mostrarToast("Error: "+(error.message||error),"error");
+    mostrarToast(`⭐ Premium +${DURACION_DIAS}d`,"ok"); renderAdminUsuarios();
 }
-async function renovarSuscripcion(usuarioId) {
-    const { error } = await MA().sbActivarPremium(usuarioId, DURACION_DIAS, "renovacion");
-    if (error) return mostrarToast("Error: " + (error.message || error), "error");
-    mostrarToast(`🔁 Premium renovado (+${DURACION_DIAS} días)`, "ok");
-    renderAdminUsuarios();
+async function renovarSuscripcion(uid) {
+    const { error } = await MA().sbActivarPremium(uid, DURACION_DIAS, "renovacion");
+    if (error) return mostrarToast("Error: "+(error.message||error),"error");
+    mostrarToast(`🔁 Renovado +${DURACION_DIAS}d`,"ok"); renderAdminUsuarios();
 }
-async function desactivarSuscripcion(usuarioId) {
-    if (!confirm("¿Desactivar el premium de este usuario?")) return;
-    const { error } = await MA().sbDesactivarPremium(usuarioId);
-    if (error) return mostrarToast("Error: " + (error.message || error), "error");
-    mostrarToast("❌ Premium desactivado", "ok");
-    renderAdminUsuarios();
+async function desactivarSuscripcion(uid) {
+    if (!confirm("¿Desactivar premium?")) return;
+    const { error } = await MA().sbDesactivarPremium(uid);
+    if (error) return mostrarToast("Error: "+(error.message||error),"error");
+    mostrarToast("❌ Desactivado","ok"); renderAdminUsuarios();
 }
 
-// ----------------------------------------------------------------
-//  👁 VISOR de contenido
-// ----------------------------------------------------------------
+// ============ VISOR ============
 async function verContenido(id) {
-    const a = appState.archivos.find(x => x.id === id);
-    if (!a) return;
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
     document.getElementById("visor-titulo").textContent = a.titulo;
     const body = document.getElementById("visor-cuerpo");
     body.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">Cargando...</p>`;
     document.getElementById("modal-visor").style.display = "flex";
-
+    let contenidoHtml = "";
     if (a.tipo === "texto") {
-        body.innerHTML = `<div style="white-space:pre-wrap;line-height:1.6;padding:1rem">${esc(a.contenido_texto || "")}</div>`;
-        return;
-    }
-    if (a.tipo === "url-video") {
-        const embed = parseEmbedUrl(a.url_video);
-        body.innerHTML = embed
-            ? `<div style="position:relative;padding-top:56.25%"><iframe src="${embed}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
+        contenidoHtml = `<div style="white-space:pre-wrap;line-height:1.6;padding:1rem">${esc(a.contenido_texto||"")}</div>`;
+    } else if (a.tipo === "url-video") {
+        const em = parseEmbedUrl(a.url_video);
+        contenidoHtml = em
+            ? `<div style="position:relative;padding-top:56.25%"><iframe src="${em}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
             : `<p style="text-align:center"><a href="${esc(a.url_video)}" target="_blank" rel="noopener">Abrir video</a></p>`;
-        return;
+    } else if (a.storage_path) {
+        const url = await MA().sbUrlFirmada(a.storage_path, 3600);
+        if (!url) contenidoHtml = `<p style="text-align:center;color:#dc2626;padding:40px">No se pudo obtener el archivo.</p>`;
+        else {
+            const mt = a.mime_type || "";
+            if (mt.startsWith("image/")) contenidoHtml = `<img src="${url}" alt="${esc(a.titulo)}" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px">`;
+            else if (mt.startsWith("video/")) contenidoHtml = `<video src="${url}" controls style="width:100%;border-radius:8px"></video>`;
+            else if (mt === "application/pdf") contenidoHtml = `<iframe src="${url}" style="width:100%;height:70vh;border:0;border-radius:8px"></iframe>`;
+            else contenidoHtml = `<p style="text-align:center;padding:20px"><a href="${url}" download="${esc(a.nombre_archivo||a.titulo)}" class="btn-pago-mp" style="display:inline-block">⬇ Descargar ${esc(a.nombre_archivo||a.titulo)}</a></p>`;
+        }
+    } else {
+        contenidoHtml = `<p style="text-align:center;color:#dc2626;padding:40px">Archivo no disponible.</p>`;
     }
-    // tipo archivo
-    if (!a.storage_path) { body.innerHTML = `<p style="text-align:center;color:#dc2626;padding:40px">Archivo no disponible.</p>`; return; }
-    const url = await MA().sbUrlFirmada(a.storage_path, 3600);
-    if (!url) { body.innerHTML = `<p style="text-align:center;color:#dc2626;padding:40px">No se pudo obtener el archivo.</p>`; return; }
-    const mt = a.mime_type || "";
-    if (mt.startsWith("image/"))   body.innerHTML = `<img src="${url}" alt="${esc(a.titulo)}" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px">`;
-    else if (mt.startsWith("video/")) body.innerHTML = `<video src="${url}" controls style="width:100%;border-radius:8px"></video>`;
-    else if (mt === "application/pdf") body.innerHTML = `<iframe src="${url}" style="width:100%;height:70vh;border:0;border-radius:8px"></iframe>`;
-    else body.innerHTML = `<p style="text-align:center;padding:20px"><a href="${url}" download="${esc(a.nombre_archivo || a.titulo)}" class="btn-pago-mp" style="display:inline-block">⬇ Descargar ${esc(a.nombre_archivo || a.titulo)}</a></p>`;
+    // Sumar puntos por ver contenido (1 punto por archivo, una vez)
+    if (appState.perfilActual && !appState.perfilActual.vistos?.includes(id)) {
+        await MA().sbSumarPuntos(2);
+        await MA().sbAgregarVisto(id);
+        await refrescarEstado(); actualizarNavbar();
+    }
+    // Renderizar visor + sección de comentarios
+    body.innerHTML = contenidoHtml + `<div id="visor-comentarios" style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:16px"></div>`;
+    renderComentarios(id);
 }
 
 function parseEmbedUrl(url) {
@@ -742,151 +612,211 @@ function parseEmbedUrl(url) {
     return null;
 }
 
-// ----------------------------------------------------------------
-//  👁 USUARIO ve archivo (consume cuota gratis o premium)
-// ----------------------------------------------------------------
+// ============ COMENTARIOS ============
+async function renderComentarios(archivoId) {
+    const cont = document.getElementById("visor-comentarios"); if (!cont) return;
+    const lista = await MA().sbListarComentarios(archivoId);
+    const formHtml = appState.perfilActual
+        ? `<div style="display:flex;gap:8px;margin-top:12px">
+                <input type="text" id="com-texto" placeholder="Escribí un comentario..." maxlength="1000" style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                <button type="button" onclick="enviarComentario('${archivoId}')" style="padding:8px 16px;background:#2563eb;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">Enviar</button>
+            </div>`
+        : `<p style="font-size:13px;color:#64748b;text-align:center;margin-top:12px"><a href="#" onclick="abrirAuth(event)" style="color:#2563eb">Iniciá sesión</a> para comentar.</p>`;
+    cont.innerHTML = `
+        <h4 style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 12px">💬 Comentarios (${lista.length})</h4>
+        <div id="lista-coms" style="max-height:280px;overflow-y:auto">
+            ${lista.length
+                ? lista.map(c => `<div style="padding:10px 0;border-bottom:1px solid #f1f5f9">
+                    <p style="font-size:13px;margin:0 0 4px"><strong style="color:#2563eb">${esc(c.perfiles?.username||"Usuario")}</strong> ${c.perfiles?.rol==="admin"?'<span style="background:#7c3aed;color:white;padding:1px 6px;border-radius:99px;font-size:10px">ADMIN</span>':""} <span style="font-size:11px;color:#94a3b8">· ${formatearFechaHora(c.creado_en)}</span></p>
+                    <p style="font-size:14px;margin:0;line-height:1.4">${esc(c.texto)}</p>
+                    ${(appState.perfilActual && (c.usuario_id===appState.perfilActual.id || appState.perfilActual.rol==="admin"))
+                        ? `<button type="button" onclick="borrarComentario('${c.id}','${archivoId}')" style="background:none;border:none;color:#dc2626;font-size:11px;cursor:pointer;padding:0;margin-top:4px">🗑 Borrar</button>` : ""}
+                </div>`).join("")
+                : `<p style="font-size:13px;color:#94a3b8;text-align:center;padding:12px">Aún no hay comentarios.</p>`}
+        </div>
+        ${formHtml}`;
+}
+async function enviarComentario(archivoId) {
+    const inp = document.getElementById("com-texto"); if (!inp) return;
+    const texto = inp.value.trim();
+    if (!texto) return;
+    const { error } = await MA().sbCrearComentario(archivoId, texto);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    inp.value = "";
+    await MA().sbSumarPuntos(1);
+    await refrescarEstado(); actualizarNavbar();
+    renderComentarios(archivoId);
+}
+async function borrarComentario(id, archivoId) {
+    if (!confirm("¿Borrar este comentario?")) return;
+    const { error } = await MA().sbBorrarComentario(id);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    renderComentarios(archivoId);
+}
+
+// ============ USUARIO VE ARCHIVO (cuota premium) ============
 async function usuarioVerArchivo(id) {
     if (!appState.perfilActual) { abrirAuth(); return; }
-    const a = appState.archivos.find(x => x.id === id);
-    if (!a) return;
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
     if (a.seccion === "premium") {
         if (esPremiumActivo(appState.perfilActual)) return verContenido(id);
         const vistos = appState.perfilActual.vistos || [];
         if (vistos.includes(id)) return verContenido(id);
         if (vistos.length >= MAX_ARCHIVOS_GRATIS) return abrirModalPago();
-        const r = await MA().sbAgregarVisto(id);
-        if (r) appState.perfilActual = r;
         return verContenido(id);
     }
     return verContenido(id);
 }
+function abrirModalPago() { document.getElementById("modal-pago").style.display = "flex"; }
 
-function abrirModalPago() {
-    document.getElementById("modal-pago").style.display = "flex";
-}
-
-// ----------------------------------------------------------------
-//  📺 RENDER PÚBLICO: videos, pdfs, premium
-// ----------------------------------------------------------------
+// ============ RENDER PÚBLICO ============
 function tarjetaPublica(a, esPremium) {
-    const tipoIcon = ({video:"🎬", pdf:"📄", premium:"⭐", imagen:"🖼", texto:"📝"})[a.seccion] || "📦";
-    return `
-        <article class="contenido-card" onclick="${esPremium ? `usuarioVerArchivo('${a.id}')` : `verContenido('${a.id}')`}">
-            <div class="contenido-thumb">${a.miniatura ? `<img src="${a.miniatura}" alt="">` : `<span style="font-size:64px">${tipoIcon}</span>`}</div>
-            <div class="contenido-body">
-                <span class="materia-tag">${esc(MATERIAS[a.materia] || a.materia)}</span>
-                <h4>${esc(a.titulo)}</h4>
-                ${a.descripcion ? `<p>${esc(a.descripcion)}</p>` : ""}
-            </div>
-        </article>`;
+    const ic = ({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion] || "📦";
+    return `<article class="contenido-card" onclick="${esPremium?`usuarioVerArchivo('${a.id}')`:`verContenido('${a.id}')`}">
+        <div class="contenido-thumb">${a.miniatura?`<img src="${a.miniatura}" alt="">`:`<span style="font-size:64px">${ic}</span>`}</div>
+        <div class="contenido-body">
+            <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
+            <h4>${esc(a.titulo)}</h4>
+            ${a.descripcion?`<p>${esc(a.descripcion)}</p>`:""}
+        </div>
+    </article>`;
 }
-
 function renderSeccionVideos() {
-    const g = document.getElementById("videos-grid");
-    if (!g) return;
-    const videos = appState.archivos.filter(a => a.seccion === "video" || a.tipo === "url-video");
-    g.innerHTML = videos.length
-        ? videos.map(a => tarjetaPublica(a, false)).join("")
-        : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay videos publicados.</p>`;
+    const g = document.getElementById("videos-grid"); if (!g) return;
+    const v = appState.archivosPublicos.filter(a => a.seccion==="video" || a.tipo==="url-video");
+    g.innerHTML = v.length ? v.map(a => tarjetaPublica(a, false)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay videos.</p>`;
 }
-
 function renderSeccionPDFs() {
-    const g = document.getElementById("pdfs-grid");
-    if (!g) return;
-    const pdfs = appState.archivos.filter(a => a.seccion === "pdf");
-    g.innerHTML = pdfs.length
-        ? pdfs.map(a => tarjetaPublica(a, false)).join("")
-        : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay PDFs publicados.</p>`;
+    const g = document.getElementById("pdfs-grid"); if (!g) return;
+    const p = appState.archivosPublicos.filter(a => a.seccion==="pdf");
+    g.innerHTML = p.length ? p.map(a => tarjetaPublica(a, false)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay PDFs.</p>`;
 }
-
 function renderSeccionPremium() {
-    const info = document.getElementById("suscripcion-info");
-    const cont = document.getElementById("suscripcion-contenido");
-    const cuota = document.getElementById("premium-cuota-info");
-    const grid  = document.getElementById("premium-grid");
+    const info = document.getElementById("suscripcion-info"); const cont = document.getElementById("suscripcion-contenido");
+    const cuota = document.getElementById("premium-cuota-info"); const grid = document.getElementById("premium-grid");
     if (!info || !cont) return;
-
     const p = appState.perfilActual;
     if (!p) {
-        info.innerHTML = `
-            <div class="premium-cta">
-                <h3>Accedé al contenido premium</h3>
-                <p>Creá una cuenta gratis y desbloqueá los primeros ${MAX_ARCHIVOS_GRATIS} archivos. Por ${PRECIO_SUSCRIPCION} ${MONEDA} accedés a todo sin límites por ${DURACION_DIAS} días.</p>
-                <button type="button" class="btn-hero-main" onclick="abrirAuth(event)">Ingresar / Registrarme</button>
-            </div>`;
-        cont.style.display = "none";
-        return;
+        info.innerHTML = `<div class="premium-cta"><h3>Accedé al contenido premium</h3><p>Creá una cuenta gratis y desbloqueá los primeros ${MAX_ARCHIVOS_GRATIS} archivos. Por ${PRECIO_SUSCRIPCION} ${MONEDA} accedés a todo por ${DURACION_DIAS} días.</p><button type="button" class="btn-hero-main" onclick="abrirAuth(event)">Ingresar / Registrarme</button></div>`;
+        cont.style.display = "none"; return;
     }
     if (esPremiumActivo(p)) {
-        info.innerHTML = `
-            <div class="premium-activo">
-                <h3>⭐ Sos premium</h3>
-                <p>Te quedan <strong>${diasRestantes(p)} días</strong> (hasta ${formatearFecha(p.premium_hasta)}). Accedés a todo el contenido sin restricciones.</p>
-            </div>`;
+        info.innerHTML = `<div class="premium-activo"><h3>⭐ Sos premium</h3><p>Te quedan <strong>${diasRestantes(p)} días</strong> (hasta ${formatearFecha(p.premium_hasta)}).</p></div>`;
         if (cuota) cuota.style.display = "none";
     } else {
-        const vistos = (p.vistos || []).length;
-        const rest   = Math.max(0, MAX_ARCHIVOS_GRATIS - vistos);
-        info.innerHTML = `
-            <div class="premium-cta">
-                <h3>Plan gratis</h3>
-                <p>Llevás ${vistos}/${MAX_ARCHIVOS_GRATIS} archivos premium. Te quedan <strong>${rest}</strong>.</p>
-                <button type="button" class="btn-hero-main" onclick="abrirModalPago()">⭐ Suscribirme (${PRECIO_SUSCRIPCION} ${MONEDA})</button>
-            </div>`;
-        if (cuota) cuota.style.display = "block", cuota.innerHTML = `Cuota gratuita: <strong>${vistos}/${MAX_ARCHIVOS_GRATIS}</strong>`;
+        const v = (p.vistos||[]).length; const r = Math.max(0, MAX_ARCHIVOS_GRATIS - v);
+        info.innerHTML = `<div class="premium-cta"><h3>Plan gratis</h3><p>Llevás ${v}/${MAX_ARCHIVOS_GRATIS} archivos premium. Te quedan <strong>${r}</strong>.</p><button type="button" class="btn-hero-main" onclick="abrirModalPago()">⭐ Suscribirme (${PRECIO_SUSCRIPCION} ${MONEDA})</button></div>`;
+        if (cuota) { cuota.style.display="block"; cuota.innerHTML = `Cuota: <strong>${v}/${MAX_ARCHIVOS_GRATIS}</strong>`; }
     }
     cont.style.display = "block";
-    const premium = appState.archivos.filter(a => a.seccion === "premium");
-    grid.innerHTML = premium.length
-        ? premium.map(a => tarjetaPublica(a, true)).join("")
-        : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay contenido premium publicado.</p>`;
+    const prem = appState.archivosPublicos.filter(a => a.seccion==="premium");
+    grid.innerHTML = prem.length ? prem.map(a => tarjetaPublica(a, true)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay contenido premium.</p>`;
 }
 
-// ----------------------------------------------------------------
-//  🌐 Traducción de errores comunes de Supabase
-// ----------------------------------------------------------------
+// ============ MIS ARCHIVOS (sección personal) ============
+function renderSeccionMisArchivos() {
+    const sec = document.getElementById("mis-archivos-section");
+    if (!sec) return;
+    if (!appState.perfilActual) { sec.style.display = "none"; return; }
+    sec.style.display = "block";
+    const grid = document.getElementById("mis-archivos-grid");
+    if (!appState.misArchivos.length) {
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:24px">Aún no subiste ningún archivo. Usá el formulario de arriba.</p>`;
+        return;
+    }
+    grid.innerHTML = appState.misArchivos.map(a => `
+        <article class="contenido-card">
+            <div class="contenido-thumb" onclick="verContenido('${a.id}')">${a.miniatura?`<img src="${a.miniatura}" alt="">`:`<span style="font-size:64px">${({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion]||"📦"}</span>`}</div>
+            <div class="contenido-body">
+                <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
+                <h4>${esc(a.titulo)}</h4>
+                ${a.descripcion?`<p>${esc(a.descripcion)}</p>`:""}
+                <p style="font-size:11px;color:#94a3b8">${formatearFecha(a.creado_en)} · ${formatearTamano(a.tamano_bytes)}</p>
+                <div style="display:flex;gap:6px;margin-top:8px">
+                    <button type="button" onclick="verContenido('${a.id}')" style="flex:1;padding:6px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer">👁 Ver</button>
+                    <button type="button" onclick="eliminarArchivo('${a.id}')" style="padding:6px 10px;background:#dc2626;color:white;border:none;border-radius:6px;cursor:pointer">🗑</button>
+                </div>
+            </div>
+        </article>`).join("");
+}
+
+// ============ RANKING ============
+async function renderRankingPublico() {
+    const cont = document.getElementById("ranking-grid"); if (!cont) return;
+    const lista = await MA().sbRanking();
+    if (!lista.length) { cont.innerHTML = `<p style="text-align:center;color:#64748b">Aún no hay usuarios en el ranking.</p>`; return; }
+    cont.innerHTML = lista.map((u, i) => {
+        const medalla = i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
+        return `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:white;border-radius:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+            <div style="font-size:24px;min-width:48px;text-align:center">${medalla}</div>
+            <div style="flex:1">
+                <h4 style="margin:0;font-size:15px;color:#0f172a">${esc(u.username||"(sin nombre)")}${u.es_premium?' <span style="font-size:11px;color:#f59e0b">⭐</span>':""}</h4>
+                <p style="margin:2px 0 0;font-size:12px;color:#64748b">🔥 racha ${u.racha} días</p>
+            </div>
+            <div style="font-size:18px;font-weight:700;color:#2563eb">${u.puntos} pts</div>
+        </div>`;
+    }).join("");
+}
+
+// ============ EJERCICIOS DIARIOS (admin) ============
+async function renderAdminEjercicios() {
+    const cont = document.getElementById("admin-ejercicios-lista"); if (!cont) return;
+    const { data: lista } = await MA().sb.from("ejercicios_diarios").select("*").order("creado_en", { ascending: false });
+    cont.innerHTML = `
+        <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px">
+            <h4 style="margin:0 0 12px;font-size:14px;color:#0f172a">➕ Agregar ejercicio</h4>
+            <div class="form-group"><label for="ej-pregunta">Pregunta</label><input type="text" id="ej-pregunta" placeholder="Ej: ¿Cuánto es 12 × 7?"></div>
+            <div class="form-group"><label for="ej-respuesta">Respuesta correcta</label><input type="text" id="ej-respuesta" placeholder="Ej: 84"></div>
+            <div class="form-group"><label for="ej-pista">Pista (opcional)</label><input type="text" id="ej-pista" placeholder="Ej: descomponé en 10×7 + 2×7"></div>
+            <div class="form-group"><label for="ej-dif">Dificultad</label><select id="ej-dif"><option value="facil">Fácil</option><option value="medio" selected>Medio</option><option value="dificil">Difícil</option></select></div>
+            <button type="button" class="btn-subir" onclick="adminCrearEjercicio()">➕ Crear ejercicio</button>
+        </div>
+        <h4 style="font-size:14px;margin:0 0 8px">Catálogo (${lista?.length||0} ejercicios)</h4>
+        ${(lista||[]).map(e => `<div style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px">
+            <p style="font-size:13px;margin:0 0 4px"><strong>${esc(e.pregunta)}</strong> → <span style="color:#16a34a">${esc(e.respuesta)}</span></p>
+            <p style="font-size:11px;color:#64748b;margin:0">Dificultad: ${e.dificultad}${e.pista?" · Pista: "+esc(e.pista):""}</p>
+        </div>`).join("") || "<p style='color:#94a3b8;font-size:13px'>Aún no hay ejercicios. Agregá el primero arriba.</p>"}`;
+}
+async function adminCrearEjercicio() {
+    const pregunta = sanitizar(document.getElementById("ej-pregunta").value);
+    const respuesta = sanitizar(document.getElementById("ej-respuesta").value);
+    const pista = sanitizar(document.getElementById("ej-pista").value);
+    const dif = document.getElementById("ej-dif").value;
+    if (!pregunta || !respuesta) return mostrarToast("Completá pregunta y respuesta","warn");
+    const { error } = await MA().sbCrearEjercicio(pregunta, respuesta, pista, dif);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    mostrarToast("✅ Ejercicio creado","ok");
+    renderAdminEjercicios();
+}
+
+// ============ TRADUCCIÓN ERRORES ============
 function traducirError(msg) {
     if (!msg) return "Error desconocido.";
     const m = msg.toLowerCase();
-    if (m.includes("invalid login"))            return "Email o contraseña incorrectos.";
-    if (m.includes("email not confirmed"))      return "Confirmá tu email antes de iniciar sesión (revisá tu casilla).";
-    if (m.includes("user already registered"))  return "Ese email ya está registrado.";
-    if (m.includes("password should be at least")) return "La contraseña es muy corta.";
-    if (m.includes("rate limit"))               return "Demasiados intentos. Esperá unos minutos.";
-    if (m.includes("network"))                  return "Error de red. Verificá tu conexión.";
+    if (m.includes("invalid login")) return "Email o contraseña incorrectos.";
+    if (m.includes("email not confirmed")) return "Confirmá tu email primero.";
+    if (m.includes("user already registered")) return "Ese email ya está registrado.";
+    if (m.includes("password should be at least")) return "Contraseña muy corta.";
+    if (m.includes("rate limit")) return "Demasiados intentos. Esperá unos minutos.";
+    if (m.includes("network")) return "Error de red.";
     return msg;
 }
 
-// ----------------------------------------------------------------
-//  🚀 BOOT
-// ----------------------------------------------------------------
+// ============ BOOT ============
 document.addEventListener("DOMContentLoaded", function () {
-    inicializarEjercicios();
     iniciarMonitoreoSesion();
     inicializarSistema();
 });
 
-// Exponer al scope global (HTML onclick=)
-window.buscarContenido = buscarContenido;
-window.resetSesionTimer = resetSesionTimer;
-window.cerrarSesion = cerrarSesion;
-window.abrirAuth = abrirAuth;
-window.abrirAdmin = abrirAdmin;
-window.mostrarForm = mostrarForm;
-window.usuarioLogin = usuarioLogin;
-window.usuarioRegistro = usuarioRegistro;
-window.adminLogin = adminLogin;
-window.adminTab = adminTab;
-window.actualizarCampoArchivo = actualizarCampoArchivo;
-window.subirContenido = subirContenido;
-window.verContenido = verContenido;
-window.abrirEdicion = abrirEdicion;
-window.guardarEdicion = guardarEdicion;
-window.eliminarArchivo = eliminarArchivo;
-window.eliminarUsuario = eliminarUsuario;
-window.activarSuscripcion = activarSuscripcion;
-window.renovarSuscripcion = renovarSuscripcion;
-window.desactivarSuscripcion = desactivarSuscripcion;
-window.usuarioVerArchivo = usuarioVerArchivo;
-window.abrirModalPago = abrirModalPago;
-window.cerrarOverlaySiClick = cerrarOverlaySiClick;
+// Expose
+Object.assign(window, {
+    buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
+    mostrarForm, usuarioLogin, usuarioRegistro, adminLogin, enviarOlvideContrasena, setearPasswordRecovery,
+    guardarUsername, cambiarMiPassword,
+    adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
+    verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
+    activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
+    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick,
+    enviarComentario, borrarComentario,
+    adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
+});
