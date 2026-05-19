@@ -130,3 +130,11 @@ a{text-decoration:none;color:inherit;}
 @media(max-width:380px){
     .mat-grid{grid-template-columns:1fr;}
 }
+
+
+/* === Categorías de la ruta de aprendizaje === */
+.mat-categoria{background:white;border-radius:14px;padding:20px;margin-bottom:18px;border:1px solid #e2e8f0;}
+.mat-categoria-titulo{font-size:17px;color:#1e293b;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid #e2e8f0;font-family:'Poppins',sans-serif;}
+.mat-categoria-temas{list-style:none;padding:0;margin:0 0 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px;}
+.mat-categoria-temas li{font-size:13px;color:#475569;padding:5px 10px;background:#f8fafc;border-radius:6px;}
+.mat-categoria .mat-grid{margin-top:8px;}

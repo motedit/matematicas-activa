@@ -81,11 +81,13 @@
     }
 
     // ---- Carga desde Supabase ----
+    let temasMateria = [];
     async function cargar() {
-        if (!MA()?.sb) { perfilActual = null; archivos = []; return; }
+        if (!MA()?.sb) { perfilActual = null; archivos = []; temasMateria = []; return; }
         perfilActual = await MA().sbPerfil();
         const todos = await MA().sbListarArchivos();
         archivos = todos.filter(a => (a.materia || "general") === MATERIA_ID);
+        temasMateria = await MA().sbListarTemas(MATERIA_ID);
     }
 
     // ---- Premium helpers ----
@@ -199,9 +201,52 @@
         const lista = archivos.filter(a => a.seccion !== "premium");
         const grid = document.getElementById("mat-publicos-grid");
         if (!grid) return;
-        grid.innerHTML = lista.length
-            ? lista.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("")
-            : `<p class="mat-vacio">El administrador publicará contenido de ${esc(NOMBRE)} pronto.</p>`;
+
+        // Ruta de aprendizaje: mostrar las categorías incluso si no hay archivos
+        const categorias = {};
+        temasMateria.forEach(t => {
+            if (!categorias[t.categoria]) categorias[t.categoria] = { nivel: t.nivel, temas: [], archivos: [] };
+            categorias[t.categoria].temas.push(t);
+        });
+        // Asignar archivos a su tema correspondiente
+        const archivosSinTema = [];
+        lista.forEach(a => {
+            let asignado = false;
+            if (a.tema_id) {
+                for (const cat in categorias) {
+                    if (categorias[cat].temas.some(t => t.id === a.tema_id)) {
+                        categorias[cat].archivos.push(a);
+                        asignado = true;
+                        break;
+                    }
+                }
+            }
+            if (!asignado) archivosSinTema.push(a);
+        });
+
+        let html = "";
+        // Renderizar cada categoría con sus archivos y los temas pendientes
+        const orden = Object.entries(categorias).sort((a,b)=>a[1].nivel - b[1].nivel);
+        if (orden.length === 0 && lista.length === 0) {
+            grid.innerHTML = `<p class="mat-vacio">El administrador publicará contenido de ${esc(NOMBRE)} pronto.</p>`;
+            return;
+        }
+        orden.forEach(([cat, data]) => {
+            html += `<div class="mat-categoria">
+                <h3 class="mat-categoria-titulo">📚 Nivel ${data.nivel} — ${esc(cat)}</h3>
+                <ul class="mat-categoria-temas">${data.temas.map(t=>`<li>${esc(t.nombre)}${data.archivos.some(a=>a.tema_id===t.id)?' <span style="color:#16a34a">✓</span>':' <span style="color:#94a3b8;font-size:11px">(pendiente)</span>'}</li>`).join("")}</ul>
+                ${data.archivos.length > 0
+                    ? '<div class="mat-grid">' + data.archivos.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("") + '</div>'
+                    : '<p style="text-align:center;color:#94a3b8;font-size:13px;padding:12px 0">Aún no hay material publicado en esta categoría.</p>'}
+            </div>`;
+        });
+        if (archivosSinTema.length > 0) {
+            html += `<div class="mat-categoria">
+                <h3 class="mat-categoria-titulo">📌 Otros contenidos</h3>
+                <div class="mat-grid">${archivosSinTema.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("")}</div>
+            </div>`;
+        }
+        grid.innerHTML = html;
     }
 
     // ---- Render premium ----

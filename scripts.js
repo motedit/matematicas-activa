@@ -115,6 +115,49 @@ async function refrescarEstado() {
     else appState.perfiles = [];
 }
 
+
+// ============ CARGA DINÁMICA DE TEMAS ============
+async function cargarTemasParaMateria(materiaSelectId, temaSelectId) {
+    const matSel = document.getElementById(materiaSelectId);
+    const temSel = document.getElementById(temaSelectId);
+    if (!matSel || !temSel) return;
+    const materia = matSel.value;
+    temSel.innerHTML = '<option value="">— Sin tema específico —</option>';
+    if (!MA()?.sb) return;
+    const temas = await MA().sbListarTemas(materia);
+    // Agrupar por categoría
+    const porCategoria = {};
+    temas.forEach(t => {
+        if (!porCategoria[t.categoria]) porCategoria[t.categoria] = [];
+        porCategoria[t.categoria].push(t);
+    });
+    Object.entries(porCategoria).forEach(([cat, lista]) => {
+        const og = document.createElement("optgroup");
+        og.label = "Nivel " + lista[0].nivel + " — " + cat;
+        lista.forEach(t => {
+            const op = document.createElement("option");
+            op.value = t.id;
+            op.textContent = t.nombre;
+            og.appendChild(op);
+        });
+        temSel.appendChild(og);
+    });
+}
+async function initSelectoresTemas() {
+    // Admin upload
+    const admMat = document.getElementById("su-materia");
+    if (admMat) {
+        admMat.addEventListener("change", () => cargarTemasParaMateria("su-materia", "su-tema"));
+        await cargarTemasParaMateria("su-materia", "su-tema");
+    }
+    // Mi upload
+    const miMat = document.getElementById("mu-materia");
+    if (miMat) {
+        miMat.addEventListener("change", () => cargarTemasParaMateria("mu-materia", "mu-tema"));
+        await cargarTemasParaMateria("mu-materia", "mu-tema");
+    }
+}
+
 async function inicializarSistema() {
     await detectarRecuperacionPassword();
     await refrescarEstado();
@@ -125,6 +168,7 @@ async function inicializarSistema() {
     renderSeccionMisArchivos();
     renderRankingPublico();
     if (appState.perfilActual) resetSesionTimer();
+    initSelectoresTemas();
 
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
         if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
@@ -423,7 +467,7 @@ async function subirContenido() {
     if (appState.perfilActual?.rol !== "admin") return mostrarError("su-error","Solo el admin.");
     await _subirArchivoComun({
         prefixIds: { titulo:"su-titulo", desc:"su-desc", tipo:"su-tipo", texto:"su-texto", url:"su-url", archivo:"su-archivo",
-                     materia:"su-materia", seccion:"su-seccion", error:"su-error", success:"su-success", progress:"su-progress", progressFill:"su-progress-fill" },
+                     materia:"su-materia", seccion:"su-seccion", tema:"su-tema", error:"su-error", success:"su-success", progress:"su-progress", progressFill:"su-progress-fill" },
         esPersonal: false,
     });
     renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium(); renderAdminArchivos();
@@ -434,7 +478,7 @@ async function subirMiArchivo() {
     if (!appState.perfilActual) return mostrarError("mu-error","Necesitás iniciar sesión.");
     await _subirArchivoComun({
         prefixIds: { titulo:"mu-titulo", desc:"mu-desc", tipo:"mu-tipo", texto:"mu-texto", url:"mu-url", archivo:"mu-archivo",
-                     materia:"mu-materia", seccion:"mu-seccion", error:"mu-error", success:"mu-success", progress:"mu-progress", progressFill:"mu-progress-fill" },
+                     materia:"mu-materia", seccion:"mu-seccion", tema:"mu-tema", error:"mu-error", success:"mu-success", progress:"mu-progress", progressFill:"mu-progress-fill" },
         esPersonal: true,
     });
     renderSeccionMisArchivos();
@@ -448,7 +492,9 @@ async function _subirArchivoComun({ prefixIds, esPersonal }) {
     const materia = get(prefixIds.materia)?.value || "general";
     const seccion = get(prefixIds.seccion)?.value || "pdf";
     if (!titulo) return mostrarError(prefixIds.error, "Ingresá un título.");
+    const tema_id = get(prefixIds.tema)?.value || null;
     let meta = { titulo, descripcion:desc, materia, seccion, tipo, creado_por: appState.perfilActual.id, es_personal: esPersonal };
+    if (tema_id) meta.tema_id = tema_id;
     if (tipo === "texto") {
         const t = get(prefixIds.texto).value.trim();
         if (!t) return mostrarError(prefixIds.error,"Ingresá el contenido.");
@@ -941,7 +987,7 @@ Object.assign(window, {
     adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
     verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
     activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
-    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto, mostrarBannerQuota,
+    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto, mostrarBannerQuota, cargarTemasParaMateria,
     enviarComentario, borrarComentario,
     adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
 });

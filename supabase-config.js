@@ -230,6 +230,16 @@ async function sbAdminActivarPlan(usuarioId, plan, dias) {
     return { data, error };
 }
 
+
+// ===================== TEMAS (ruta de aprendizaje) ==============
+async function sbListarTemas(materia) {
+    let q = sb.from("temas").select("*").order("nivel").order("categoria").order("orden");
+    if (materia) q = q.eq("materia", materia);
+    const { data, error } = await q;
+    if (error) { console.warn("Error temas:", error); return []; }
+    return data || [];
+}
+
 window.MA_SUPABASE = {
     sb,
     sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
@@ -239,6 +249,7 @@ window.MA_SUPABASE = {
     sbListarPerfiles, sbActualizarPerfil, sbAgregarVisto,
     sbActivarPremium, sbDesactivarPremium,
     sbPlanVigente, sbRegistrarUso, sbVerQuotaHoy, sbAdminActivarPlan,
+    sbListarTemas,
     sbSumarPuntos, sbRegistrarVisitaDiaria, sbRanking,
     sbListarComentarios, sbCrearComentario, sbBorrarComentario,
     sbEjercicioDeHoy, sbResponderEjercicio, sbYaRespondioHoy, sbCrearEjercicio,
