@@ -700,25 +700,104 @@ function renderSeccionPDFs() {
     g.innerHTML = p.length ? p.map(a => tarjetaPublica(a, false)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay PDFs.</p>`;
 }
 function renderSeccionPremium() {
-    const info = document.getElementById("suscripcion-info"); const cont = document.getElementById("suscripcion-contenido");
-    const cuota = document.getElementById("premium-cuota-info"); const grid = document.getElementById("premium-grid");
+    const info = document.getElementById("suscripcion-info");
+    const cont = document.getElementById("suscripcion-contenido");
+    const cuota = document.getElementById("premium-cuota-info");
+    const grid  = document.getElementById("premium-grid");
     if (!info || !cont) return;
+
     const p = appState.perfilActual;
+
+    // === Banner de estado del usuario actual ===
+    let banner = "";
     if (!p) {
-        info.innerHTML = `<div class="premium-cta"><h3>Accedé al contenido premium</h3><p>Creá una cuenta gratis y desbloqueá los primeros ${MAX_ARCHIVOS_GRATIS} archivos. Por ${PRECIO_SUSCRIPCION} ${MONEDA} accedés a todo por ${DURACION_DIAS} días.</p><button type="button" class="btn-hero-main" onclick="abrirAuth(event)">Ingresar / Registrarme</button></div>`;
-        cont.style.display = "none"; return;
-    }
-    if (esPremiumActivo(p)) {
-        info.innerHTML = `<div class="premium-activo"><h3>⭐ Sos premium</h3><p>Te quedan <strong>${diasRestantes(p)} días</strong> (hasta ${formatearFecha(p.premium_hasta)}).</p></div>`;
-        if (cuota) cuota.style.display = "none";
+        banner = `<div class="premium-banner-estado banner-gratis">
+            <h3 style="color:#fbbf24;margin:0 0 6px">👋 ¡Hola! Ingresá para acceder a más contenido</h3>
+            <p style="color:rgba(255,255,255,.85);margin:0 0 12px">Creá una cuenta gratis y empezá a usar la plataforma.</p>
+            <button type="button" class="btn-hero-main" onclick="abrirAuth(event)" style="margin:0">Registrarme gratis</button>
+        </div>`;
+    } else if (esPremiumActivo(p)) {
+        banner = `<div class="premium-banner-estado banner-activo">
+            <h3 style="color:#fde68a;margin:0 0 6px">⭐ Sos usuario PREMIUM</h3>
+            <p style="color:rgba(255,255,255,.9);margin:0">Te quedan <strong>${diasRestantes(p)} días</strong> de acceso completo (hasta ${formatearFecha(p.premium_hasta)}).</p>
+        </div>`;
     } else {
-        const v = (p.vistos||[]).length; const r = Math.max(0, MAX_ARCHIVOS_GRATIS - v);
-        info.innerHTML = `<div class="premium-cta"><h3>Plan gratis</h3><p>Llevás ${v}/${MAX_ARCHIVOS_GRATIS} archivos premium. Te quedan <strong>${r}</strong>.</p><button type="button" class="btn-hero-main" onclick="abrirModalPago()">⭐ Suscribirme (${PRECIO_SUSCRIPCION} ${MONEDA})</button></div>`;
-        if (cuota) { cuota.style.display="block"; cuota.innerHTML = `Cuota: <strong>${v}/${MAX_ARCHIVOS_GRATIS}</strong>`; }
+        const v = (p.vistos||[]).length;
+        banner = `<div class="premium-banner-estado banner-gratis">
+            <h3 style="color:#fbbf24;margin:0 0 6px">🆓 Estás en el plan Gratis</h3>
+            <p style="color:rgba(255,255,255,.85);margin:0">Tenés acceso limitado a 3 archivos/día. ¿Querés más? Elegí un plan abajo.</p>
+        </div>`;
     }
-    cont.style.display = "block";
-    const prem = appState.archivosPublicos.filter(a => a.seccion==="premium");
-    grid.innerHTML = prem.length ? prem.map(a => tarjetaPublica(a, true)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay contenido premium.</p>`;
+
+    // === Cards de los 3 planes (siempre visibles en la home) ===
+    const planesHtml = `
+    <div class="planes-grid planes-home">
+        <div class="plan-card">
+            <div class="plan-tag" style="background:#94a3b8">GRATIS</div>
+            <h3>Plan Gratis</h3>
+            <p class="plan-precio">$ 0</p>
+            <p class="plan-sub">Para siempre</p>
+            <ul class="plan-features">
+                <li>✅ 3 archivos públicos por día</li>
+                <li>✅ 3 usos de calculadora/graficadora por día</li>
+                <li>✅ Acceso al ranking</li>
+                <li>⏱️ Renovación cada 24hs</li>
+                <li>❌ Sin archivos premium</li>
+                <li>❌ Sin subir archivos personales</li>
+            </ul>
+            <button type="button" class="plan-btn plan-btn-gratis" disabled>Plan por defecto</button>
+        </div>
+        <div class="plan-card plan-card-popular">
+            <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
+            <h3>Plan Básico</h3>
+            <p class="plan-precio">$ 7.000</p>
+            <p class="plan-sub">23 días de acceso</p>
+            <ul class="plan-features">
+                <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
+                <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
+                <li>✅ Sistema de puntos y ranking</li>
+                <li>✅ Comentarios en todo el contenido</li>
+                <li>❌ No podés subir archivos personales</li>
+            </ul>
+            <a class="plan-btn plan-btn-basico" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📩 Suscribirme por WhatsApp</a>
+        </div>
+        <div class="plan-card plan-card-premium">
+            <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
+            <h3>Plan Premium</h3>
+            <p class="plan-precio">$ 12.000</p>
+            <p class="plan-sub">30 días de acceso completo</p>
+            <ul class="plan-features">
+                <li>✅ <strong>Todo lo del plan Básico</strong></li>
+                <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
+                <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
+                <li>✅ Carpeta personal ilimitada</li>
+                <li>✅ Soporte prioritario</li>
+            </ul>
+            <a class="plan-btn plan-btn-premium" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">⭐ Suscribirme por WhatsApp</a>
+        </div>
+    </div>
+    <div style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:14px 18px;margin-top:18px;text-align:center;color:#fde68a">
+        <p style="margin:0;font-size:13px"><strong>📋 ¿Cómo suscribirte?</strong> Apretá "Suscribirme por WhatsApp" del plan que quieras. Te pasamos los datos para pagar y, una vez hecho el pago, mandás el comprobante con tu nombre de usuario. La activación es en pocos minutos. <a href="guia-pago.html" target="_blank" style="color:#fde68a;text-decoration:underline">Ver guía completa →</a></p>
+    </div>
+    `;
+
+    info.innerHTML = banner + planesHtml;
+
+    // === Grid de contenido premium (solo si hay) ===
+    const premium = appState.archivosPublicos.filter(a => a.seccion==="premium");
+    if (premium.length > 0) {
+        cont.style.display = "block";
+        if (cuota && p && !esPremiumActivo(p)) {
+            const v = (p.vistos||[]).length;
+            cuota.style.display = "block";
+            cuota.innerHTML = `Tu cuota: <strong>${v}/${MAX_ARCHIVOS_GRATIS}</strong> archivos premium ya vistos`;
+        } else if (cuota) {
+            cuota.style.display = "none";
+        }
+        grid.innerHTML = premium.map(a => tarjetaPublica(a, true)).join("");
+    } else {
+        cont.style.display = "none";
+    }
 }
 
 // ============ MIS ARCHIVOS (sección personal) ============

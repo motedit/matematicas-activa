@@ -433,3 +433,28 @@ ul{list-style:none;}
 .quota-banner{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #f59e0b;border-radius:12px;padding:16px 20px;margin:16px 0;text-align:center;}
 .quota-banner h4{margin:0 0 6px;color:#92400e;font-size:15px;}
 .quota-banner p{margin:0 0 10px;color:#78350f;font-size:13px;}
+
+/* === SECCIÓN PREMIUM en la home (sobre fondo oscuro) === */
+.premium-section{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e293b 100%);}
+.premium-section .section-title{color:white!important;}
+.premium-section .section-sub{color:rgba(255,255,255,.75)!important;}
+.premium-section .section-title.light{color:white!important;}
+.premium-section .section-sub.light{color:rgba(255,255,255,.75)!important;}
+.premium-section .cuota-info{color:rgba(255,255,255,.85);text-align:center;margin-bottom:18px;font-size:14px;background:rgba(255,255,255,.05);padding:10px;border-radius:8px;}
+.premium-section .cuota-info strong{color:#fbbf24;}
+
+/* Banner de estado del usuario */
+.premium-banner-estado{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:18px 22px;margin-bottom:24px;text-align:center;backdrop-filter:blur(8px);}
+.banner-activo{background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(220,38,38,.18));border-color:rgba(245,158,11,.4);}
+.banner-gratis{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25);}
+
+/* Planes en la home (sobre fondo oscuro, asegurar contraste) */
+.planes-home{margin-top:8px;}
+.planes-home .plan-card{background:white;color:#0f172a;}
+.planes-home .plan-card h3{color:#0f172a;}
+.planes-home .plan-precio{color:#0f172a;}
+.planes-home .plan-sub{color:#475569;}
+.planes-home .plan-features li{color:#334155;}
+
+/* Sobreescribir oscuridad del texto "Aún no hay contenido premium" */
+.premium-section #premium-grid p{color:rgba(255,255,255,.6)!important;}
