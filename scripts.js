@@ -567,6 +567,14 @@ async function desactivarSuscripcion(uid) {
 // ============ VISOR ============
 async function verContenido(id) {
     const a = appState.archivos.find(x => x.id===id); if (!a) return;
+    // 🆕 GATE DE QUOTA: si el usuario está logueado y NO es admin, registrar uso
+    if (appState.perfilActual && appState.perfilActual.rol !== "admin" && !a.es_personal) {
+        const c = await MA().sbRegistrarUso("archivo");
+        if (c === -1) {
+            mostrarBannerQuota("archivo");
+            return;
+        }
+    }
     document.getElementById("visor-titulo").textContent = a.titulo;
     const body = document.getElementById("visor-cuerpo");
     body.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">Cargando...</p>`;
@@ -809,6 +817,22 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+
+// ============ BANNER DE QUOTA EXCEDIDA ============
+function mostrarBannerQuota(tipo) {
+    const modal = document.getElementById("modal-visor");
+    document.getElementById("visor-titulo").textContent = "Llegaste al límite diario";
+    const tipoTxt = tipo === "archivo" ? "archivos públicos" : "usos de la calculadora";
+    document.getElementById("visor-cuerpo").innerHTML = `
+        <div class="quota-banner">
+            <h4>⏱️ Llegaste al límite gratuito de hoy</h4>
+            <p>Como usuario gratis podés ver hasta <strong>3 ${tipoTxt} por día</strong>. Se reinicia automáticamente en las próximas 24hs.</p>
+            <p><strong>¿Querés acceso ilimitado ahora?</strong></p>
+            <button type="button" onclick="document.getElementById('modal-visor').style.display='none';abrirModalPago()" style="background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;border:none;padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">⭐ Ver planes</button>
+        </div>`;
+    modal.style.display = "flex";
+}
+
 // ============ FAB DE CONTACTO ============
 function toggleFabContacto() {
     const btn  = document.getElementById("fab-contacto-btn");
@@ -838,7 +862,7 @@ Object.assign(window, {
     adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
     verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
     activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
-    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto,
+    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto, mostrarBannerQuota,
     enviarComentario, borrarComentario,
     adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
 });

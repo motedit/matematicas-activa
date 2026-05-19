@@ -406,3 +406,30 @@ ul{list-style:none;}
     .fab-contacto{width:54px;height:54px;font-size:24px;bottom:18px;right:18px;}
     .fab-menu{bottom:84px;right:18px;width:calc(100vw - 36px);max-width:300px;}
 }
+
+/* === CARDS DE 3 PLANES === */
+.planes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px;}
+.plan-card{background:white;border:2px solid #e2e8f0;border-radius:14px;padding:24px 18px;position:relative;display:flex;flex-direction:column;transition:transform .2s,border-color .2s;}
+.plan-card:hover{transform:translateY(-4px);}
+.plan-card-popular{border-color:#2563eb;transform:scale(1.02);box-shadow:0 8px 24px rgba(37,99,235,.18);}
+.plan-card-popular:hover{transform:scale(1.02) translateY(-4px);}
+.plan-card-premium{border-color:#f59e0b;background:linear-gradient(180deg,#fffbeb 0%,white 60%);}
+.plan-tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);color:white;font-size:11px;font-weight:700;padding:4px 14px;border-radius:99px;letter-spacing:1px;white-space:nowrap;}
+.plan-card h3{font-size:18px;margin:8px 0 4px;color:#0f172a;text-align:center;font-weight:700;}
+.plan-precio{font-size:32px;font-weight:900;text-align:center;color:#0f172a;margin:6px 0 2px;font-family:var(--font);}
+.plan-sub{font-size:12px;color:#64748b;text-align:center;margin:0 0 16px;}
+.plan-features{list-style:none;padding:0;margin:0 0 18px;flex:1;}
+.plan-features li{padding:5px 0;font-size:13px;color:#334155;border-bottom:1px solid #f1f5f9;}
+.plan-features li:last-child{border-bottom:none;}
+.plan-btn{display:block;width:100%;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;color:white;transition:all .2s;}
+.plan-btn-gratis{background:#cbd5e1;color:#475569;cursor:not-allowed;}
+.plan-btn-basico{background:linear-gradient(135deg,#2563eb,#7c3aed);}
+.plan-btn-basico:hover{opacity:.9;transform:translateY(-1px);}
+.plan-btn-premium{background:linear-gradient(135deg,#f59e0b,#dc2626);}
+.plan-btn-premium:hover{opacity:.9;transform:translateY(-1px);}
+@media (max-width:780px){.planes-grid{grid-template-columns:1fr;}.plan-card-popular{transform:none;}.plan-card-popular:hover{transform:translateY(-4px);}}
+
+/* === BANNER DE QUOTA EXCEDIDA === */
+.quota-banner{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #f59e0b;border-radius:12px;padding:16px 20px;margin:16px 0;text-align:center;}
+.quota-banner h4{margin:0 0 6px;color:#92400e;font-size:15px;}
+.quota-banner p{margin:0 0 10px;color:#78350f;font-size:13px;}

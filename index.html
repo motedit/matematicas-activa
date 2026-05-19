@@ -222,6 +222,9 @@
                 <a href="#videos">Videos</a>
                 <a href="#ranking">Ranking</a>
                 <a href="#suscripcion">Premium</a>
+                <a href="politica-privacidad.html">Política de Privacidad</a>
+                <a href="terminos-servicio.html">Términos de Servicio</a>
+                <a href="guia-pago.html">Guía de pago</a>
             </div>
         </div>
     </footer>
@@ -423,7 +426,83 @@
         </div>
     </div>
 
-        <!-- 🆕 BOTÓN FLOTANTE DE CONTACTO -->
+        <!-- MODAL PAGO con 3 planes -->
+    <div id="modal-pago" class="overlay" style="display:none" role="dialog" aria-modal="true" onclick="cerrarOverlaySiClick(event,'modal-pago')">
+        <div class="overlay-panel" style="max-width:920px;padding:32px 28px">
+            <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-pago').style.display='none'">✕</button>
+            <div style="text-align:center;margin-bottom:24px">
+                <h2 style="font-size:24px;margin:0 0 6px">Elegí tu plan</h2>
+                <p style="color:#64748b;font-size:14px;margin:0">Mejorá tu experiencia y accedé a más contenido</p>
+            </div>
+
+            <div class="planes-grid">
+                <!-- PLAN GRATIS -->
+                <div class="plan-card">
+                    <div class="plan-tag" style="background:#94a3b8">GRATIS</div>
+                    <h3>Plan Gratis</h3>
+                    <p class="plan-precio">$ 0</p>
+                    <p class="plan-sub">Para siempre</p>
+                    <ul class="plan-features">
+                        <li>✅ 3 archivos públicos por día</li>
+                        <li>✅ 3 usos de calculadora/graficadora por día</li>
+                        <li>✅ Acceso al ranking</li>
+                        <li>⏱️ Renovación cada 24hs</li>
+                        <li>❌ Sin archivos premium</li>
+                        <li>❌ Sin subir archivos personales</li>
+                    </ul>
+                    <button type="button" class="plan-btn plan-btn-gratis" disabled>Tu plan actual por defecto</button>
+                </div>
+
+                <!-- PLAN BÁSICO -->
+                <div class="plan-card plan-card-popular">
+                    <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
+                    <h3>Plan Básico</h3>
+                    <p class="plan-precio">$ 7.000</p>
+                    <p class="plan-sub">23 días de acceso</p>
+                    <ul class="plan-features">
+                        <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
+                        <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
+                        <li>✅ Sistema de puntos y ranking</li>
+                        <li>✅ Comentarios en todo el contenido</li>
+                        <li>❌ No podés subir archivos personales</li>
+                    </ul>
+                    <a class="plan-btn plan-btn-basico" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📩 Pedir información por WhatsApp</a>
+                    <p style="font-size:11px;color:#64748b;text-align:center;margin:8px 0 0">Pagás por MercadoPago/Naranja X y nos enviás el comprobante</p>
+                </div>
+
+                <!-- PLAN PREMIUM -->
+                <div class="plan-card plan-card-premium">
+                    <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
+                    <h3>Plan Premium</h3>
+                    <p class="plan-precio">$ 12.000</p>
+                    <p class="plan-sub">30 días de acceso completo</p>
+                    <ul class="plan-features">
+                        <li>✅ <strong>Todo lo del plan Básico</strong></li>
+                        <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
+                        <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
+                        <li>✅ Carpeta personal ilimitada</li>
+                        <li>✅ Soporte prioritario</li>
+                    </ul>
+                    <a class="plan-btn plan-btn-premium" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">⭐ Pedir información por WhatsApp</a>
+                    <p style="font-size:11px;color:#64748b;text-align:center;margin:8px 0 0">Activación en pocos minutos tras enviar comprobante</p>
+                </div>
+            </div>
+
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-top:20px">
+                <h4 style="margin:0 0 8px;font-size:14px;color:#92400e">📋 Cómo funciona el pago:</h4>
+                <ol style="margin:0;padding-left:20px;font-size:13px;color:#78350f;line-height:1.7">
+                    <li>Hacé clic en "Pedir información" del plan que querés.</li>
+                    <li>Te abre WhatsApp con un mensaje predefinido — solo agregás tu nombre de usuario.</li>
+                    <li>Te enviamos los datos para pagar por MercadoPago o Naranja X.</li>
+                    <li>Realizás el pago y nos enviás el comprobante por WhatsApp.</li>
+                    <li>Tu plan se activa en pocos minutos.</li>
+                </ol>
+                <p style="font-size:12px;color:#92400e;margin:10px 0 0"><a href="guia-pago.html" target="_blank" style="color:#92400e;font-weight:600">📖 Ver guía detallada de pago</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🆕 BOTÓN FLOTANTE DE CONTACTO -->
     <button type="button" class="fab-contacto" id="fab-contacto-btn" aria-label="Contactanos" onclick="toggleFabContacto()">💬</button>
     <div class="fab-menu" id="fab-menu-contacto" role="dialog" aria-label="Opciones de contacto">
         <h4>¿Necesitás ayuda?</h4>

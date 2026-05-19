@@ -207,6 +207,29 @@ async function sbCrearEjercicio(pregunta, respuesta, pista, dificultad) {
 }
 
 // ====================== EXPOSE ==================================
+
+// ===================== PLANES (v4) ==============================
+async function sbPlanVigente() {
+    const u = await sbUsuario(); if (!u) return 'gratis';
+    const { data, error } = await sb.rpc('plan_vigente', { usuario_id: u.id });
+    if (error) { console.warn(error); return 'gratis'; }
+    return data || 'gratis';
+}
+async function sbRegistrarUso(accion) {
+    const { data, error } = await sb.rpc('registrar_uso', { accion });
+    if (error) { console.warn(error); return -1; }
+    return data;
+}
+async function sbVerQuotaHoy() {
+    const { data, error } = await sb.rpc('ver_quota_hoy');
+    if (error) { console.warn(error); return null; }
+    return data?.[0];
+}
+async function sbAdminActivarPlan(usuarioId, plan, dias) {
+    const { data, error } = await sb.rpc('admin_activar_plan', { usuario_id: usuarioId, nuevo_plan: plan, dias });
+    return { data, error };
+}
+
 window.MA_SUPABASE = {
     sb,
     sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
@@ -215,6 +238,7 @@ window.MA_SUPABASE = {
     sbSubirBlob, sbUrlFirmada, sbDescargarBlob,
     sbListarPerfiles, sbActualizarPerfil, sbAgregarVisto,
     sbActivarPremium, sbDesactivarPremium,
+    sbPlanVigente, sbRegistrarUso, sbVerQuotaHoy, sbAdminActivarPlan,
     sbSumarPuntos, sbRegistrarVisitaDiaria, sbRanking,
     sbListarComentarios, sbCrearComentario, sbBorrarComentario,
     sbEjercicioDeHoy, sbResponderEjercicio, sbYaRespondioHoy, sbCrearEjercicio,
