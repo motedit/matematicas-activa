@@ -1,37 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Razonamiento Matemático — Matemáticas Activa</title>
-    <meta name="description" content="Razonamiento Matemático: lógica, resolución de problemas y pensamiento crítico.">
-    <meta name="theme-color" content="#2563eb">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <link rel="icon" href="../../img/descarga.png" type="image/png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Estilos compartidos (raíz) -->
-    <link rel="stylesheet" href="../../materia.css">
-    <!-- Estilos propios de esta materia -->
-    <link rel="stylesheet" href="materia-local.css">
-</head>
-<body data-materia="razonamiento" data-nombre="Razonamiento Matemático" data-emoji="🧠">
+/* materia-local.css — Estilos propios de Razonamiento Matemático */
 
-    <noscript>
-        <div style="max-width:640px;margin:40px auto;padding:20px;border:1px solid #e2e8f0;border-radius:12px;font-family:sans-serif;text-align:center">
-            <h1>Razonamiento Matemático — Matemáticas Activa</h1>
-            <p>Esta página necesita JavaScript habilitado para mostrar el contenido interactivo.</p>
-            <p><a href="../../index.html">← Volver al inicio</a></p>
-        </div>
-    </noscript>
+/* Color de acento de esta materia */
+:root {
+    --mat-color: #16a34a;
+}
 
-    <!-- Supabase SDK + config + script principal compartido -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../supabase-config.js"></script>
-    <script src="../../materia.js"></script>
+/* Header con el color de la materia */
+.mat-header {
+    background: linear-gradient(135deg, #0f172a 0%, #16a34a44 100%) !important;
+}
 
-    <!-- Script local de esta materia -->
-    <script src="materia-local.js"></script>
-
-</body>
-</html>
+/* Badge y acentos propios */
+.mat-section-title::before {
+    color: #16a34a;
+}

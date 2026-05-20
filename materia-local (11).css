@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Álgebra — Matemáticas Activa</title>
-    <meta name="description" content="Álgebra en Matemáticas Activa: ecuaciones, polinomios, funciones y ejercicios interactivos.">
+    <title>Estadística — Matemáticas Activa</title>
+    <meta name="description" content="Estadística en Matemáticas Activa: probabilidad, distribuciones y análisis de datos.">
     <meta name="theme-color" content="#2563eb">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <link rel="icon" href="../../img/descarga.png" type="image/png">
@@ -15,11 +15,11 @@
     <!-- Estilos propios de esta materia -->
     <link rel="stylesheet" href="materia-local.css">
 </head>
-<body data-materia="algebra" data-nombre="Álgebra" data-emoji="📐">
+<body data-materia="estadistica" data-nombre="Estadística" data-emoji="📊">
 
     <noscript>
         <div style="max-width:640px;margin:40px auto;padding:20px;border:1px solid #e2e8f0;border-radius:12px;font-family:sans-serif;text-align:center">
-            <h1>Álgebra — Matemáticas Activa</h1>
+            <h1>Estadística — Matemáticas Activa</h1>
             <p>Esta página necesita JavaScript habilitado para mostrar el contenido interactivo.</p>
             <p><a href="../../index.html">← Volver al inicio</a></p>
         </div>

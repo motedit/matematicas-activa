@@ -1,16 +1,37 @@
-/* materia-local.css — Estilos propios de Geometría */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometría — Matemáticas Activa</title>
+    <meta name="description" content="Geometría en Matemáticas Activa: figuras, áreas, volúmenes y sólidos.">
+    <meta name="theme-color" content="#2563eb">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <link rel="icon" href="../../img/descarga.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Estilos compartidos (raíz) -->
+    <link rel="stylesheet" href="../../materia.css">
+    <!-- Estilos propios de esta materia -->
+    <link rel="stylesheet" href="materia-local.css">
+</head>
+<body data-materia="geometria" data-nombre="Geometría" data-emoji="△">
 
-/* Color de acento de esta materia */
-:root {
-    --mat-color: #0d9488;
-}
+    <noscript>
+        <div style="max-width:640px;margin:40px auto;padding:20px;border:1px solid #e2e8f0;border-radius:12px;font-family:sans-serif;text-align:center">
+            <h1>Geometría — Matemáticas Activa</h1>
+            <p>Esta página necesita JavaScript habilitado para mostrar el contenido interactivo.</p>
+            <p><a href="../../index.html">← Volver al inicio</a></p>
+        </div>
+    </noscript>
 
-/* Header con el color de la materia */
-.mat-header {
-    background: linear-gradient(135deg, #0f172a 0%, #0d948844 100%) !important;
-}
+    <!-- Supabase SDK + config + script principal compartido -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../supabase-config.js"></script>
+    <script src="../../materia.js"></script>
 
-/* Badge y acentos propios */
-.mat-section-title::before {
-    color: #0d9488;
-}
+    <!-- Script local de esta materia -->
+    <script src="materia-local.js"></script>
+
+</body>
+</html>

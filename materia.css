@@ -1,140 +1,16 @@
-/* ================================================================
-   MATEMÁTICAS ACTIVA — materia.css  (rediseño completo)
-================================================================ */
-:root{
-    --navy:#0f172a;--navy2:#1e293b;--blue:#2563eb;--blue2:#1d4ed8;
-    --purple:#7c3aed;--gold:#f59e0b;--green:#16a34a;
-    --gray50:#f8fafc;--gray100:#f1f5f9;--gray200:#e2e8f0;
-    --gray400:#94a3b8;--gray600:#475569;--gray800:#1e293b;
-    --radius:12px;--radius-lg:20px;
-    --shadow:0 4px 24px rgba(0,0,0,.10);--shadow-lg:0 12px 48px rgba(0,0,0,.18);
-    --font:'Poppins',system-ui,sans-serif;--font-body:'Inter',system-ui,sans-serif;
-    --navbar-h:64px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{font-family:var(--font-body);background:var(--gray50);color:var(--gray800);min-height:100vh;overflow-x:hidden;}
-img{display:block;max-width:100%;}
-a{text-decoration:none;color:inherit;}
+/* materia-local.css — Estilos propios de Cálculo */
 
-/* ── HEADER ── */
-.mat-header{
-    background:linear-gradient(135deg,var(--navy) 0%,#1a1050 60%,#0d2060 100%);
-    color:white;display:flex;align-items:center;justify-content:space-between;
-    padding:0 24px;height:var(--navbar-h);gap:16px;flex-wrap:wrap;
-    position:sticky;top:0;z-index:100;
-    box-shadow:0 4px 20px rgba(0,0,0,.3);
-}
-.mat-header h1{
-    font-family:var(--font);font-size:clamp(18px,3vw,26px);font-weight:800;
-    flex:1;text-align:center;letter-spacing:-.5px;
-}
-.mat-back{
-    color:rgba(255,255,255,.8);font-size:13px;font-weight:600;
-    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-    padding:7px 14px;border-radius:100px;white-space:nowrap;
-    transition:all .2s;
-}
-.mat-back:hover{background:rgba(255,255,255,.22);color:white;}
-
-/* ── NAVBAR SESION ── */
-#mat-navbar-sesion{display:flex;align-items:center;gap:8px;font-size:13px;color:white;}
-.mat-nav-btn{
-    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-    color:white;padding:7px 14px;border-radius:100px;cursor:pointer;
-    font-size:13px;font-weight:600;font-family:var(--font-body);
-    transition:all .2s;
-}
-.mat-nav-btn:hover{background:rgba(255,255,255,.25);}
-
-/* ── MAIN ── */
-.mat-main{max-width:1100px;margin:0 auto;padding:40px 24px;display:flex;flex-direction:column;gap:32px;}
-
-/* ── SECCIONES ── */
-.mat-section{background:white;border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow);border:1px solid var(--gray200);}
-.mat-section-title{font-family:var(--font);font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px;}
-.mat-section-desc{font-size:14px;color:var(--gray400);margin-bottom:24px;}
-.mat-premium-section{border:2px solid #fcd34d;background:linear-gradient(180deg,#fffbeb 0%,white 60%);}
-
-/* ── GRID ── */
-.mat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;}
-
-/* ── TARJETAS ── */
-.mat-card{
-    background:white;border:1.5px solid var(--gray200);border-radius:var(--radius-lg);
-    padding:16px;display:flex;flex-direction:column;gap:10px;
-    transition:transform .25s,box-shadow .25s;box-shadow:0 2px 8px rgba(0,0,0,.05);
-}
-.mat-card:hover{transform:translateY(-6px);box-shadow:var(--shadow);}
-.mat-thumb-img{width:100%;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--gray200);}
-.mat-thumb-icon{height:90px;display:flex;align-items:center;justify-content:center;font-size:40px;background:var(--gray100);border-radius:10px;}
-.mat-thumb-text{background:var(--gray100);border-radius:10px;padding:10px;font-size:11px;color:var(--gray400);max-height:80px;overflow:hidden;line-height:1.5;}
-.mat-card-titulo{font-family:var(--font);font-size:15px;font-weight:700;color:var(--navy);}
-.mat-card-desc{font-size:12px;color:var(--gray400);line-height:1.5;}
-
-/* ── BOTONES ── */
-.mat-btn{
-    display:inline-block;padding:9px 16px;
-    background:linear-gradient(135deg,var(--blue),var(--blue2));
-    color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;
-    font-family:var(--font);cursor:pointer;transition:all .2s;text-align:center;
-    margin-top:auto;
-}
-.mat-btn:hover{opacity:.9;transform:translateY(-2px);}
-.mat-btn-premium{background:linear-gradient(135deg,var(--gold),#d97706);}
-.mat-vacio{color:var(--gray400);font-size:14px;font-style:italic;}
-
-/* ── PREMIUM BANNER ── */
-.mat-premium-banner{
-    background:linear-gradient(135deg,var(--navy),#1a1050);
-    color:white;border-radius:var(--radius-lg);padding:28px;
-    text-align:center;display:flex;flex-direction:column;
-    align-items:center;gap:14px;max-width:500px;
-}
-.mat-premium-banner p{font-size:15px;opacity:.9;line-height:1.6;}
-
-/* ── ESTADOS ── */
-.mat-estado-activa{
-    display:flex;align-items:center;gap:10px;
-    background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(124,58,237,.15));
-    border:1px solid rgba(37,99,235,.3);
-    color:var(--navy);border-radius:var(--radius);
-    padding:14px 18px;font-size:14px;font-weight:700;
-    margin-bottom:16px;flex-wrap:wrap;
-}
-.mat-estado-inactiva{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    background:var(--gray50);border:1.5px solid var(--gray200);
-    border-radius:var(--radius);padding:14px 18px;
-    margin-bottom:12px;flex-wrap:wrap;
+/* Color de acento de esta materia */
+:root {
+    --mat-color: #4338ca;
 }
 
-/* ── CUOTA ── */
-#mat-cuota-info{margin-bottom:16px;}
-
-/* ── FOOTER ── */
-.mat-footer{
-    background:var(--navy);color:white;text-align:center;
-    padding:28px 24px;font-size:13px;color:rgba(255,255,255,.5);
-    margin-top:10px;
+/* Header con el color de la materia */
+.mat-header {
+    background: linear-gradient(135deg, #0f172a 0%, #4338ca44 100%) !important;
 }
 
-/* ── RESPONSIVE ── */
-@media(max-width:600px){
-    .mat-header h1{font-size:16px;}
-    .mat-card{width:100%;}
-    .mat-grid{grid-template-columns:1fr 1fr;}
-    .mat-section{padding:20px 16px;}
-    .mat-main{padding:24px 12px;}
+/* Badge y acentos propios */
+.mat-section-title::before {
+    color: #4338ca;
 }
-@media(max-width:380px){
-    .mat-grid{grid-template-columns:1fr;}
-}
-
-
-/* === Categorías de la ruta de aprendizaje === */
-.mat-categoria{background:white;border-radius:14px;padding:20px;margin-bottom:18px;border:1px solid #e2e8f0;}
-.mat-categoria-titulo{font-size:17px;color:#1e293b;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid #e2e8f0;font-family:'Poppins',sans-serif;}
-.mat-categoria-temas{list-style:none;padding:0;margin:0 0 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px;}
-.mat-categoria-temas li{font-size:13px;color:#475569;padding:5px 10px;background:#f8fafc;border-radius:6px;}
-.mat-categoria .mat-grid{margin-top:8px;}
