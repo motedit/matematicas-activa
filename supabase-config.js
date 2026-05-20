@@ -1,174 +1,256 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guía de Pago — Matemáticas Activa</title>
-    <meta name="description" content="Cómo suscribirte a Matemáticas Activa paso a paso. Plan Básico $7000 y Premium $12000.">
-    <link rel="icon" href="img/descarga.png" type="image/png">
-    <link rel="stylesheet" href="styles.css">
-    <style>
-      .guia-wrap{max-width:780px;margin:0 auto;padding:120px 24px 80px;color:#0f172a;line-height:1.7}
-      .guia-wrap h1{font-size:30px;margin:0 0 8px}
-      .guia-wrap .meta{color:#64748b;font-size:14px;margin-bottom:32px}
-      .guia-wrap h2{font-size:22px;margin:32px 0 12px;color:#1e293b;border-bottom:2px solid #e2e8f0;padding-bottom:8px}
-      .guia-wrap h3{font-size:17px;margin:24px 0 8px;color:#334155}
-      .guia-wrap p{margin:0 0 14px;font-size:15px}
-      .guia-wrap ol,.guia-wrap ul{margin:0 0 14px;padding-left:24px}
-      .guia-wrap li{margin-bottom:8px;font-size:15px}
-      .guia-wrap a{color:#2563eb;text-decoration:underline}
-      .guia-back{display:inline-block;margin-bottom:24px;color:#2563eb;font-weight:600}
-      .step-card{background:white;border:2px solid #e2e8f0;border-radius:14px;padding:22px;margin-bottom:18px;position:relative;padding-left:70px}
-      .step-num{position:absolute;left:18px;top:18px;width:38px;height:38px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
-      .step-card h3{margin:0 0 8px;color:#0f172a}
-      .step-card p{margin:0 0 8px;font-size:14px}
-      .planes-resumen{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0 24px}
-      .plan-mini{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center}
-      .plan-mini h4{margin:0 0 4px;font-size:14px;color:#0f172a}
-      .plan-mini .precio{font-size:22px;font-weight:800;color:#2563eb;margin:0 0 4px}
-      .plan-mini .dias{font-size:11px;color:#64748b;margin:0}
-      .destacado{background:#fef3c7;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:8px;margin:20px 0;font-size:14px;color:#78350f}
-      .destacado strong{color:#92400e}
-      .wa-bg{background:linear-gradient(135deg,#25d366,#128c7e);color:white;padding:14px 20px;border-radius:10px;display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;margin:10px 0}
-      .wa-bg:hover{opacity:.92}
-      @media(max-width:640px){.planes-resumen{grid-template-columns:1fr}}
-    </style>
-</head>
-<body>
-<div class="guia-wrap">
-    <a href="index.html" class="guia-back">← Volver al inicio</a>
-    <h1>📖 Guía de Pago</h1>
-    <p class="meta">Cómo suscribirte a Matemáticas Activa · Actualizado mayo 2026</p>
+// ================================================================
+//  MATEMÁTICAS ACTIVA — Configuración de Supabase (v3 con features)
+//  Credenciales del proyecto: matematicas-activa (region sa-east-1)
+// ================================================================
 
-    <h2>1. Elegí tu plan</h2>
-    <p>Tenemos 3 opciones para que elijas según tus necesidades:</p>
+const SUPABASE_URL      = "https://yidrpuizgtqpswefwdaa.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZHJwdWl6Z3RxcHN3ZWZ3ZGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzk4MTcsImV4cCI6MjA5NDYxNTgxN30.kRuZoCIkvXhDNdlfumkWY7JK2qsU1nObr6eegBboFds";
 
-    <div class="planes-resumen">
-        <div class="plan-mini">
-            <h4>🆓 Gratis</h4>
-            <p class="precio">$ 0</p>
-            <p class="dias">Para siempre · Limitado a 3 usos/día</p>
-        </div>
-        <div class="plan-mini" style="border-color:#2563eb">
-            <h4>📘 Básico</h4>
-            <p class="precio">$ 7.000</p>
-            <p class="dias">23 días · Acceso completo</p>
-        </div>
-        <div class="plan-mini" style="border-color:#f59e0b">
-            <h4>⭐ Premium</h4>
-            <p class="precio">$ 12.000</p>
-            <p class="dias">30 días · Todo + subir archivos</p>
-        </div>
-    </div>
+const sb = (typeof supabase !== "undefined" && supabase.createClient)
+    ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    })
+    : null;
+if (!sb) console.error("Supabase SDK no se cargó.");
 
-    <h3>¿Qué incluye cada plan?</h3>
-    <ul>
-        <li><strong>Gratis:</strong> 3 archivos públicos y 3 usos de calculadora/graficadora por día (se reinicia cada 24 hs).</li>
-        <li><strong>Básico ($7.000 / 23 días):</strong> acceso ilimitado a archivos premium + calculadora/graficadora sin límites.</li>
-        <li><strong>Premium ($12.000 / 30 días):</strong> todo lo del básico + 7 días más + podés subir tus propios PDFs y videos a tu carpeta personal.</li>
-    </ul>
+// ============================ AUTH ==============================
+async function sbRegistro({ email, password, username }) {
+    const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { username }, emailRedirectTo: window.location.origin + window.location.pathname }
+    });
+    return { data, error };
+}
+async function sbLogin({ email, password }) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (!error && data?.user) {
+        await sb.from("perfiles").update({ ultimo_login: new Date().toISOString() }).eq("id", data.user.id);
+        try { await sb.rpc("registrar_visita_diaria"); } catch(e) {}
+    }
+    return { data, error };
+}
+async function sbLogout()  { return await sb.auth.signOut(); }
+async function sbSesion()  { const { data: { session } } = await sb.auth.getSession(); return session; }
+async function sbUsuario() { const { data: { user } } = await sb.auth.getUser(); return user; }
+async function sbPerfil(userId) {
+    const id = userId || (await sbUsuario())?.id;
+    if (!id) return null;
+    const { data, error } = await sb.from("perfiles").select("*").eq("id", id).single();
+    if (error) { console.warn("Error leyendo perfil:", error); return null; }
+    return data;
+}
+async function sbEsAdmin() { const p = await sbPerfil(); return p?.rol === "admin"; }
 
-    <h2>2. Pedir información por WhatsApp</h2>
+// ============== Cambiar password / username =====================
+async function sbCambiarPassword(passwordActual, passwordNuevo) {
+    // Re-autenticar primero verificando la actual
+    const u = await sbUsuario();
+    if (!u) return { error: { message: "No hay sesión activa" } };
+    const { error: e1 } = await sb.auth.signInWithPassword({ email: u.email, password: passwordActual });
+    if (e1) return { error: { message: "La contraseña actual no es correcta" } };
+    const { error: e2 } = await sb.auth.updateUser({ password: passwordNuevo });
+    return { error: e2 };
+}
+async function sbCambiarUsername(nuevoUsername) {
+    const u = await sbUsuario();
+    if (!u) return { error: { message: "No hay sesión activa" } };
+    const { data, error } = await sb.from("perfiles")
+        .update({ username: nuevoUsername }).eq("id", u.id).select().single();
+    return { data, error };
+}
+async function sbOlvidePassword(email) {
+    // Manda mail con link de reset a la URL actual
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+    });
+    return { error };
+}
+async function sbSetPasswordEnRecovery(nuevoPassword) {
+    // Se llama después de que el usuario llegó al sitio con el link de recovery
+    const { error } = await sb.auth.updateUser({ password: nuevoPassword });
+    return { error };
+}
 
-    <div class="step-card">
-        <span class="step-num">1</span>
-        <h3>Tocá el botón verde flotante</h3>
-        <p>Abajo a la derecha del sitio vas a ver un botón verde con 💬. Tocalo.</p>
-    </div>
+// ====================== ARCHIVOS ================================
+async function sbListarArchivos(filtros = {}) {
+    let q = sb.from("archivos").select("*").order("creado_en", { ascending: false });
+    if (filtros.solo_publicos)  q = q.eq("es_personal", false);
+    if (filtros.solo_personales) q = q.eq("es_personal", true);
+    if (filtros.materia)         q = q.eq("materia", filtros.materia);
+    const { data, error } = await q;
+    if (error) { console.warn("Error listando archivos:", error); return []; }
+    return data || [];
+}
+async function sbCrearArchivo(meta) { return await sb.from("archivos").insert(meta).select().single(); }
+async function sbActualizarArchivo(id, cambios) {
+    return await sb.from("archivos").update(cambios).eq("id", id).select().single();
+}
+async function sbBorrarArchivo(id, storagePath) {
+    if (storagePath) await sb.storage.from("archivos").remove([storagePath]);
+    return await sb.from("archivos").delete().eq("id", id);
+}
+async function sbSubirBlob(path, blob, contentType) {
+    return await sb.storage.from("archivos").upload(path, blob, { contentType, upsert: false });
+}
+async function sbUrlFirmada(path, expiresInSeconds = 3600) {
+    const { data, error } = await sb.storage.from("archivos").createSignedUrl(path, expiresInSeconds);
+    if (error) { console.warn("Error URL firmada:", error); return null; }
+    return data?.signedUrl || null;
+}
+async function sbDescargarBlob(path) {
+    const { data, error } = await sb.storage.from("archivos").download(path);
+    if (error) { console.warn("Error descargando blob:", error); return null; }
+    return data;
+}
 
-    <div class="step-card">
-        <span class="step-num">2</span>
-        <h3>Elegí "WhatsApp"</h3>
-        <p>Se abre un menú con dos opciones. Tocá la de WhatsApp 💚.</p>
-    </div>
+// ==================== PERFILES ==================================
+async function sbListarPerfiles() {
+    const { data, error } = await sb.from("perfiles").select("*").order("creado_en", { ascending: false });
+    if (error) { console.warn("Error listando perfiles:", error); return []; }
+    return data || [];
+}
+async function sbActualizarPerfil(userId, cambios) {
+    return await sb.from("perfiles").update(cambios).eq("id", userId).select().single();
+}
+async function sbAgregarVisto(archivoId) {
+    const u = await sbUsuario(); if (!u) return;
+    const p = await sbPerfil(u.id); if (!p) return;
+    if (p.vistos?.includes(archivoId)) return p;
+    const nuevos = [...(p.vistos || []), archivoId];
+    const { data } = await sbActualizarPerfil(u.id, { vistos: nuevos });
+    return data;
+}
 
-    <div class="step-card">
-        <span class="step-num">3</span>
-        <h3>Mandanos un mensaje</h3>
-        <p>Te abre WhatsApp con un mensaje predefinido. Solo tenés que <strong>agregar tu nombre de usuario</strong> al final.</p>
-        <p>Ejemplo del mensaje:</p>
-        <blockquote style="background:#f1f5f9;border-left:3px solid #25d366;padding:10px 14px;font-style:italic;font-size:14px;margin:8px 0">
-            "Hola! Quiero suscribirme al PLAN PREMIUM ($12.000) de Matemáticas Activa. Mi usuario es: <strong>marcos.99</strong>"
-        </blockquote>
-        <a class="wa-bg" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20a%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">💚 Abrir WhatsApp ahora</a>
-    </div>
+// =================== PREMIUM ====================================
+async function sbActivarPremium(usuarioId, diasExtra = 30, tipo = "activacion") {
+    const p = await sbPerfil(usuarioId);
+    if (!p) return { error: "Usuario no encontrado" };
+    const base = (p.premium_hasta && new Date(p.premium_hasta) > new Date())
+        ? new Date(p.premium_hasta).getTime() : Date.now();
+    const nuevoHasta = new Date(base + diasExtra * 86400000);
+    const { error: e1 } = await sbActualizarPerfil(usuarioId, { premium_hasta: nuevoHasta.toISOString() });
+    if (e1) return { error: e1 };
+    const { error: e2 } = await sb.from("historial_pagos").insert({
+        usuario_id: usuarioId, monto: window.PRECIO_SUSCRIPCION || "$ 10.000",
+        moneda: "ARS", dias_activados: diasExtra, tipo,
+    });
+    return { error: e2, nuevoHasta };
+}
+async function sbDesactivarPremium(usuarioId) {
+    return await sbActualizarPerfil(usuarioId, { premium_hasta: null });
+}
 
-    <h2>3. Realizar el pago</h2>
+// ===================== PUNTOS / RACHA ===========================
+async function sbSumarPuntos(cantidad) {
+    const { data, error } = await sb.rpc("sumar_puntos", { cantidad });
+    if (error) console.warn("Error sumando puntos:", error);
+    return data;
+}
+async function sbRegistrarVisitaDiaria() {
+    const { data, error } = await sb.rpc("registrar_visita_diaria");
+    if (error) console.warn("Error registrando visita:", error);
+    return data?.[0];
+}
+async function sbRanking() {
+    const { data, error } = await sb.from("ranking_semanal").select("*");
+    if (error) { console.warn("Error ranking:", error); return []; }
+    return data || [];
+}
 
-    <div class="step-card">
-        <span class="step-num">4</span>
-        <h3>Te enviamos los datos para pagar</h3>
-        <p>Por WhatsApp te vamos a pasar los datos para que pagues. Podés elegir entre:</p>
-        <ul>
-            <li><strong>MercadoPago</strong> — link directo, podés pagar con tarjeta, dinero en cuenta o transferencia.</li>
-            <li><strong>Naranja X</strong> — para clientes de Naranja X, pago en cuotas si aplica.</li>
-        </ul>
-    </div>
+// ===================== COMENTARIOS ==============================
+async function sbListarComentarios(archivoId) {
+    const { data, error } = await sb.from("comentarios")
+        .select("id, texto, creado_en, usuario_id, perfiles:usuario_id(username, rol)")
+        .eq("archivo_id", archivoId)
+        .order("creado_en", { ascending: true });
+    if (error) { console.warn("Error comentarios:", error); return []; }
+    return data || [];
+}
+async function sbCrearComentario(archivoId, texto) {
+    const u = await sbUsuario(); if (!u) return { error: { message: "Necesitás login" } };
+    return await sb.from("comentarios").insert({
+        archivo_id: archivoId, usuario_id: u.id, texto
+    }).select().single();
+}
+async function sbBorrarComentario(id) {
+    return await sb.from("comentarios").delete().eq("id", id);
+}
 
-    <div class="step-card">
-        <span class="step-num">5</span>
-        <h3>Hacé el pago</h3>
-        <p>Completá la operación en la plataforma elegida. Vas a recibir un comprobante (captura de pantalla o PDF).</p>
-    </div>
+// ===================== EJERCICIOS DIARIOS =======================
+async function sbEjercicioDeHoy() {
+    const hoy = new Date().toISOString().slice(0, 10);
+    // Primero buscar uno fijado para hoy
+    let { data } = await sb.from("ejercicios_diarios").select("*").eq("fecha", hoy).maybeSingle();
+    if (data) return data;
+    // Si no hay, devolver uno aleatorio del catálogo
+    const { data: lista } = await sb.from("ejercicios_diarios").select("*").is("fecha", null);
+    if (!lista?.length) return null;
+    const idx = Math.floor(Math.random() * lista.length);
+    return lista[idx];
+}
+async function sbResponderEjercicio(fecha, correcto) {
+    const u = await sbUsuario(); if (!u) return;
+    await sb.from("ejercicios_respondidos").insert({ usuario_id: u.id, fecha, correcto });
+    if (correcto) await sbSumarPuntos(10);
+}
+async function sbYaRespondioHoy() {
+    const u = await sbUsuario(); if (!u) return false;
+    const hoy = new Date().toISOString().slice(0, 10);
+    const { data } = await sb.from("ejercicios_respondidos")
+        .select("correcto").eq("usuario_id", u.id).eq("fecha", hoy).maybeSingle();
+    return data;
+}
+async function sbCrearEjercicio(pregunta, respuesta, pista, dificultad) {
+    return await sb.from("ejercicios_diarios").insert({
+        pregunta, respuesta, pista, dificultad: dificultad || "medio"
+    }).select().single();
+}
 
-    <h2>4. Enviar el comprobante</h2>
+// ====================== EXPOSE ==================================
 
-    <div class="step-card">
-        <span class="step-num">6</span>
-        <h3>Mandanos el comprobante por WhatsApp</h3>
-        <p>Volvé al mismo chat de WhatsApp donde te pasamos los datos y enviá:</p>
-        <ul>
-            <li>📎 La captura/PDF del comprobante de pago.</li>
-            <li>👤 Tu nombre de usuario en Matemáticas Activa (el que usás para entrar al sitio).</li>
-            <li>📦 Qué plan compraste (Básico o Premium).</li>
-        </ul>
-    </div>
+// ===================== PLANES (v4) ==============================
+async function sbPlanVigente() {
+    const u = await sbUsuario(); if (!u) return 'gratis';
+    const { data, error } = await sb.rpc('plan_vigente', { usuario_id: u.id });
+    if (error) { console.warn(error); return 'gratis'; }
+    return data || 'gratis';
+}
+async function sbRegistrarUso(accion) {
+    const { data, error } = await sb.rpc('registrar_uso', { accion });
+    if (error) { console.warn(error); return -1; }
+    return data;
+}
+async function sbVerQuotaHoy() {
+    const { data, error } = await sb.rpc('ver_quota_hoy');
+    if (error) { console.warn(error); return null; }
+    return data?.[0];
+}
+async function sbAdminActivarPlan(usuarioId, plan, dias) {
+    const { data, error } = await sb.rpc('admin_activar_plan', { usuario_id: usuarioId, nuevo_plan: plan, dias });
+    return { data, error };
+}
 
-    <div class="destacado">
-        <p><strong>⚠️ MUY IMPORTANTE:</strong> sin el nombre de usuario no podemos activarte el plan. Asegurate de incluirlo en el mensaje.</p>
-    </div>
 
-    <h2>5. Activación</h2>
+// ===================== TEMAS (ruta de aprendizaje) ==============
+async function sbListarTemas(materia) {
+    let q = sb.from("temas").select("*").order("nivel").order("categoria").order("orden");
+    if (materia) q = q.eq("materia", materia);
+    const { data, error } = await q;
+    if (error) { console.warn("Error temas:", error); return []; }
+    return data || [];
+}
 
-    <div class="step-card">
-        <span class="step-num">7</span>
-        <h3>Tu plan se activa en pocos minutos</h3>
-        <p>Una vez que recibimos el comprobante:</p>
-        <ul>
-            <li>Verificamos que el pago se haya acreditado.</li>
-            <li>Activamos tu plan en la plataforma.</li>
-            <li>Te confirmamos por WhatsApp.</li>
-            <li>Ya podés cerrar sesión y volver a entrar para ver tu plan activado.</li>
-        </ul>
-        <p><strong>Tiempo estimado:</strong> dentro de las próximas horas hábiles (días de semana, 9 a 21 hs).</p>
-    </div>
-
-    <h2>Preguntas frecuentes</h2>
-
-    <h3>¿Es seguro pagar así?</h3>
-    <p>El pago se hace en plataformas seguras (MercadoPago o Naranja X), no acá. Nosotros nunca vemos los datos de tu tarjeta o cuenta. Solo recibimos la confirmación del pago.</p>
-
-    <h3>¿Qué pasa si no recibo confirmación?</h3>
-    <p>Si pasan más de 24 hs hábiles sin respuesta, volvé a escribirnos por WhatsApp con tu nombre de usuario. Eventualmente algunos mensajes se pierden.</p>
-
-    <h3>¿Puedo cancelar y pedir reembolso?</h3>
-    <p>Sí, conforme a la Ley 24.240 de Defensa del Consumidor tenés derecho a revocar la compra dentro de los <strong>10 días corridos</strong>, siempre que no hayas usado el contenido premium de forma sustancial.</p>
-
-    <h3>¿Qué pasa cuando vence mi plan?</h3>
-    <p>Volvés automáticamente al plan Gratis (3 archivos y 3 usos por día). Si querés seguir, repetís el proceso de pago.</p>
-
-    <h3>¿Puedo cambiar de Básico a Premium antes de que venza?</h3>
-    <p>Sí. Pagás la diferencia y te extendemos al plan superior. Escribinos por WhatsApp para coordinarlo.</p>
-
-    <h3>¿Necesito factura?</h3>
-    <p>Si necesitás factura, pedila al hacer el pago y te la enviamos.</p>
-
-    <hr style="margin:40px 0;border:none;border-top:1px solid #e2e8f0">
-    <div style="text-align:center">
-        <p style="font-size:14px;color:#64748b">¿Lista para empezar?</p>
-        <a class="wa-bg" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20a%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">💚 Escribinos por WhatsApp</a>
-        <p style="font-size:13px;color:#64748b;margin-top:14px"><a href="index.html" style="color:#2563eb">← Volver al inicio</a> · <a href="terminos-servicio.html" style="color:#2563eb">Ver Términos de Servicio</a></p>
-    </div>
-</div>
-</body>
-</html>
+window.MA_SUPABASE = {
+    sb,
+    sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
+    sbCambiarPassword, sbCambiarUsername, sbOlvidePassword, sbSetPasswordEnRecovery,
+    sbListarArchivos, sbCrearArchivo, sbActualizarArchivo, sbBorrarArchivo,
+    sbSubirBlob, sbUrlFirmada, sbDescargarBlob,
+    sbListarPerfiles, sbActualizarPerfil, sbAgregarVisto,
+    sbActivarPremium, sbDesactivarPremium,
+    sbPlanVigente, sbRegistrarUso, sbVerQuotaHoy, sbAdminActivarPlan,
+    sbListarTemas,
+    sbSumarPuntos, sbRegistrarVisitaDiaria, sbRanking,
+    sbListarComentarios, sbCrearComentario, sbBorrarComentario,
+    sbEjercicioDeHoy, sbResponderEjercicio, sbYaRespondioHoy, sbCrearEjercicio,
+};

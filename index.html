@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1779236486">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -170,7 +170,7 @@
                 <div class="form-group"><label for="mu-tema">🎯 Tema de la ruta (opcional)</label><select id="mu-tema"><option value="">— Sin tema específico —</option></select></div>
                 <div class="form-group"><label for="mu-seccion">📂 Tipo de contenido</label><select id="mu-seccion"><option value="pdf">PDF</option><option value="imagen">Imagen</option><option value="texto">Nota de texto</option><option value="video">Video</option></select></div>
                 <div class="form-group"><label for="mu-tipo">Formato</label><select id="mu-tipo" onchange="(function(){var t=document.getElementById('mu-tipo').value;document.getElementById('mu-archivo-wrap').style.display=t==='archivo'?'block':'none';document.getElementById('mu-texto-wrap').style.display=t==='texto'?'block':'none';document.getElementById('mu-url-wrap').style.display=t==='url-video'?'block':'none';})()"><option value="archivo">Subir archivo (PDF, Word, imagen, etc.)</option><option value="texto">Nota de texto</option><option value="url-video">URL de video (YouTube/Vimeo)</option></select></div>
-                <div id="mu-archivo-wrap" class="form-group"><label for="mu-archivo">Archivo (máx. 50 MB)</label><input type="file" id="mu-archivo" accept=".pdf,.doc,.docx,.txt,image/*,video/*"></div>
+                <div id="mu-archivo-wrap" class="form-group"><label for="mu-archivo">Archivo (máx. 2 GB)</label><input type="file" id="mu-archivo" accept=".pdf,.doc,.docx,.txt,image/*,video/*"></div>
                 <div id="mu-texto-wrap" class="form-group" style="display:none"><label for="mu-texto">Texto</label><textarea id="mu-texto" rows="5" placeholder="Tu nota..."></textarea></div>
                 <div id="mu-url-wrap" class="form-group" style="display:none"><label for="mu-url">URL</label><input type="url" id="mu-url" placeholder="https://youtube.com/..."></div>
                 <div class="form-group"><label for="mu-desc">Descripción (opcional)</label><input type="text" id="mu-desc" placeholder="Breve descripción"></div>
@@ -260,6 +260,12 @@
                 <div class="form-group"><label for="re-email">Email</label><input type="email" id="re-email" placeholder="tu@email.com" autocomplete="email"></div>
                 <div class="form-group"><label for="re-pass">Contraseña</label><input type="password" id="re-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
                 <div class="form-group"><label for="re-pass2">Confirmar contraseña</label><input type="password" id="re-pass2" placeholder="Repetí la contraseña" autocomplete="new-password"></div>
+                <div class="form-group" style="display:flex;align-items:flex-start;gap:8px;background:#f8fafc;padding:10px 12px;border-radius:8px;margin:8px 0">
+                    <input type="checkbox" id="re-acepto" style="margin-top:3px;cursor:pointer;width:18px;height:18px;flex-shrink:0">
+                    <label for="re-acepto" style="font-size:13px;color:#475569;line-height:1.4;cursor:pointer">
+                        Acepto los <a href="terminos-servicio.html" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600">Términos y Condiciones</a> y la <a href="politica-privacidad.html" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600">Política de Privacidad</a> de Matemáticas Activa.
+                    </label>
+                </div>
                 <div id="re-error" class="form-error" role="alert" aria-live="polite"></div>
                 <div id="re-success" class="form-success" role="status" aria-live="polite"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="usuarioRegistro()">Registrarme</button>
@@ -358,7 +364,7 @@
                     <div class="form-group"><label for="su-tema">🎯 Tema (opcional, ruta de aprendizaje)</label><select id="su-tema"><option value="">— Sin tema específico —</option></select></div>
                     <div class="form-group"><label for="su-seccion">📂 Sección *</label><select id="su-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
                     <div class="form-group"><label for="su-tipo">Tipo *</label><select id="su-tipo" onchange="actualizarCampoArchivo()"><option value="archivo">Archivo</option><option value="texto">Texto</option><option value="url-video">URL de video</option></select></div>
-                    <div id="su-archivo-wrap" class="form-group"><label for="su-archivo">Archivo (máx. 50 MB)</label><input type="file" id="su-archivo" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"></div>
+                    <div id="su-archivo-wrap" class="form-group"><label for="su-archivo">Archivo (máx. 2 GB)</label><input type="file" id="su-archivo" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"></div>
                     <div id="su-texto-wrap" class="form-group" style="display:none"><label for="su-texto">Contenido</label><textarea id="su-texto" rows="5" placeholder="Escribí el contenido..."></textarea></div>
                     <div id="su-url-wrap" class="form-group" style="display:none"><label for="su-url">URL del video</label><input type="url" id="su-url" placeholder="https://youtube.com/..."></div>
                     <div class="form-group"><label for="su-desc">Descripción</label><input type="text" id="su-desc" placeholder="Breve descripción"></div>
@@ -527,7 +533,7 @@
 
     <!-- Supabase SDK + config + scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <script src="scripts.js"></script>
+    <script src="supabase-config.js?v=1779236486"></script>
+    <script src="scripts.js?v=1779236486"></script>
 </body>
 </html>

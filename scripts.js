@@ -1,820 +1,1038 @@
 // ================================================================
-//  MATEMÁTICAS ACTIVA — calculadora.js
-//  Calculadora de ejercicios aleatorios por materia
-//  Materias: algebra | aritmetica | trigonometria
-//  Niveles: secundario | superior
+//  MATEMÁTICAS ACTIVA — scripts.js v3 (Supabase + features)
 // ================================================================
 
-(function () {
+const PRECIO_SUSCRIPCION = "$ 10.000";
+const MONEDA             = "ARS / mes";
+const DURACION_DIAS      = 30;
+const LINK_MERCADOPAGO   = "https://mpago.la/29qTXgw";
+const LINK_NARANJAX      = "https://mpago.la/29qTXgw";
+window.PRECIO_SUSCRIPCION = PRECIO_SUSCRIPCION;
 
-    // ── Utilidades matemáticas ─────────────────────────────────
-    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a || 1; }
-    function mcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
-    function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-    function fracSimp(num, den) {
-        if (den === 0) return { num: 0, den: 1 };
-        const g = gcd(Math.abs(num), Math.abs(den));
-        const s = den < 0 ? -1 : 1;
-        return { num: s * num / g, den: s * den / g };
+const SEG = { SESION_TIMEOUT_MIN: 30, PASS_MIN_LENGTH: 6 };
+const MAX_ARCHIVOS_GRATIS = 3;
+const MAX_FILE_SIZE       = 2 * 1024 * 1024 * 1024; // 2 GB (requiere Supabase Pro)
+const MATERIAS = {
+    general:"General", algebra:"Álgebra", aritmetica:"Aritmética",
+    geometria:"Geometría", estadistica:"Estadística", trigonometria:"Trigonometría",
+    calculo:"Cálculo", razonamiento:"Razonamiento Mat.", juegos:"Juegos Matemáticos"
+};
+
+let appState = {
+    perfilActual: null,
+    archivos: [],         // todos los archivos visibles (públicos + mis personales si soy user; todo si soy admin)
+    archivosPublicos: [], // solo públicos
+    misArchivos: [],      // solo del usuario logueado
+    perfiles: [],
+};
+
+const MA = () => window.MA_SUPABASE;
+
+// ============ UTILS ============
+function sanitizar(s) {
+    return String(s).replace(/[<>"'`]/g, "").replace(/javascript:/gi,"").replace(/on\w+=/gi,"").trim().substring(0,200);
+}
+function validarUsuario(n) { return /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ._-]{3,40}$/.test(n); }
+function validarEmail(e)   { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function formatearFecha(ts){ if(!ts)return"—"; return new Date(ts).toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}); }
+function formatearFechaHora(ts){ if(!ts)return"—"; return new Date(ts).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+function formatearTamano(b){ if(!b)return""; if(b<1024)return b+" B"; if(b<1024**2)return(b/1024).toFixed(1)+" KB"; if(b<1024**3)return(b/1024**2).toFixed(1)+" MB"; return(b/1024**3).toFixed(2)+" GB"; }
+
+// ============ TOAST ============
+function mostrarToast(msg, tipo = "info") {
+    let t = document.getElementById("ma-toast");
+    if (!t) {
+        t = document.createElement("div"); t.id = "ma-toast";
+        t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.25);transition:opacity .3s,transform .3s;opacity:0;transform:translateY(12px);font-family:'Inter',sans-serif;`;
+        document.body.appendChild(t);
     }
-    function fracStr(f) { return f.den === 1 ? `${f.num}` : `${f.num}/${f.den}`; }
-    function fracVal(f) { return f.num / f.den; }
+    const c = {info:"background:#1e293b;color:white;", ok:"background:#16a34a;color:white;", warn:"background:#f59e0b;color:#1a1a1a;", error:"background:#dc2626;color:white;"};
+    t.style.cssText += c[tipo] || c.info;
+    t.textContent = msg;
+    t.style.opacity = "1"; t.style.transform = "translateY(0)";
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity="0"; t.style.transform="translateY(12px)"; }, 4000);
+}
 
-    // Verifica si la respuesta del usuario es correcta (numérica o fracción)
-    function respuestaCorrecta(input, esperado, tolerancia = 0.005) {
-        const s = input.toString().trim().replace(',', '.').replace('−', '-');
-        // Intento directo numérico
-        const n = parseFloat(s);
-        if (!isNaN(n)) return Math.abs(n - esperado) <= tolerancia + Math.abs(esperado) * 0.001;
-        // Intento fracción a/b
-        const m = s.match(/^(-?\d+)\s*\/\s*(-?\d+)$/);
-        if (m) return Math.abs(parseInt(m[1]) / parseInt(m[2]) - esperado) <= tolerancia;
-        // Respuestas especiales trig
-        const trig = { '√3/2': Math.sqrt(3)/2, '√2/2': Math.sqrt(2)/2, '√3/3': Math.sqrt(3)/3,
-                       '√3': Math.sqrt(3), '√2': Math.sqrt(2), '1/√3': 1/Math.sqrt(3) };
-        if (trig[s] !== undefined) return Math.abs(trig[s] - esperado) <= tolerancia;
-        return false;
+// ============ TIMEOUT INACTIVIDAD ============
+let _sesionTimer=null, _warnTimer=null, _warnInterval=null;
+function ocultarWarning(){ clearInterval(_warnInterval); _warnInterval=null; const w=document.getElementById('ma-timeout-modal'); if(w) w.style.display='none'; }
+function mostrarWarningTimeout(){
+    let m = document.getElementById('ma-timeout-modal');
+    if(!m){
+        m = document.createElement('div'); m.id='ma-timeout-modal';
+        m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px';
+        m.innerHTML = `<div style="background:white;border-radius:16px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div style="font-size:48px;margin-bottom:12px">⏱️</div><h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 8px">¿Seguís ahí?</h3><p style="font-size:14px;color:#64748b;margin:0 0 16px">Tu sesión se cerrará en <strong id="ma-countdown" style="color:#dc2626;font-size:20px">15</strong> segundos.</p><button type="button" onclick="resetSesionTimer()" style="width:100%;padding:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">✅ Seguir</button><button type="button" onclick="cerrarSesion()" style="width:100%;padding:10px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;cursor:pointer;margin-top:8px">Cerrar sesión</button></div>`;
+        document.body.appendChild(m);
     }
+    m.style.display='flex';
+    let c=15; clearInterval(_warnInterval);
+    _warnInterval = setInterval(()=>{ c--; const el=document.getElementById('ma-countdown'); if(el) el.textContent=c; if(c<=0) clearInterval(_warnInterval); },1000);
+}
+function resetSesionTimer(){
+    if(!appState.perfilActual) return;
+    ocultarWarning(); clearTimeout(_sesionTimer); clearTimeout(_warnTimer);
+    const t = SEG.SESION_TIMEOUT_MIN*60*1000;
+    _warnTimer = setTimeout(mostrarWarningTimeout, t-15000);
+    _sesionTimer = setTimeout(async()=>{ if(appState.perfilActual){ await cerrarSesion(); mostrarToast("⏱️ Sesión cerrada por inactividad","warn"); } }, t);
+}
+function iniciarMonitoreoSesion(){
+    ["click","keydown","scroll","mousemove","touchstart"].forEach(ev=>
+        document.addEventListener(ev, ()=>{ if(appState.perfilActual) resetSesionTimer(); }, {passive:true})
+    );
+}
 
-    // ── Tabla de ángulos notables ──────────────────────────────
-    const ANGULOS = {
-        0:   { sin: 0,             cos: 1,              tan: 0,             sinD: "0",     cosD: "1",      tanD: "0" },
-        30:  { sin: 0.5,           cos: Math.sqrt(3)/2, tan: Math.sqrt(3)/3,sinD: "1/2",  cosD: "√3/2",   tanD: "√3/3" },
-        45:  { sin: Math.sqrt(2)/2,cos: Math.sqrt(2)/2, tan: 1,             sinD: "√2/2", cosD: "√2/2",   tanD: "1" },
-        60:  { sin: Math.sqrt(3)/2,cos: 0.5,            tan: Math.sqrt(3),  sinD: "√3/2", cosD: "1/2",    tanD: "√3" },
-        90:  { sin: 1,             cos: 0,              tan: null,          sinD: "1",     cosD: "0",      tanD: "no existe" },
-        120: { sin: Math.sqrt(3)/2,cos: -0.5,           tan: -Math.sqrt(3), sinD: "√3/2", cosD: "-1/2",   tanD: "-√3" },
-        135: { sin: Math.sqrt(2)/2,cos: -Math.sqrt(2)/2,tan: -1,            sinD: "√2/2", cosD: "-√2/2",  tanD: "-1" },
-        150: { sin: 0.5,           cos: -Math.sqrt(3)/2,tan: -Math.sqrt(3)/3,sinD:"1/2",  cosD: "-√3/2",  tanD: "-√3/3" },
-        180: { sin: 0,             cos: -1,             tan: 0,             sinD: "0",     cosD: "-1",     tanD: "0" },
-    };
+// ============ BÚSQUEDA ============
+function buscarContenido() {
+    const input = sanitizar(document.getElementById("buscador").value).toLowerCase();
+    const cont = document.getElementById("lista-contenidos"); if (!cont) return;
+    [...cont.getElementsByTagName("a")].forEach(a => {
+        const visible = a.innerText.toLowerCase().includes(input);
+        const t = a.parentElement?.tagName === "LI" ? a.parentElement : a;
+        t.style.display = visible ? "" : "none";
+    });
+}
 
-    // ── GENERADORES DE EJERCICIOS ──────────────────────────────
-    // Cada generador devuelve: { enunciado, respuesta, respuestaTexto, pista, solucion, tipo }
+// ============ PREMIUM helpers ============
+function esPremiumActivo(p) { return p?.premium_hasta && new Date(p.premium_hasta).getTime() > Date.now(); }
+function diasRestantes(p) {
+    if (!p?.premium_hasta) return 0;
+    const ms = new Date(p.premium_hasta).getTime() - Date.now();
+    return ms > 0 ? Math.ceil(ms / 86400000) : 0;
+}
 
-    const GEN = {
+// ============ ESTADO ============
+async function refrescarEstado() {
+    if (!MA()?.sb) { appState = { perfilActual:null, archivos:[], archivosPublicos:[], misArchivos:[], perfiles:[] }; return; }
+    appState.perfilActual = await MA().sbPerfil();
+    appState.archivos     = await MA().sbListarArchivos();
+    appState.archivosPublicos = appState.archivos.filter(a => !a.es_personal);
+    appState.misArchivos  = appState.perfilActual
+        ? appState.archivos.filter(a => a.es_personal && a.creado_por === appState.perfilActual.id)
+        : [];
+    if (appState.perfilActual?.rol === "admin") appState.perfiles = await MA().sbListarPerfiles();
+    else appState.perfiles = [];
+}
 
-        // ════════ ARITMÉTICA ════════════════════════════════════
-        aritmetica: {
 
-            secundario: [
-
-                // Suma de fracciones
-                function() {
-                    const denoms = [2,3,4,5,6,8,10];
-                    const b = pick(denoms), d = pick(denoms.filter(x => x !== b));
-                    const a = rnd(1, b-1), c = rnd(1, d-1);
-                    const lcd = mcm(b, d);
-                    const rn = a*(lcd/b) + c*(lcd/d);
-                    const r = fracSimp(rn, lcd);
-                    return {
-                        tipo: "Suma de fracciones",
-                        enunciado: `Calculá: <span class="calc-expr">${a}/${b} + ${c}/${d}</span>`,
-                        respuesta: fracVal(r),
-                        respuestaTexto: fracStr(r),
-                        pista: `El mínimo común múltiplo de ${b} y ${d} es ${lcd}.`,
-                        solucion: `MCM(${b}, ${d}) = ${lcd}\n${a}/${b} = ${a*(lcd/b)}/${lcd}\n${c}/${d} = ${c*(lcd/d)}/${lcd}\n${a*(lcd/b)}/${lcd} + ${c*(lcd/d)}/${lcd} = ${rn}/${lcd} = ${fracStr(r)}`
-                    };
-                },
-
-                // Resta de fracciones
-                function() {
-                    const denoms = [2,3,4,5,6,8,10];
-                    const b = pick(denoms), d = pick(denoms.filter(x => x !== b));
-                    const lcd = mcm(b, d);
-                    let a, c;
-                    do { a = rnd(1, b); c = rnd(1, d); } while (a*(lcd/b) <= c*(lcd/d));
-                    const rn = a*(lcd/b) - c*(lcd/d);
-                    const r = fracSimp(rn, lcd);
-                    return {
-                        tipo: "Resta de fracciones",
-                        enunciado: `Calculá: <span class="calc-expr">${a}/${b} − ${c}/${d}</span>`,
-                        respuesta: fracVal(r),
-                        respuestaTexto: fracStr(r),
-                        pista: `El mínimo común múltiplo de ${b} y ${d} es ${lcd}.`,
-                        solucion: `MCM(${b}, ${d}) = ${lcd}\n${a*(lcd/b)}/${lcd} − ${c*(lcd/d)}/${lcd} = ${rn}/${lcd} = ${fracStr(r)}`
-                    };
-                },
-
-                // Multiplicación de fracciones
-                function() {
-                    const b = pick([2,3,4,5,6]), d = pick([2,3,4,5,6]);
-                    const a = rnd(1, b+2), c = rnd(1, d+2);
-                    const r = fracSimp(a*c, b*d);
-                    return {
-                        tipo: "Multiplicación de fracciones",
-                        enunciado: `Calculá: <span class="calc-expr">${a}/${b} × ${c}/${d}</span>`,
-                        respuesta: fracVal(r),
-                        respuestaTexto: fracStr(r),
-                        pista: "Se multiplican numeradores entre sí y denominadores entre sí.",
-                        solucion: `${a}/${b} × ${c}/${d} = (${a}×${c}) / (${b}×${d}) = ${a*c}/${b*d} = ${fracStr(r)}`
-                    };
-                },
-
-                // División de fracciones
-                function() {
-                    const b = pick([2,3,4,5,6]), d = pick([2,3,4,5,6]);
-                    const a = rnd(1, b+2), c = rnd(1, d+2);
-                    const r = fracSimp(a*d, b*c);
-                    return {
-                        tipo: "División de fracciones",
-                        enunciado: `Calculá: <span class="calc-expr">${a}/${b} ÷ ${c}/${d}</span>`,
-                        respuesta: fracVal(r),
-                        respuestaTexto: fracStr(r),
-                        pista: "Dividir por una fracción = multiplicar por su inversa.",
-                        solucion: `${a}/${b} ÷ ${c}/${d} = ${a}/${b} × ${d}/${c} = ${a*d}/${b*c} = ${fracStr(r)}`
-                    };
-                },
-
-                // Porcentaje directo
-                function() {
-                    const pcts = [10,15,20,25,30,40,50,60,75];
-                    const p = pick(pcts);
-                    const bases = [20,40,50,80,100,120,150,200,250,400];
-                    const base = pick(bases.filter(b => (b*p)%100 === 0));
-                    const ans = base * p / 100;
-                    return {
-                        tipo: "Porcentaje",
-                        enunciado: `¿Cuánto es el <span class="calc-expr">${p}%</span> de <span class="calc-expr">${base}</span>?`,
-                        respuesta: ans,
-                        respuestaTexto: `${ans}`,
-                        pista: `Multiplicá ${base} × ${p} y dividí por 100.`,
-                        solucion: `${base} × ${p} / 100 = ${base*p} / 100 = ${ans}`
-                    };
-                },
-
-                // Potencias enteras
-                function() {
-                    const a = rnd(2, 9), n = pick([2,3]);
-                    const ans = Math.pow(a, n);
-                    return {
-                        tipo: "Potencias",
-                        enunciado: `Calculá: <span class="calc-expr">${a}<sup>${n}</sup></span>`,
-                        respuesta: ans,
-                        respuestaTexto: `${ans}`,
-                        pista: n===2 ? `${a}² = ${a} × ${a}` : `${a}³ = ${a} × ${a} × ${a}`,
-                        solucion: n===2 ? `${a}² = ${a} × ${a} = ${ans}` : `${a}³ = ${a} × ${a} × ${a} = ${a*a} × ${a} = ${ans}`
-                    };
-                },
-
-                // Raíz cuadrada (cuadrados perfectos)
-                function() {
-                    const n = rnd(2, 20);
-                    const num = n*n;
-                    return {
-                        tipo: "Raíz cuadrada",
-                        enunciado: `Calculá: <span class="calc-expr">√${num}</span>`,
-                        respuesta: n,
-                        respuestaTexto: `${n}`,
-                        pista: `Pensá qué número multiplicado por sí mismo da ${num}.`,
-                        solucion: `√${num} = ${n}  (porque ${n} × ${n} = ${num})`
-                    };
-                },
-
-                // Regla de tres simple
-                function() {
-                    const a = rnd(2, 10), b = rnd(2, 15), k = rnd(2, 8);
-                    const c = a * k, ans = b * k;
-                    return {
-                        tipo: "Regla de tres",
-                        enunciado: `Si ${a} kg de fruta cuestan $${b}, ¿cuánto cuestan ${c} kg?`,
-                        respuesta: ans,
-                        respuestaTexto: `$${ans}`,
-                        pista: `Dividí para encontrar el precio por kg, luego multiplicá.`,
-                        solucion: `Precio por kg: $${b} ÷ ${a} = $${b/a > Math.floor(b/a) ? (b/a).toFixed(2) : b/a}\nPrecio de ${c} kg: $${b/a > Math.floor(b/a) ? (b/a).toFixed(2) : b/a} × ${c} = $${ans}`
-                    };
-                },
-
-            ],
-
-            superior: [
-
-                // Operación combinada con fracciones
-                function() {
-                    const b = pick([3,4,5,6]), d = pick([2,3,4]), f = pick([2,3,5]);
-                    const a = rnd(1, b), c = rnd(1, d), e = rnd(1, f);
-                    const lcd = mcm(b,d);
-                    const sumNum = a*(lcd/b) + c*(lcd/d);
-                    const r = fracSimp(sumNum * e, lcd * f);
-                    return {
-                        tipo: "Operación combinada",
-                        enunciado: `Calculá: <span class="calc-expr">(${a}/${b} + ${c}/${d}) × ${e}/${f}</span>`,
-                        respuesta: fracVal(r),
-                        respuestaTexto: fracStr(r),
-                        pista: `Primero resolvé la suma entre paréntesis, luego multiplicá.`,
-                        solucion: `Suma: ${a}/${b} + ${c}/${d} = ${sumNum}/${lcd}\nMultiplicación: ${sumNum}/${lcd} × ${e}/${f} = ${sumNum*e}/${lcd*f} = ${fracStr(r)}`
-                    };
-                },
-
-                // Porcentaje inverso
-                function() {
-                    const pcts = [10,20,25,40,50];
-                    const p = pick(pcts);
-                    const base = rnd(2, 20) * (100/p);
-                    const x = base * p / 100;
-                    return {
-                        tipo: "Porcentaje inverso",
-                        enunciado: `<span class="calc-expr">${x}</span> es el <span class="calc-expr">${p}%</span> de ¿qué número?`,
-                        respuesta: base,
-                        respuestaTexto: `${base}`,
-                        pista: `Si X es el P% de N, entonces N = X × 100 / P`,
-                        solucion: `N = ${x} × 100 / ${p} = ${x*100} / ${p} = ${base}`
-                    };
-                },
-
-                // Potencias negativas
-                function() {
-                    const a = pick([2,3,4,5,10]), n = pick([1,2,3]);
-                    const denom = Math.pow(a, n);
-                    return {
-                        tipo: "Potencias negativas",
-                        enunciado: `Calculá: <span class="calc-expr">${a}<sup>−${n}</sup></span> (expresá como fracción o decimal)`,
-                        respuesta: 1/denom,
-                        respuestaTexto: `1/${denom}`,
-                        pista: `a⁻ⁿ = 1/aⁿ`,
-                        solucion: `${a}⁻${n} = 1/${a}${n>1?'ⁿ':''} = 1/${denom} ≈ ${(1/denom).toFixed(4)}`
-                    };
-                },
-
-                // MCM de dos números
-                function() {
-                    const a = rnd(2, 12), b = rnd(2, 12);
-                    const ans = mcm(a, b);
-                    const g = gcd(a, b);
-                    return {
-                        tipo: "Mínimo Común Múltiplo",
-                        enunciado: `Calculá el MCM de <span class="calc-expr">${a}</span> y <span class="calc-expr">${b}</span>`,
-                        respuesta: ans,
-                        respuestaTexto: `${ans}`,
-                        pista: `MCM(a,b) = (a × b) / MCD(a,b)`,
-                        solucion: `MCD(${a}, ${b}) = ${g}\nMCM(${a}, ${b}) = (${a} × ${b}) / ${g} = ${a*b} / ${g} = ${ans}`
-                    };
-                },
-
-                // Expresión con variables
-                function() {
-                    const x = rnd(-4, 4), y = rnd(-4, 4);
-                    const a = rnd(1, 4), b = rnd(1, 4);
-                    const ans = a*x*x - b*y;
-                    return {
-                        tipo: "Valor numérico",
-                        enunciado: `Si x = ${x} e y = ${y}, calculá: <span class="calc-expr">${a}x² − ${b}y</span>`,
-                        respuesta: ans,
-                        respuestaTexto: `${ans}`,
-                        pista: `Sustituí los valores: ${a}×(${x})² − ${b}×(${y})`,
-                        solucion: `${a}×(${x})² − ${b}×(${y})\n= ${a}×${x*x} − ${b*y > 0 ? b+'×'+y : '('+b+'×'+y+')'}\n= ${a*x*x} ${b*y >= 0 ? '− '+b*y : '+ '+Math.abs(b*y)}\n= ${ans}`
-                    };
-                },
-
-            ],
-        },
-
-        // ════════ ÁLGEBRA ═══════════════════════════════════════
-        algebra: {
-
-            secundario: [
-
-                // Ecuación lineal simple ax + b = c
-                function() {
-                    const xSol = rnd(-6, 6);
-                    const a = rnd(2, 7), b = rnd(-10, 10);
-                    const c = a * xSol + b;
-                    const eq = `${a}x ${b>=0?'+':''}${b} = ${c}`;
-                    return {
-                        tipo: "Ecuación lineal",
-                        enunciado: `Resolvé: <span class="calc-expr">${eq}</span> → Hallá x`,
-                        respuesta: xSol,
-                        respuestaTexto: `x = ${xSol}`,
-                        pista: `Despejá x: pasá ${b} al otro lado y dividí por ${a}.`,
-                        solucion: `${eq}\n${a}x = ${c} ${b>=0?'− '+b:'+ '+Math.abs(b)}\n${a}x = ${c - b}\nx = ${c-b} / ${a}\nx = ${xSol}`
-                    };
-                },
-
-                // Ecuación con paréntesis a(x + b) = c
-                function() {
-                    const xSol = rnd(-5, 5);
-                    const a = rnd(2, 6), b = rnd(-8, 8);
-                    const c = a * (xSol + b);
-                    return {
-                        tipo: "Ecuación con paréntesis",
-                        enunciado: `Resolvé: <span class="calc-expr">${a}(x ${b>=0?'+':'-'} ${Math.abs(b)}) = ${c}</span> → Hallá x`,
-                        respuesta: xSol,
-                        respuestaTexto: `x = ${xSol}`,
-                        pista: `Dividí ambos lados por ${a} primero.`,
-                        solucion: `${a}(x ${b>=0?'+ '+b:'− '+Math.abs(b)}) = ${c}\nx ${b>=0?'+ '+b:'− '+Math.abs(b)} = ${c} / ${a} = ${c/a}\nx = ${c/a} ${b>=0?'− '+b:'+ '+Math.abs(b)} = ${xSol}`
-                    };
-                },
-
-                // Valor de función lineal
-                function() {
-                    const a = rnd(-4, 4), b = rnd(-10, 10), k = rnd(-5, 5);
-                    while (a === 0) { a = rnd(-4, 4); }
-                    const ans = a*k + b;
-                    return {
-                        tipo: "Valor de función",
-                        enunciado: `Sea f(x) = <span class="calc-expr">${a}x ${b>=0?'+':''} ${b}</span>. Calculá f(${k})`,
-                        respuesta: ans,
-                        respuestaTexto: `${ans}`,
-                        pista: `Reemplazá x por ${k} en la expresión.`,
-                        solucion: `f(${k}) = ${a}×(${k}) + (${b})\n= ${a*k} + (${b})\n= ${ans}`
-                    };
-                },
-
-                // Reducción de términos semejantes
-                function() {
-                    const a = rnd(1,6), b = rnd(1,6), c = rnd(-5,5), d = rnd(-5,5);
-                    const coef = a + b, cte = c + d;
-                    return {
-                        tipo: "Términos semejantes",
-                        enunciado: `Simplificá: <span class="calc-expr">${a}x ${c>=0?'+':''} ${c} + ${b}x ${d>=0?'+':''} ${d}</span>`,
-                        respuesta: null,  // respuesta textual
-                        respuestaTexto: cte === 0 ? `${coef}x` : `${coef}x ${cte>=0?'+':''} ${cte}`,
-                        tipo2: "texto",
-                        pista: `Agrupá los términos con x por un lado y los números por otro.`,
-                        solucion: `Términos en x: ${a}x + ${b}x = ${coef}x\nTérminos independientes: (${c}) + (${d}) = ${cte}\nResultado: ${coef}x ${cte===0?'':(cte>0?'+ '+cte:cte)}`
-                    };
-                },
-
-                // Verificar si un valor es solución
-                function() {
-                    const xSol = rnd(-4, 4);
-                    const a = rnd(2, 5), b = rnd(-8, 8);
-                    const c = a * xSol + b;
-                    const fakeX = xSol + pick([-3,-2,-1,1,2,3]);
-                    const candidatos = [xSol, fakeX];
-                    const elegido = pick(candidatos);
-                    const esSol = elegido === xSol;
-                    return {
-                        tipo: "Verificación de solución",
-                        enunciado: `¿Es x = ${elegido} solución de <span class="calc-expr">${a}x ${b>=0?'+':''} ${b} = ${c}</span>? Respondé: si o no`,
-                        respuesta: null,
-                        respuestaTexto: esSol ? "si" : "no",
-                        tipo2: "texto",
-                        pista: `Reemplazá x = ${elegido} en la ecuación y verificá si da ${c}.`,
-                        solucion: `Reemplazando x = ${elegido}:\n${a}×(${elegido}) + (${b}) = ${a*elegido+b}\n${a*elegido+b} ${esSol?'=':'≠'} ${c}\n→ x = ${elegido} ${esSol?'SÍ es':'NO es'} solución`
-                    };
-                },
-
-            ],
-
-            superior: [
-
-                // Ecuación cuadrática
-                function() {
-                    const r1 = rnd(-6, 6), r2 = rnd(-6, 6);
-                    while (r1 === r2 || r1 === 0 || r2 === 0) { r1 = rnd(-6,6); r2 = rnd(-6,6); }
-                    // x² - (r1+r2)x + r1*r2 = 0
-                    const b = -(r1 + r2), c = r1 * r2;
-                    const disc = b*b - 4*c;
-                    const sols = [Math.min(r1,r2), Math.max(r1,r2)];
-                    return {
-                        tipo: "Ecuación cuadrática",
-                        enunciado: `Resolvé: <span class="calc-expr">x² ${b>=0?'+':''} ${b}x ${c>=0?'+':''} ${c} = 0</span><br><small>Escribí las dos soluciones separadas por coma: ej. −3, 2</small>`,
-                        respuesta: null,
-                        respuestaTexto: `${sols[0]}, ${sols[1]}`,
-                        tipo2: "doble",
-                        vals: sols,
-                        pista: `Discriminante: Δ = b² − 4ac = ${b}² − 4×${c} = ${disc}`,
-                        solucion: `a=1, b=${b}, c=${c}\nΔ = ${b}² − 4×1×${c} = ${b*b} − ${4*c} = ${disc}\nx = (−${b} ± √${disc}) / 2\nx₁ = ${r1}, x₂ = ${r2}`
-                    };
-                },
-
-                // Sistema de ecuaciones 2x2
-                function() {
-                    const xS = rnd(-4, 4), yS = rnd(-4, 4);
-                    while (xS === 0 || yS === 0) { xS = rnd(-4,4); yS = rnd(-4,4); }
-                    const a1 = rnd(1,4), b1 = rnd(1,4), a2 = rnd(1,4), b2 = rnd(1,4);
-                    while (a1*b2 === a2*b1) { a2 = rnd(1,4); b2 = rnd(1,4); } // evitar sistema sin solución única
-                    const c1 = a1*xS + b1*yS, c2 = a2*xS + b2*yS;
-                    return {
-                        tipo: "Sistema de ecuaciones",
-                        enunciado: `Resolvé el sistema:<br><span class="calc-expr">${a1}x + ${b1}y = ${c1}</span><br><span class="calc-expr">${a2}x + ${b2}y = ${c2}</span><br><small>Escribí: x = … , y = …</small>`,
-                        respuesta: null,
-                        respuestaTexto: `x=${xS}, y=${yS}`,
-                        tipo2: "sistema",
-                        vals: [xS, yS],
-                        pista: `Usá sustitución o eliminación para despejar una incógnita.`,
-                        solucion: `De la Ec.1: multiplicando por ${b2} → ${a1*b2}x + ${b1*b2}y = ${c1*b2}\nDe la Ec.2: multiplicando por ${b1} → ${a2*b1}x + ${b2*b1}y = ${c2*b1}\nRestando: ${a1*b2-a2*b1}x = ${c1*b2-c2*b1} → x = ${xS}\nSustituindo: y = ${yS}`
-                    };
-                },
-
-                // Producto notable: (a + b)²
-                function() {
-                    const a = rnd(1, 8), b = rnd(1, 8);
-                    const sig = pick([1, -1]);
-                    const bSig = b * sig;
-                    // (a + bSig)² = a² + 2a*bSig + bSig²
-                    const coef2ab = 2*a*bSig, bCuad = bSig*bSig;
-                    const label = sig > 0 ? `(${a} + ${b})²` : `(${a} − ${b})²`;
-                    const res = `${a*a} ${coef2ab>=0?'+ ':''}${coef2ab}x${bCuad>=0?' + ':' '}${bCuad}`;
-                    // En realidad es cuadrado de binomio sin variable... mejor con variable
-                    const r1 = a*a, r2 = 2*a*bSig, r3 = bSig*bSig;
-                    return {
-                        tipo: "Producto notable",
-                        enunciado: `Desarrollá: <span class="calc-expr">(x ${sig>0?'+ '+b:'− '+b})²</span>`,
-                        respuesta: null,
-                        respuestaTexto: `x² ${r2>=0?'+ '+r2:'− '+Math.abs(r2)}x ${r3>=0?'+ '+r3:'− '+Math.abs(r3)}`,
-                        tipo2: "texto",
-                        pista: `(x ${sig>0?'+ b':'− b'})² = x² ${sig>0?'+ 2bx + b²':'− 2bx + b²'}`,
-                        solucion: `(x ${sig>0?'+ '+b:'− '+b})²\n= x² + 2×(${sig>0?b:-b})×x + (${sig>0?b:-b})²\n= x² ${r2>=0?'+ '+r2:r2}x ${r3>=0?'+ '+r3:r3}`
-                    };
-                },
-
-                // Logaritmo en base b
-                function() {
-                    const bases = [2, 3, 5, 10];
-                    const base = pick(bases);
-                    const exp = rnd(1, 4);
-                    const num = Math.pow(base, exp);
-                    return {
-                        tipo: "Logaritmos",
-                        enunciado: `Calculá: <span class="calc-expr">log<sub>${base}</sub>(${num})</span>`,
-                        respuesta: exp,
-                        respuestaTexto: `${exp}`,
-                        pista: `log_b(x) = n significa que b^n = x. ¿Cuánto es ${base}^? = ${num}?`,
-                        solucion: `log_${base}(${num}) = ${exp}  (porque ${base}^${exp} = ${num})`
-                    };
-                },
-
-                // Ecuación fraccionaria simple
-                function() {
-                    const xSol = rnd(-5, 5);
-                    while (xSol === 0) { xSol = rnd(-5, 5); }
-                    const a = rnd(2, 8), b = rnd(1, 6);
-                    const c = a + b * xSol;
-                    return {
-                        tipo: "Ecuación fraccionaria",
-                        enunciado: `Resolvé: <span class="calc-expr">${a}/x ${b>=0?'+':''} ${b} = ${c}/x + ${c - a} / x</span>`,
-                        respuesta: xSol,
-                        respuestaTexto: `x = ${xSol}`,
-                        tipo2: null,
-                        pista: `Multiplicá ambos miembros por x para eliminar denominadores.`,
-                        solucion: `Multiplicando por x:\n${a} + ${b}x = ${c}\n${b}x = ${c - a}\nx = ${(c-a)/b} = ${xSol}`
-                    };
-                },
-
-            ],
-        },
-
-        // ════════ TRIGONOMETRÍA ═════════════════════════════════
-        trigonometria: {
-
-            secundario: [
-
-                // Valor de función trigonométrica en ángulo notable
-                function() {
-                    const angulos = [0, 30, 45, 60, 90, 120, 135, 150, 180];
-                    const fns = ['sin', 'cos'];
-                    const fn = pick(fns);
-                    let ang;
-                    // Para tan, evitar 90°
-                    do { ang = pick(angulos); } while (fn === 'tan' && ang === 90);
-                    const dat = ANGULOS[ang];
-                    const val = dat[fn];
-                    const valD = dat[fn + 'D'];
-                    const fnName = fn === 'sin' ? 'sen' : fn === 'cos' ? 'cos' : 'tan';
-                    return {
-                        tipo: "Funciones en ángulos notables",
-                        enunciado: `Calculá: <span class="calc-expr">${fnName}(${ang}°)</span><br><small>Podés escribir fracción como √3/2, 1/2, √2/2 o valor decimal (2 decimales)</small>`,
-                        respuesta: val,
-                        respuestaTexto: valD,
-                        pista: `Recordá la tabla de ángulos notables para ${ang}°.`,
-                        solucion: `${fnName}(${ang}°) = ${valD} ≈ ${val !== null ? val.toFixed(4) : 'no existe'}`
-                    };
-                },
-
-                // Tangente en ángulo notable
-                function() {
-                    const angulos = [0, 30, 45, 60, 120, 135, 150, 180];
-                    const ang = pick(angulos);
-                    const dat = ANGULOS[ang];
-                    return {
-                        tipo: "Tangente en ángulo notable",
-                        enunciado: `Calculá: <span class="calc-expr">tan(${ang}°)</span><br><small>Escribí el valor exacto o decimal (2 dec.)</small>`,
-                        respuesta: dat.tan,
-                        respuestaTexto: dat.tanD,
-                        pista: `tan(x) = sen(x) / cos(x)`,
-                        solucion: `tan(${ang}°) = sen(${ang}°) / cos(${ang}°) = ${dat.sinD} / ${dat.cosD} = ${dat.tanD}`
-                    };
-                },
-
-                // Teorema de Pitágoras — encontrar hipotenusa
-                function() {
-                    const triples = [[3,4,5],[5,12,13],[8,15,17],[7,24,25],[6,8,10],[9,12,15],[12,16,20]];
-                    const t = pick(triples);
-                    const k = pick([1,1,1,2,3]);
-                    const [a,b,c] = t.map(x=>x*k);
-                    const tipo = pick([0,1,2]);
-                    if (tipo === 0) {
-                        return { tipo:"Teorema de Pitágoras", enunciado:`En un triángulo rectángulo, los catetos miden <span class="calc-expr">${a}</span> y <span class="calc-expr">${b}</span>. ¿Cuánto mide la hipotenusa?`, respuesta:c, respuestaTexto:`${c}`, pista:`c² = a² + b²`, solucion:`c² = ${a}² + ${b}² = ${a*a} + ${b*b} = ${a*a+b*b}\nc = √${a*a+b*b} = ${c}` };
-                    } else if (tipo === 1) {
-                        return { tipo:"Teorema de Pitágoras", enunciado:`La hipotenusa mide <span class="calc-expr">${c}</span> y un cateto mide <span class="calc-expr">${a}</span>. ¿Cuánto mide el otro cateto?`, respuesta:b, respuestaTexto:`${b}`, pista:`b² = c² − a²`, solucion:`b² = ${c}² − ${a}² = ${c*c} − ${a*a} = ${c*c-a*a}\nb = √${c*c-a*a} = ${b}` };
-                    } else {
-                        return { tipo:"Teorema de Pitágoras", enunciado:`La hipotenusa mide <span class="calc-expr">${c}</span> y un cateto mide <span class="calc-expr">${b}</span>. ¿Cuánto mide el otro cateto?`, respuesta:a, respuestaTexto:`${a}`, pista:`a² = c² − b²`, solucion:`a² = ${c}² − ${b}² = ${c*c} − ${b*b} = ${c*c-b*b}\na = √${c*c-b*b} = ${a}` };
-                    }
-                },
-
-                // Identidad fundamental: dado sen, hallar cos
-                function() {
-                    const triples = [[3,4,5],[5,12,13],[8,15,17],[7,24,25]];
-                    const t = pick(triples);
-                    const [a,b,c] = t;
-                    const tipo = pick([0,1]);
-                    if (tipo === 0) {
-                        return { tipo:"Identidad fundamental", enunciado:`Si <span class="calc-expr">sen(α) = ${a}/${c}</span> y α está en el primer cuadrante, ¿cuánto vale cos(α)?`, respuesta:b/c, respuestaTexto:`${b}/${c}`, pista:`sen²(α) + cos²(α) = 1`, solucion:`cos²(α) = 1 − sen²(α) = 1 − (${a}/${c})² = 1 − ${a*a}/${c*c} = ${c*c-a*a}/${c*c}\ncos(α) = ${b}/${c}` };
-                    } else {
-                        return { tipo:"Identidad fundamental", enunciado:`Si <span class="calc-expr">cos(α) = ${b}/${c}</span> y α está en el primer cuadrante, ¿cuánto vale sen(α)?`, respuesta:a/c, respuestaTexto:`${a}/${c}`, pista:`sen²(α) + cos²(α) = 1`, solucion:`sen²(α) = 1 − cos²(α) = 1 − (${b}/${c})² = 1 − ${b*b}/${c*c} = ${c*c-b*b}/${c*c}\nsen(α) = ${a}/${c}` };
-                    }
-                },
-
-                // Conversión grados-radianes
-                function() {
-                    const table = [
-                        {g:30,  r:'π/6',  rv:Math.PI/6},
-                        {g:45,  r:'π/4',  rv:Math.PI/4},
-                        {g:60,  r:'π/3',  rv:Math.PI/3},
-                        {g:90,  r:'π/2',  rv:Math.PI/2},
-                        {g:120, r:'2π/3', rv:2*Math.PI/3},
-                        {g:135, r:'3π/4', rv:3*Math.PI/4},
-                        {g:150, r:'5π/6', rv:5*Math.PI/6},
-                        {g:180, r:'π',    rv:Math.PI},
-                    ];
-                    const item = pick(table);
-                    return {
-                        tipo: "Conversión grados-radianes",
-                        enunciado: `Convertí <span class="calc-expr">${item.g}°</span> a radianes<br><small>Escribí la respuesta con π, ej: π/3, 2π/3</small>`,
-                        respuesta: item.rv,
-                        respuestaTexto: item.r,
-                        tipo2: "texto",
-                        pista: `Multiplicá los grados por π/180.`,
-                        solucion: `${item.g}° × π/180 = ${item.g}π/180 = ${item.r} rad`
-                    };
-                },
-
-            ],
-
-            superior: [
-
-                // Ecuación trigonométrica en [0°, 360°]
-                function() {
-                    const eqs = [
-                        { enun: 'sen(x) = 1/2',  sols: '30°, 150°', check: [30,150] },
-                        { enun: 'sen(x) = -1/2', sols: '210°, 330°', check: [210,330] },
-                        { enun: 'cos(x) = 1/2',  sols: '60°, 300°', check: [60,300] },
-                        { enun: 'cos(x) = -1/2', sols: '120°, 240°', check: [120,240] },
-                        { enun: 'cos(x) = 0',    sols: '90°, 270°', check: [90,270] },
-                        { enun: 'sen(x) = 0',    sols: '0°, 180°',  check: [0,180] },
-                        { enun: 'tan(x) = 1',    sols: '45°, 225°', check: [45,225] },
-                        { enun: 'tan(x) = -1',   sols: '135°, 315°',check: [135,315] },
-                        { enun: 'tan(x) = √3',   sols: '60°, 240°', check: [60,240] },
-                    ];
-                    const eq = pick(eqs);
-                    return {
-                        tipo: "Ecuación trigonométrica",
-                        enunciado: `Resolvé para x ∈ [0°, 360°]: <span class="calc-expr">${eq.enun}</span><br><small>Escribí los dos ángulos separados por coma, ej: 30°, 150°</small>`,
-                        respuesta: null,
-                        respuestaTexto: eq.sols,
-                        tipo2: "texto",
-                        pista: `Encontrá el ángulo de referencia y usá el signo para ubicar los cuadrantes.`,
-                        solucion: `Soluciones en [0°, 360°]: ${eq.sols}`
-                    };
-                },
-
-                // Ley de cosenos
-                function() {
-                    const angulos = [60, 90, 120];
-                    const C = pick(angulos);
-                    const a = rnd(3, 10), b = rnd(3, 10);
-                    const cosC = Math.cos(C * Math.PI / 180);
-                    const c2 = a*a + b*b - 2*a*b*cosC;
-                    const c = Math.sqrt(c2);
-                    const cRound = Math.round(c * 100) / 100;
-                    return {
-                        tipo: "Ley de cosenos",
-                        enunciado: `En un triángulo, a = ${a}, b = ${b} y el ángulo C = ${C}°. Calculá c (redondeá a 2 decimales).<br><small>Fórmula: c² = a² + b² − 2ab·cos(C)</small>`,
-                        respuesta: cRound,
-                        respuestaTexto: `${cRound}`,
-                        pista: `cos(${C}°) = ${cosC.toFixed(4)}`,
-                        solucion: `c² = ${a}² + ${b}² − 2×${a}×${b}×cos(${C}°)\nc² = ${a*a} + ${b*b} − ${2*a*b}×(${cosC.toFixed(4)})\nc² = ${a*a+b*b} − ${(2*a*b*cosC).toFixed(2)} = ${c2.toFixed(2)}\nc = √${c2.toFixed(2)} ≈ ${cRound}`
-                    };
-                },
-
-                // Arco trigonométrico
-                function() {
-                    const arcos = [
-                        { enun: 'arcsen(1/2)',  ans: '30°', val: 30 },
-                        { enun: 'arcsen(√2/2)', ans: '45°', val: 45 },
-                        { enun: 'arcsen(√3/2)', ans: '60°', val: 60 },
-                        { enun: 'arccos(1/2)',  ans: '60°', val: 60 },
-                        { enun: 'arccos(√2/2)', ans: '45°', val: 45 },
-                        { enun: 'arccos(√3/2)', ans: '30°', val: 30 },
-                        { enun: 'arctan(1)',    ans: '45°', val: 45 },
-                        { enun: 'arctan(√3)',   ans: '60°', val: 60 },
-                    ];
-                    const item = pick(arcos);
-                    return {
-                        tipo: "Función arco",
-                        enunciado: `Calculá: <span class="calc-expr">${item.enun}</span> (en grados)`,
-                        respuesta: item.val,
-                        respuestaTexto: item.ans,
-                        pista: `Preguntás: ¿qué ángulo tiene esa función con ese valor?`,
-                        solucion: `${item.enun} = ${item.ans}`
-                    };
-                },
-
-                // Identidad trigonométrica: simplificar
-                function() {
-                    const ids = [
-                        { en: 'sen²(x) + cos²(x)', res: '1', exp: 'Esta es la identidad fundamental.' },
-                        { en: '1 − sen²(x)', res: 'cos²(x)', exp: 'Despejando de sen²x + cos²x = 1.' },
-                        { en: '1 − cos²(x)', res: 'sen²(x)', exp: 'Despejando de sen²x + cos²x = 1.' },
-                        { en: 'sen(x)/cos(x)', res: 'tan(x)', exp: 'Definición de tangente.' },
-                        { en: 'sen(x) × (1/sen(x))', res: '1', exp: 'Producto de un número por su inverso.' },
-                    ];
-                    const id = pick(ids);
-                    return {
-                        tipo: "Identidades trigonométricas",
-                        enunciado: `Simplificá: <span class="calc-expr">${id.en}</span>`,
-                        respuesta: null,
-                        respuestaTexto: id.res,
-                        tipo2: "texto",
-                        pista: id.exp,
-                        solucion: `${id.en} = ${id.res}\n${id.exp}`
-                    };
-                },
-
-            ],
-        },
-    };
-
-    // ── Estado del componente ──────────────────────────────────
-    let estado = { materiaId: '', dificultad: 'secundario', puntos: 0, total: 0, ejercicio: null, visto: false };
-
-    // ── Verificar respuesta ingresada ──────────────────────────
-    function chequear(input, ej) {
-        if (!ej) return false;
-        const s = input.trim().toLowerCase().replace(/°/g, '').replace(/\s+/g, '');
-        if (ej.tipo2 === 'texto') {
-            const esperado = ej.respuestaTexto.toLowerCase().replace(/\s+/g,'');
-            return s === esperado || s.replace(/x=/,'').replace(/y=/,'') === esperado.replace(/x=/,'').replace(/y=/,'');
-        }
-        if (ej.tipo2 === 'doble' || ej.tipo2 === 'sistema') {
-            // Acepta "r1, r2" en cualquier orden
-            const parts = s.replace(/x=|y=/g,'').split(/[,;]/);
-            if (parts.length < 2) return false;
-            const n1 = parseFloat(parts[0]), n2 = parseFloat(parts[1]);
-            const v = ej.vals;
-            return (!isNaN(n1) && !isNaN(n2)) &&
-                ((Math.abs(n1-v[0])<0.05 && Math.abs(n2-v[1])<0.05) ||
-                 (Math.abs(n1-v[1])<0.05 && Math.abs(n2-v[0])<0.05));
-        }
-        return respuestaCorrecta(s, ej.respuesta);
-    }
-
-    // ── Generar nuevo ejercicio ────────────────────────────────
-    function nuevoEjercicio() {
-        const gens = GEN[estado.materiaId]?.[estado.dificultad];
-        if (!gens || gens.length === 0) return;
-        estado.ejercicio = pick(gens)();
-        estado.visto = false;
-        renderEjercicio();
-    }
-
-    // ── Render del ejercicio actual ────────────────────────────
-    function renderEjercicio() {
-        const c = document.getElementById('calc-card');
-        if (!c || !estado.ejercicio) return;
-        const ej = estado.ejercicio;
-        c.innerHTML = `
-            <div class="calc-tipo-badge">${ej.tipo}</div>
-            <div class="calc-enunciado">${ej.enunciado}</div>
-            <div class="calc-input-row">
-                <input type="text" id="calc-input" class="calc-input" placeholder="Tu respuesta..."
-                       autocomplete="off" autocorrect="off" spellcheck="false"
-                       onkeydown="if(event.key==='Enter') window._calc.verificar()">
-                <button class="calc-btn-check" onclick="window._calc.verificar()">Verificar ✓</button>
-            </div>
-            <div id="calc-resultado" class="calc-resultado" style="display:none"></div>
-            <div class="calc-botones-extra">
-                <button class="calc-btn-pista" onclick="window._calc.pista()">💡 Pista</button>
-                <button class="calc-btn-nuevo" onclick="window._calc.nuevo()">→ Nuevo ejercicio</button>
-            </div>`;
-        document.getElementById('calc-input')?.focus();
-    }
-
-    // ── Verificar respuesta ────────────────────────────────────
-    function verificar() {
-        const input = document.getElementById('calc-input');
-        const resDiv = document.getElementById('calc-resultado');
-        if (!input || !resDiv || !estado.ejercicio) return;
-        const val = input.value.trim();
-        if (!val) { resDiv.style.display='block'; resDiv.className='calc-resultado calc-warn'; resDiv.innerHTML='⚠️ Escribí tu respuesta primero.'; return; }
-        if (estado.visto) return;
-        const ok = chequear(val, estado.ejercicio);
-        estado.total++;
-        if (ok) estado.puntos++;
-        estado.visto = true;
-        actualizarScore();
-        const ej = estado.ejercicio;
-        resDiv.style.display = 'block';
-        resDiv.className = `calc-resultado ${ok ? 'calc-ok' : 'calc-error'}`;
-        resDiv.innerHTML = ok
-            ? `✅ ¡Correcto! <strong>${ej.respuestaTexto}</strong>`
-            : `❌ Incorrecto. La respuesta correcta es: <strong>${ej.respuestaTexto}</strong><div class="calc-sol"><pre>${ej.solucion}</pre></div>`;
-        input.disabled = true;
-    }
-
-    // ── Mostrar pista ──────────────────────────────────────────
-    function pista() {
-        const resDiv = document.getElementById('calc-resultado');
-        if (!resDiv || !estado.ejercicio) return;
-        resDiv.style.display = 'block';
-        resDiv.className = 'calc-resultado calc-hint';
-        resDiv.innerHTML = `💡 <em>${estado.ejercicio.pista}</em>`;
-    }
-
-    // ── Actualizar marcador ────────────────────────────────────
-    function actualizarScore() {
-        const el = document.getElementById('calc-score');
-        if (el) el.innerHTML = `<span class="calc-score-pts">✅ ${estado.puntos}</span> / ${estado.total} correctas`;
-    }
-
-    // ── Cambiar dificultad ─────────────────────────────────────
-    function setDificultad(nivel) {
-        estado.dificultad = nivel;
-        document.querySelectorAll('.calc-dif-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.nivel === nivel);
+// ============ CARGA DINÁMICA DE TEMAS ============
+async function cargarTemasParaMateria(materiaSelectId, temaSelectId) {
+    const matSel = document.getElementById(materiaSelectId);
+    const temSel = document.getElementById(temaSelectId);
+    if (!matSel || !temSel) return;
+    const materia = matSel.value;
+    temSel.innerHTML = '<option value="">— Sin tema específico —</option>';
+    if (!MA()?.sb) return;
+    const temas = await MA().sbListarTemas(materia);
+    // Agrupar por categoría
+    const porCategoria = {};
+    temas.forEach(t => {
+        if (!porCategoria[t.categoria]) porCategoria[t.categoria] = [];
+        porCategoria[t.categoria].push(t);
+    });
+    Object.entries(porCategoria).forEach(([cat, lista]) => {
+        const og = document.createElement("optgroup");
+        og.label = "Nivel " + lista[0].nivel + " — " + cat;
+        lista.forEach(t => {
+            const op = document.createElement("option");
+            op.value = t.id;
+            op.textContent = t.nombre;
+            og.appendChild(op);
         });
-        nuevoEjercicio();
+        temSel.appendChild(og);
+    });
+}
+async function initSelectoresTemas() {
+    // Admin upload
+    const admMat = document.getElementById("su-materia");
+    if (admMat) {
+        admMat.addEventListener("change", () => cargarTemasParaMateria("su-materia", "su-tema"));
+        await cargarTemasParaMateria("su-materia", "su-tema");
     }
-
-    // ── Inyectar estilos CSS ───────────────────────────────────
-    function inyectarCSS() {
-        if (document.getElementById('calc-style')) return;
-        const style = document.createElement('style');
-        style.id = 'calc-style';
-        style.textContent = `
-            #mat-calc-section { border: 2px solid #2563eb22; }
-            .calc-dif-row { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
-            .calc-dif-btn { padding:7px 20px; border-radius:100px; border:2px solid #e2e8f0; background:transparent; cursor:pointer; font-size:13px; font-weight:700; font-family:inherit; color:#64748b; transition:all .2s; }
-            .calc-dif-btn.active { background:#2563eb; color:white; border-color:#2563eb; }
-            .calc-score-wrap { display:flex; justify-content:flex-end; margin-bottom:12px; }
-            .calc-score { font-size:13px; color:#64748b; font-weight:600; }
-            .calc-score-pts { color:#16a34a; font-size:15px; }
-            .calc-card { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:16px; padding:24px; min-height:180px; }
-            .calc-tipo-badge { display:inline-block; background:#dbeafe; color:#1e40af; font-size:11px; font-weight:700; padding:3px 12px; border-radius:100px; margin-bottom:14px; }
-            .calc-enunciado { font-size:17px; font-weight:600; color:#0f172a; line-height:1.7; margin-bottom:18px; }
-            .calc-expr { font-family:'Courier New',monospace; background:#e0f2fe; color:#0c4a6e; padding:2px 6px; border-radius:5px; font-size:1em; }
-            .calc-input-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-            .calc-input { flex:1; min-width:160px; padding:10px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; font-family:'Courier New',monospace; outline:none; transition:border-color .2s; }
-            .calc-input:focus { border-color:#2563eb; background:white; }
-            .calc-input:disabled { background:#f1f5f9; color:#94a3b8; }
-            .calc-btn-check { padding:10px 22px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:white; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap; }
-            .calc-btn-check:hover { opacity:.9; transform:translateY(-1px); }
-            .calc-resultado { border-radius:10px; padding:14px 16px; font-size:14px; font-weight:600; margin-bottom:12px; }
-            .calc-ok { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
-            .calc-error { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
-            .calc-hint { background:#fefce8; color:#854d0e; border:1px solid #fde68a; font-weight:400; }
-            .calc-warn { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; }
-            .calc-sol { margin-top:10px; }
-            .calc-sol pre { font-size:13px; font-family:'Courier New',monospace; white-space:pre-wrap; color:#374151; font-weight:400; line-height:1.6; background:#1e293b; padding:12px; border-radius:8px; color:#e2e8f0; }
-            .calc-botones-extra { display:flex; gap:8px; flex-wrap:wrap; }
-            .calc-btn-pista { padding:8px 16px; background:#fefce8; color:#854d0e; border:1.5px solid #fde68a; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
-            .calc-btn-pista:hover { background:#fef9c3; }
-            .calc-btn-nuevo { padding:8px 16px; background:#f0fdf4; color:#166534; border:1.5px solid #bbf7d0; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
-            .calc-btn-nuevo:hover { background:#dcfce7; }
-        `;
-        document.head.appendChild(style);
+    // Mi upload
+    const miMat = document.getElementById("mu-materia");
+    if (miMat) {
+        miMat.addEventListener("change", () => cargarTemasParaMateria("mu-materia", "mu-tema"));
+        await cargarTemasParaMateria("mu-materia", "mu-tema");
     }
+}
 
-    // ── Inicializar el componente ──────────────────────────────
-    function init(materiaId) {
-        estado.materiaId = materiaId;
-        const sec = document.getElementById('mat-calc-section');
-        const cont = document.getElementById('mat-calc-container');
-        if (!sec || !cont) return;
-        sec.style.display = 'block';
-        inyectarCSS();
-        cont.innerHTML = `
-            <div class="calc-dif-row">
-                <span style="font-size:13px;color:#64748b;font-weight:600;align-self:center">Dificultad:</span>
-                <button class="calc-dif-btn active" data-nivel="secundario" onclick="window._calc.setDif('secundario')">Secundario</button>
-                <button class="calc-dif-btn" data-nivel="superior" onclick="window._calc.setDif('superior')">Superior / Universitario</button>
+async function inicializarSistema() {
+    await detectarRecuperacionPassword();
+    await refrescarEstado();
+    actualizarNavbar();
+    renderSeccionVideos();
+    renderSeccionPDFs();
+    renderSeccionPremium();
+    renderSeccionMisArchivos();
+    renderRankingPublico();
+    if (appState.perfilActual) resetSesionTimer();
+    initSelectoresTemas();
+
+    MA()?.sb?.auth.onAuthStateChange(async (event) => {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
+            await refrescarEstado();
+            actualizarNavbar();
+            renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium();
+            renderSeccionMisArchivos(); renderRankingPublico();
+        }
+    });
+}
+
+// ============ Recuperación de password ============
+async function detectarRecuperacionPassword() {
+    // Si la URL viene de un link de recovery (#access_token=...&type=recovery), abrimos el modal
+    const hash = window.location.hash || "";
+    if (hash.includes("type=recovery")) {
+        // Esperamos a que Supabase detecte la sesión
+        setTimeout(() => {
+            document.getElementById("modal-recovery").style.display = "flex";
+        }, 600);
+    }
+}
+
+async function setearPasswordRecovery() {
+    const p1 = document.getElementById("rec-pass").value;
+    const p2 = document.getElementById("rec-pass2").value;
+    if (p1.length < SEG.PASS_MIN_LENGTH) return mostrarError("rec-error", `Mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
+    if (p1 !== p2) return mostrarError("rec-error", "Las contraseñas no coinciden.");
+    const { error } = await MA().sbSetPasswordEnRecovery(p1);
+    if (error) return mostrarError("rec-error", traducirError(error.message));
+    mostrarToast("✅ Contraseña actualizada. Iniciá sesión con la nueva.", "ok");
+    document.getElementById("modal-recovery").style.display = "none";
+    history.replaceState(null, "", window.location.pathname);
+    await MA().sbLogout();
+}
+
+// ============ NAVBAR ============
+function actualizarNavbar() {
+    const p = appState.perfilActual;
+    const lbl = document.getElementById("nav-cuenta-label");
+    const navAdmin = document.getElementById("nav-admin-link");
+    const navSalir = document.getElementById("nav-salir-link");
+    const navPerfil = document.getElementById("nav-perfil-link");
+    const navPuntos = document.getElementById("nav-puntos");
+    const navMisArchivos = document.getElementById("nav-mis-archivos-link");
+
+    if (lbl) lbl.textContent = p ? (p.username || "Mi cuenta") : "Ingresar";
+    if (navAdmin)  navAdmin.style.display  = (p?.rol === "admin") ? "inline" : "none";
+    if (navSalir)  navSalir.style.display  = p ? "inline" : "none";
+    if (navPerfil) navPerfil.style.display = p ? "inline" : "none";
+    if (navMisArchivos) navMisArchivos.style.display = p ? "inline" : "none";
+    if (navPuntos) {
+        navPuntos.style.display = p ? "inline-flex" : "none";
+        navPuntos.innerHTML = p ? `⭐ ${p.puntos || 0} · 🔥 ${p.racha || 0}` : "";
+    }
+}
+
+// ============ OVERLAYS / FORMS ============
+function abrirAuth(e) {
+    if (e) e.preventDefault();
+    if (appState.perfilActual) return mostrarToast(`Ya estás logueado como ${appState.perfilActual.username}`, "info");
+    document.getElementById("overlay-auth").style.display = "flex";
+    mostrarForm("auth-selector");
+}
+function abrirAdmin(e) {
+    if (e) e.preventDefault();
+    if (appState.perfilActual?.rol !== "admin") return mostrarToast("Solo el admin puede ver este panel", "warn");
+    document.getElementById("overlay-admin").style.display = "flex";
+    adminTab("archivos");
+}
+function abrirPerfil(e) {
+    if (e) e.preventDefault();
+    if (!appState.perfilActual) return abrirAuth();
+    document.getElementById("perfil-username").value = appState.perfilActual.username || "";
+    document.getElementById("perfil-email-display").textContent = (appState.perfilActual.id ? "ID: " + appState.perfilActual.id.slice(0,8) + "..." : "");
+    document.getElementById("perfil-puntos-display").textContent = `⭐ ${appState.perfilActual.puntos || 0} puntos · 🔥 racha ${appState.perfilActual.racha || 0} días`;
+    document.getElementById("pf-error").textContent = "";
+    document.getElementById("pf-success").textContent = "";
+    document.getElementById("modal-perfil").style.display = "flex";
+}
+function abrirMisArchivos(e) {
+    if (e) e.preventDefault();
+    if (!appState.perfilActual) return abrirAuth();
+    renderSeccionMisArchivos();
+    document.getElementById("mis-archivos-section")?.scrollIntoView({ behavior: "smooth" });
+}
+function cerrarOverlaySiClick(e, id) { if (e.target.id === id) document.getElementById(id).style.display = "none"; }
+function mostrarForm(id) {
+    ["auth-selector","form-login","form-registro","form-admin","form-olvide"].forEach(f => {
+        const el = document.getElementById(f);
+        if (el) el.style.display = (f === id) ? "block" : "none";
+    });
+    ["li-error","re-error","ad-error","re-success","ol-error","ol-success"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = "";
+    });
+}
+function mostrarError(id, msg) { const el = document.getElementById(id); if (el) el.textContent = msg; }
+function mostrarExito(id, msg) { const el = document.getElementById(id); if (el) el.textContent = msg; }
+
+// ============ REGISTRO / LOGIN / LOGOUT ============
+async function usuarioRegistro() {
+    mostrarError("re-error",""); mostrarExito("re-success","");
+    const username = sanitizar(document.getElementById("re-user").value);
+    const email    = sanitizar(document.getElementById("re-email").value);
+    const pass     = document.getElementById("re-pass").value;
+    const pass2    = document.getElementById("re-pass2").value;
+    if (!validarUsuario(username)) return mostrarError("re-error","Usuario 3-40 caracteres alfanuméricos.");
+    if (!validarEmail(email))      return mostrarError("re-error","Email inválido.");
+    if (pass.length < SEG.PASS_MIN_LENGTH) return mostrarError("re-error",`Contraseña mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
+    if (pass !== pass2)            return mostrarError("re-error","Las contraseñas no coinciden.");
+    if (!document.getElementById("re-acepto")?.checked) return mostrarError("re-error","Tenés que aceptar los Términos y Condiciones para registrarte.");
+    if (!MA()?.sb)                 return mostrarError("re-error","Supabase no configurado.");
+    const { data, error } = await MA().sbRegistro({ email, password: pass, username });
+    if (error) return mostrarError("re-error", traducirError(error.message));
+    if (data?.user && !data?.session) mostrarExito("re-success","✅ Cuenta creada. Revisá tu email para confirmar.");
+    else { mostrarExito("re-success","✅ Cuenta creada."); setTimeout(()=>document.getElementById("overlay-auth").style.display="none", 1500); }
+    ["re-user","re-email","re-pass","re-pass2"].forEach(id=>document.getElementById(id).value="");
+}
+
+async function usuarioLogin() {
+    mostrarError("li-error","");
+    const email = sanitizar(document.getElementById("li-user").value);
+    const pass  = document.getElementById("li-pass").value;
+    if (!validarEmail(email)) return mostrarError("li-error","Email inválido.");
+    if (!pass)                return mostrarError("li-error","Ingresá tu contraseña.");
+    const { data, error } = await MA().sbLogin({ email, password: pass });
+    if (error) return mostrarError("li-error", traducirError(error.message));
+    mostrarToast(`¡Hola ${data.user.user_metadata?.username || data.user.email}!`, "ok");
+    document.getElementById("overlay-auth").style.display = "none";
+    document.getElementById("li-user").value = ""; document.getElementById("li-pass").value = "";
+}
+
+async function adminLogin() {
+    mostrarError("ad-error","");
+    const email = sanitizar(document.getElementById("ad-user").value);
+    const pass  = document.getElementById("ad-pass").value;
+    if (!validarEmail(email)) return mostrarError("ad-error","Email del admin.");
+    if (!pass)                return mostrarError("ad-error","Ingresá la contraseña.");
+    const { error } = await MA().sbLogin({ email, password: pass });
+    if (error) return mostrarError("ad-error", traducirError(error.message));
+    await refrescarEstado();
+    if (appState.perfilActual?.rol !== "admin") {
+        await MA().sbLogout();
+        return mostrarError("ad-error","Esta cuenta no es admin.");
+    }
+    mostrarToast("👋 Bienvenido administrador","ok");
+    document.getElementById("overlay-auth").style.display = "none";
+}
+
+async function cerrarSesion(e) {
+    if (e) e.preventDefault();
+    clearTimeout(_sesionTimer); clearTimeout(_warnTimer); ocultarWarning();
+    if (MA()?.sb) await MA().sbLogout();
+    appState.perfilActual = null;
+    actualizarNavbar(); renderSeccionPremium(); renderSeccionMisArchivos();
+    mostrarToast("Sesión cerrada","info");
+}
+
+// ============ OLVIDÉ CONTRASEÑA ============
+async function enviarOlvideContrasena() {
+    const email = sanitizar(document.getElementById("ol-email").value);
+    if (!validarEmail(email)) return mostrarError("ol-error","Ingresá un email válido.");
+    const { error } = await MA().sbOlvidePassword(email);
+    if (error) return mostrarError("ol-error", traducirError(error.message));
+    mostrarExito("ol-success","✅ Si el email está registrado, vas a recibir un link en breve.");
+}
+
+// ============ MI PERFIL ============
+async function guardarUsername() {
+    mostrarError("pf-error",""); mostrarExito("pf-success","");
+    const nuevo = sanitizar(document.getElementById("perfil-username").value);
+    if (!validarUsuario(nuevo)) return mostrarError("pf-error","Usuario 3-40 caracteres alfanuméricos.");
+    const { error } = await MA().sbCambiarUsername(nuevo);
+    if (error) return mostrarError("pf-error", error.message);
+    appState.perfilActual.username = nuevo;
+    actualizarNavbar();
+    mostrarExito("pf-success","✅ Nombre de usuario actualizado.");
+}
+
+async function cambiarMiPassword() {
+    mostrarError("pf-error",""); mostrarExito("pf-success","");
+    const actual = document.getElementById("perfil-pass-actual").value;
+    const nueva  = document.getElementById("perfil-pass-nueva").value;
+    const nueva2 = document.getElementById("perfil-pass-nueva2").value;
+    if (!actual) return mostrarError("pf-error","Ingresá tu contraseña actual.");
+    if (nueva.length < SEG.PASS_MIN_LENGTH) return mostrarError("pf-error",`Nueva contraseña mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
+    if (nueva !== nueva2) return mostrarError("pf-error","Las contraseñas nuevas no coinciden.");
+    const { error } = await MA().sbCambiarPassword(actual, nueva);
+    if (error) return mostrarError("pf-error", error.message);
+    ["perfil-pass-actual","perfil-pass-nueva","perfil-pass-nueva2"].forEach(id=>document.getElementById(id).value="");
+    mostrarExito("pf-success","✅ Contraseña cambiada exitosamente.");
+}
+
+// ============ ADMIN ============
+function adminTab(tab) {
+    ["archivos","usuarios","subir","ejercicios"].forEach(t => {
+        const el = document.getElementById("admin-tab-"+t);
+        if (el) el.style.display = (t===tab) ? "block" : "none";
+    });
+    document.querySelectorAll(".admin-tab").forEach(b => b.classList.remove("active"));
+    const btn = [...document.querySelectorAll(".admin-tab")].find(b => b.textContent.toLowerCase().includes(tab));
+    if (btn) btn.classList.add("active");
+    if (tab==="archivos") renderAdminArchivos();
+    if (tab==="usuarios") renderAdminUsuarios();
+    if (tab==="ejercicios") renderAdminEjercicios();
+}
+
+async function renderAdminArchivos() {
+    const grid = document.getElementById("admin-archivos-grid"); if (!grid) return;
+    grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b">Cargando...</p>`;
+    appState.archivos = await MA().sbListarArchivos();
+    const fSec = document.getElementById("filtro-seccion")?.value || "";
+    const fMat = document.getElementById("filtro-materia")?.value || "";
+    const lista = appState.archivos.filter(a => (!fSec || a.seccion===fSec) && (!fMat || a.materia===fMat));
+    if (!lista.length) { grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px">No hay archivos.</p>`; return; }
+    grid.innerHTML = lista.map(a => `
+        <div class="admin-card">
+            <div class="admin-card-mini">${miniPreview(a)}</div>
+            <div class="admin-card-body">
+                <span class="seccion-tag seccion-${a.seccion}">${etiquetaSeccion(a.seccion)}</span>
+                <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
+                ${a.es_personal ? '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">PERSONAL</span>' : ""}
+                <h4>${esc(a.titulo)}</h4>
+                ${a.descripcion ? `<p>${esc(a.descripcion)}</p>` : ""}
+                <p style="font-size:11px;color:#94a3b8">${formatearFecha(a.creado_en)} · ${formatearTamano(a.tamano_bytes)}</p>
+                <div class="admin-card-actions">
+                    <button type="button" onclick="verContenido('${a.id}')">👁 Ver</button>
+                    <button type="button" onclick="abrirEdicion('${a.id}')">✏ Editar</button>
+                    <button type="button" onclick="eliminarArchivo('${a.id}')" class="btn-rojo">🗑</button>
+                </div>
             </div>
-            <div class="calc-score-wrap"><div id="calc-score" class="calc-score">✅ 0 / 0 correctas</div></div>
-            <div id="calc-card" class="calc-card"></div>`;
-        nuevoEjercicio();
+        </div>`).join("");
+}
+
+function etiquetaSeccion(s){ return ({video:"🎬 Video",pdf:"📄 PDF",premium:"⭐ Premium",imagen:"🖼 Imagen",texto:"📝 Texto"})[s]||s; }
+function miniPreview(a) {
+    if (a.miniatura) return `<img src="${a.miniatura}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px">`;
+    const i = ({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion] || "📦";
+    return `<div style="display:flex;align-items:center;justify-content:center;height:120px;background:#f1f5f9;border-radius:8px;font-size:48px">${i}</div>`;
+}
+
+async function renderAdminUsuarios() {
+    const cont = document.getElementById("admin-usuarios-lista"); if (!cont) return;
+    cont.innerHTML = `<p style="text-align:center;color:#64748b">Cargando...</p>`;
+    appState.perfiles = await MA().sbListarPerfiles();
+    if (!appState.perfiles.length) { cont.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">No hay usuarios.</p>`; return; }
+    cont.innerHTML = appState.perfiles.map(p => {
+        const premium = esPremiumActivo(p);
+        const dias = diasRestantes(p);
+        return `<div class="usuario-card">
+            <div class="usuario-info">
+                <h4>👤 ${esc(p.username||"(sin username)")} ${p.rol==="admin"?'<span style="background:#7c3aed;color:white;padding:2px 8px;border-radius:99px;font-size:11px">ADMIN</span>':""}</h4>
+                <p style="font-size:12px;color:#64748b">Creado: ${formatearFecha(p.creado_en)} · ⭐ ${p.puntos||0} pts · 🔥 racha ${p.racha||0}</p>
+                <p style="font-size:13px">${premium ? `⭐ Premium · ${dias} días (hasta ${formatearFecha(p.premium_hasta)})` : "🆓 Plan gratis"}</p>
+            </div>
+            <div class="usuario-actions">
+                ${premium
+                    ? `<button type="button" onclick="renovarSuscripcion('${p.id}')">🔁 Renovar +30d</button>
+                       <button type="button" onclick="desactivarSuscripcion('${p.id}')" class="btn-rojo">❌ Desactivar</button>`
+                    : `<button type="button" onclick="activarSuscripcion('${p.id}')">⭐ Activar Premium</button>`}
+                <button type="button" onclick="adminResetPassword('${p.id}')">🔑 Reset password</button>
+                <button type="button" onclick="adminAsignarPasswordTemp('${p.id}', '${esc(p.username)}')">🎟️ Asignar temporal</button>
+                ${p.rol !== "admin" ? `<button type="button" onclick="eliminarUsuario('${p.id}', '${esc(p.username)}')" class="btn-rojo">🗑 Eliminar</button>` : ""}
+            </div>
+        </div>`;
+    }).join("");
+}
+
+async function adminResetPassword(usuarioId) {
+    const p = appState.perfiles.find(x => x.id === usuarioId); if (!p) return;
+    const email = prompt(`Vamos a mandar un email de reset a "${p.username}".\nIngresá su email (lo encontrás en Supabase Dashboard → Authentication → Users):`);
+    if (!email) return;
+    const { error } = await MA().sbOlvidePassword(sanitizar(email));
+    if (error) return mostrarToast("Error: " + error.message, "error");
+    mostrarToast("✅ Email de reset enviado", "ok");
+}
+
+async function adminAsignarPasswordTemp(usuarioId, nombre) {
+    mostrarToast(`Para asignar una contraseña temporal al usuario "${nombre}" abrí Supabase Dashboard → Authentication → Users → click en el usuario → "Reset password". Esa opción te permite setear una password directamente.`, "info");
+    // Razón: cambiar password de OTRO usuario requiere service_role key (admin API),
+    // que no está disponible en el front-end por seguridad.
+    setTimeout(() => {
+        window.open(`https://supabase.com/dashboard/project/yidrpuizgtqpswefwdaa/auth/users`, "_blank");
+    }, 600);
+}
+
+// ============ SUBIR CONTENIDO ============
+function actualizarCampoArchivo() {
+    const tipo = document.getElementById("su-tipo").value;
+    document.getElementById("su-archivo-wrap").style.display = tipo==="archivo" ? "block" : "none";
+    document.getElementById("su-texto-wrap").style.display   = tipo==="texto" ? "block" : "none";
+    document.getElementById("su-url-wrap").style.display     = tipo==="url-video" ? "block" : "none";
+}
+
+async function subirContenido() {
+    mostrarError("su-error",""); mostrarExito("su-success","");
+    if (appState.perfilActual?.rol !== "admin") return mostrarError("su-error","Solo el admin.");
+    await _subirArchivoComun({
+        prefixIds: { titulo:"su-titulo", desc:"su-desc", tipo:"su-tipo", texto:"su-texto", url:"su-url", archivo:"su-archivo",
+                     materia:"su-materia", seccion:"su-seccion", tema:"su-tema", error:"su-error", success:"su-success", progress:"su-progress", progressFill:"su-progress-fill" },
+        esPersonal: false,
+    });
+    renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium(); renderAdminArchivos();
+}
+
+async function subirMiArchivo() {
+    mostrarError("mu-error",""); mostrarExito("mu-success","");
+    if (!appState.perfilActual) return mostrarError("mu-error","Necesitás iniciar sesión.");
+    await _subirArchivoComun({
+        prefixIds: { titulo:"mu-titulo", desc:"mu-desc", tipo:"mu-tipo", texto:"mu-texto", url:"mu-url", archivo:"mu-archivo",
+                     materia:"mu-materia", seccion:"mu-seccion", tema:"mu-tema", error:"mu-error", success:"mu-success", progress:"mu-progress", progressFill:"mu-progress-fill" },
+        esPersonal: true,
+    });
+    renderSeccionMisArchivos();
+}
+
+async function _subirArchivoComun({ prefixIds, esPersonal }) {
+    const get = id => document.getElementById(id);
+    const titulo = sanitizar(get(prefixIds.titulo).value);
+    const desc   = sanitizar(get(prefixIds.desc).value);
+    const tipo   = get(prefixIds.tipo).value;
+    const materia = get(prefixIds.materia)?.value || "general";
+    const seccion = get(prefixIds.seccion)?.value || "pdf";
+    if (!titulo) return mostrarError(prefixIds.error, "Ingresá un título.");
+    const tema_id = get(prefixIds.tema)?.value || null;
+    let meta = { titulo, descripcion:desc, materia, seccion, tipo, creado_por: appState.perfilActual.id, es_personal: esPersonal };
+    if (tema_id) meta.tema_id = tema_id;
+    if (tipo === "texto") {
+        const t = get(prefixIds.texto).value.trim();
+        if (!t) return mostrarError(prefixIds.error,"Ingresá el contenido.");
+        meta.contenido_texto = t;
+    } else if (tipo === "url-video") {
+        const u = get(prefixIds.url).value.trim();
+        if (!u) return mostrarError(prefixIds.error,"Ingresá la URL.");
+        meta.url_video = u;
+    } else {
+        const file = get(prefixIds.archivo).files[0];
+        if (!file) return mostrarError(prefixIds.error,"Seleccioná un archivo.");
+        if (file.size > MAX_FILE_SIZE) return mostrarError(prefixIds.error,`Máx ${formatearTamano(MAX_FILE_SIZE)}.`);
+        get(prefixIds.progress).style.display = "block";
+        const fill = get(prefixIds.progressFill); if (fill) fill.style.width = "30%";
+        const ext  = file.name.split(".").pop().toLowerCase();
+        const carpeta = esPersonal ? `personales/${appState.perfilActual.id}` : materia;
+        const path = `${carpeta}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+        const { error: eUp } = await MA().sbSubirBlob(path, file, file.type);
+        if (eUp) { get(prefixIds.progress).style.display="none"; return mostrarError(prefixIds.error,"Error: "+eUp.message); }
+        if (fill) fill.style.width = "70%";
+        meta.storage_path  = path;
+        meta.nombre_archivo = file.name;
+        meta.mime_type     = file.type;
+        meta.tamano_bytes  = file.size;
+        if (file.type.startsWith("image/")) meta.miniatura = await generarMiniaturaDesdeBlob(file);
+    }
+    const { error } = await MA().sbCrearArchivo(meta);
+    get(prefixIds.progress).style.display = "none";
+    if (error) return mostrarError(prefixIds.error,"Error: "+error.message);
+    mostrarExito(prefixIds.success,"✅ Publicado.");
+    [prefixIds.titulo, prefixIds.desc, prefixIds.texto, prefixIds.url, prefixIds.archivo].forEach(id => { if (get(id)) get(id).value=""; });
+    await refrescarEstado();
+    setTimeout(() => mostrarExito(prefixIds.success,""), 3000);
+}
+
+function generarMiniaturaDesdeBlob(blob, maxW=340) {
+    return new Promise(resolve => {
+        const img = new Image(), url = URL.createObjectURL(blob);
+        img.onload = () => {
+            const r = Math.min(maxW/img.width, 1);
+            const c = document.createElement("canvas");
+            c.width=Math.round(img.width*r); c.height=Math.round(img.height*r);
+            c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+            URL.revokeObjectURL(url);
+            resolve(c.toDataURL("image/jpeg", 0.75));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+        img.src = url;
+    });
+}
+
+// ============ EDITAR / BORRAR ============
+function abrirEdicion(id) {
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
+    document.getElementById("ed-id").value=a.id;
+    document.getElementById("ed-titulo").value=a.titulo||"";
+    document.getElementById("ed-desc").value=a.descripcion||"";
+    document.getElementById("ed-materia").value=a.materia||"general";
+    document.getElementById("ed-seccion").value=a.seccion||"video";
+    const w = document.getElementById("ed-texto-wrap");
+    if (a.tipo==="texto") { w.style.display="block"; document.getElementById("ed-texto").value=a.contenido_texto||""; }
+    else w.style.display="none";
+    document.getElementById("modal-editar").style.display="flex";
+}
+async function guardarEdicion() {
+    const id = document.getElementById("ed-id").value;
+    const cambios = {
+        titulo: sanitizar(document.getElementById("ed-titulo").value),
+        descripcion: sanitizar(document.getElementById("ed-desc").value),
+        materia: document.getElementById("ed-materia").value,
+        seccion: document.getElementById("ed-seccion").value,
+    };
+    const a = appState.archivos.find(x => x.id===id);
+    if (a?.tipo==="texto") cambios.contenido_texto = document.getElementById("ed-texto").value;
+    const { error } = await MA().sbActualizarArchivo(id, cambios);
+    if (error) return mostrarError("ed-error", error.message);
+    document.getElementById("modal-editar").style.display="none";
+    mostrarToast("✅ Guardado","ok");
+    await refrescarEstado();
+    renderAdminArchivos(); renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium();
+}
+async function eliminarArchivo(id) {
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
+    if (!confirm(`¿Borrar "${a.titulo}"?`)) return;
+    const { error } = await MA().sbBorrarArchivo(id, a.storage_path);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    mostrarToast("🗑 Borrado","ok");
+    await refrescarEstado();
+    renderAdminArchivos(); renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium(); renderSeccionMisArchivos();
+}
+async function eliminarUsuario(usuarioId, nombre) {
+    if (!confirm(`¿Eliminar a "${nombre}"?\nNota: borra el perfil pero la cuenta de Auth queda en Supabase.`)) return;
+    const { error } = await MA().sb.from("perfiles").delete().eq("id", usuarioId);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    mostrarToast("🗑 Eliminado","ok"); renderAdminUsuarios();
+}
+
+// ============ PREMIUM (acciones) ============
+async function activarSuscripcion(uid) {
+    const { error } = await MA().sbActivarPremium(uid, DURACION_DIAS, "activacion");
+    if (error) return mostrarToast("Error: "+(error.message||error),"error");
+    mostrarToast(`⭐ Premium +${DURACION_DIAS}d`,"ok"); renderAdminUsuarios();
+}
+async function renovarSuscripcion(uid) {
+    const { error } = await MA().sbActivarPremium(uid, DURACION_DIAS, "renovacion");
+    if (error) return mostrarToast("Error: "+(error.message||error),"error");
+    mostrarToast(`🔁 Renovado +${DURACION_DIAS}d`,"ok"); renderAdminUsuarios();
+}
+async function desactivarSuscripcion(uid) {
+    if (!confirm("¿Desactivar premium?")) return;
+    const { error } = await MA().sbDesactivarPremium(uid);
+    if (error) return mostrarToast("Error: "+(error.message||error),"error");
+    mostrarToast("❌ Desactivado","ok"); renderAdminUsuarios();
+}
+
+// ============ VISOR ============
+async function verContenido(id) {
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
+    // 🆕 GATE DE QUOTA: si el usuario está logueado y NO es admin, registrar uso
+    if (appState.perfilActual && appState.perfilActual.rol !== "admin" && !a.es_personal) {
+        const c = await MA().sbRegistrarUso("archivo");
+        if (c === -1) {
+            mostrarBannerQuota("archivo");
+            return;
+        }
+    }
+    document.getElementById("visor-titulo").textContent = a.titulo;
+    const body = document.getElementById("visor-cuerpo");
+    body.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">Cargando...</p>`;
+    document.getElementById("modal-visor").style.display = "flex";
+    // Marca de agua disuasiva en archivos admin (con username)
+    if (appState.perfilActual && !a.es_personal && a.seccion !== "texto") {
+        const wm = document.getElementById("modal-visor");
+        const txt = `© Matemáticas Activa · ${appState.perfilActual.username || "usuario"} · ${new Date().toLocaleDateString("es-AR")}`;
+        wm.dataset.watermark = txt;
+        wm.classList.add("con-marca-agua");
+    } else {
+        document.getElementById("modal-visor").classList.remove("con-marca-agua");
+    }
+    let contenidoHtml = "";
+    if (a.tipo === "texto") {
+        contenidoHtml = `<div style="white-space:pre-wrap;line-height:1.6;padding:1rem">${esc(a.contenido_texto||"")}</div>`;
+    } else if (a.tipo === "url-video") {
+        const em = parseEmbedUrl(a.url_video);
+        contenidoHtml = em
+            ? `<div style="position:relative;padding-top:56.25%"><iframe src="${em}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
+            : `<p style="text-align:center"><a href="${esc(a.url_video)}" target="_blank" rel="noopener">Abrir video</a></p>`;
+    } else if (a.storage_path) {
+        const url = await MA().sbUrlFirmada(a.storage_path, 3600);
+        if (!url) contenidoHtml = `<p style="text-align:center;color:#dc2626;padding:40px">No se pudo obtener el archivo.</p>`;
+        else {
+            const mt = a.mime_type || "";
+            if (mt.startsWith("image/")) {
+                const proteg = !a.es_personal ? ' oncontextmenu="return false" draggable="false" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px;user-select:none;-webkit-user-drag:none;pointer-events:none"' : ' style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px"';
+                contenidoHtml = `<img src="${url}" alt="${esc(a.titulo)}"${proteg}>`;
+            }
+            else if (mt.startsWith("video/")) {
+                const noDl = !a.es_personal ? ' controlsList="nodownload nofullscreen noremoteplayback" disablepictureinpicture oncontextmenu="return false"' : '';
+                contenidoHtml = `<video src="${url}" controls${noDl} style="width:100%;border-radius:8px"></video>`;
+            }
+            else if (mt === "application/pdf") {
+                // PDFs: iframe con #toolbar=0 para ocultar botón de descarga
+                const sufijo = !a.es_personal ? "#toolbar=0&navpanes=0" : "";
+                contenidoHtml = `<iframe src="${url}${sufijo}" style="width:100%;height:70vh;border:0;border-radius:8px" sandbox="allow-same-origin allow-scripts"></iframe>${!a.es_personal?'<p style=\"font-size:11px;color:#94a3b8;text-align:center;margin-top:6px\">📌 Material protegido — solo lectura online</p>':''}`;
+            }
+            else {
+                // Para archivos del admin, no permitir descarga directa
+                if (!a.es_personal) contenidoHtml = `<p style="text-align:center;padding:30px"><div style="font-size:48px">📁</div><p style="margin:14px 0;color:#64748b">${esc(a.nombre_archivo||a.titulo)}</p><p style="font-size:13px;color:#dc2626">Este archivo solo se visualiza online — no descargable.</p></p>`;
+                else contenidoHtml = `<p style="text-align:center;padding:20px"><a href="${url}" download="${esc(a.nombre_archivo||a.titulo)}" class="btn-pago-mp" style="display:inline-block">⬇ Descargar ${esc(a.nombre_archivo||a.titulo)}</a><p style="font-size:11px;color:#94a3b8;margin-top:8px">(Tus archivos personales sí podés descargarlos)</p></p>`;
+            }
+        }
+    } else {
+        contenidoHtml = `<p style="text-align:center;color:#dc2626;padding:40px">Archivo no disponible.</p>`;
+    }
+    // Sumar puntos por ver contenido (1 punto por archivo, una vez)
+    if (appState.perfilActual && !appState.perfilActual.vistos?.includes(id)) {
+        await MA().sbSumarPuntos(2);
+        await MA().sbAgregarVisto(id);
+        await refrescarEstado(); actualizarNavbar();
+    }
+    // Renderizar visor + sección de comentarios
+    body.innerHTML = contenidoHtml + `<div id="visor-comentarios" style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:16px"></div>`;
+    renderComentarios(id);
+}
+
+function parseEmbedUrl(url) {
+    if (!url) return null;
+    let m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);
+    if (m) return `https://www.youtube.com/embed/${m[1]}`;
+    m = url.match(/vimeo\.com\/(\d+)/);
+    if (m) return `https://player.vimeo.com/video/${m[1]}`;
+    return null;
+}
+
+// ============ COMENTARIOS ============
+async function renderComentarios(archivoId) {
+    const cont = document.getElementById("visor-comentarios"); if (!cont) return;
+    const lista = await MA().sbListarComentarios(archivoId);
+    const formHtml = appState.perfilActual
+        ? `<div style="display:flex;gap:8px;margin-top:12px">
+                <input type="text" id="com-texto" placeholder="Escribí un comentario..." maxlength="1000" style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                <button type="button" onclick="enviarComentario('${archivoId}')" style="padding:8px 16px;background:#2563eb;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">Enviar</button>
+            </div>`
+        : `<p style="font-size:13px;color:#64748b;text-align:center;margin-top:12px"><a href="#" onclick="abrirAuth(event)" style="color:#2563eb">Iniciá sesión</a> para comentar.</p>`;
+    cont.innerHTML = `
+        <h4 style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 12px">💬 Comentarios (${lista.length})</h4>
+        <div id="lista-coms" style="max-height:280px;overflow-y:auto">
+            ${lista.length
+                ? lista.map(c => `<div style="padding:10px 0;border-bottom:1px solid #f1f5f9">
+                    <p style="font-size:13px;margin:0 0 4px"><strong style="color:#2563eb">${esc(c.perfiles?.username||"Usuario")}</strong> ${c.perfiles?.rol==="admin"?'<span style="background:#7c3aed;color:white;padding:1px 6px;border-radius:99px;font-size:10px">ADMIN</span>':""} <span style="font-size:11px;color:#94a3b8">· ${formatearFechaHora(c.creado_en)}</span></p>
+                    <p style="font-size:14px;margin:0;line-height:1.4">${esc(c.texto)}</p>
+                    ${(appState.perfilActual && (c.usuario_id===appState.perfilActual.id || appState.perfilActual.rol==="admin"))
+                        ? `<button type="button" onclick="borrarComentario('${c.id}','${archivoId}')" style="background:none;border:none;color:#dc2626;font-size:11px;cursor:pointer;padding:0;margin-top:4px">🗑 Borrar</button>` : ""}
+                </div>`).join("")
+                : `<p style="font-size:13px;color:#94a3b8;text-align:center;padding:12px">Aún no hay comentarios.</p>`}
+        </div>
+        ${formHtml}`;
+}
+async function enviarComentario(archivoId) {
+    const inp = document.getElementById("com-texto"); if (!inp) return;
+    const texto = inp.value.trim();
+    if (!texto) return;
+    const { error } = await MA().sbCrearComentario(archivoId, texto);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    inp.value = "";
+    await MA().sbSumarPuntos(1);
+    await refrescarEstado(); actualizarNavbar();
+    renderComentarios(archivoId);
+}
+async function borrarComentario(id, archivoId) {
+    if (!confirm("¿Borrar este comentario?")) return;
+    const { error } = await MA().sbBorrarComentario(id);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    renderComentarios(archivoId);
+}
+
+// ============ USUARIO VE ARCHIVO (cuota premium) ============
+async function usuarioVerArchivo(id) {
+    if (!appState.perfilActual) { abrirAuth(); return; }
+    const a = appState.archivos.find(x => x.id===id); if (!a) return;
+    if (a.seccion === "premium") {
+        if (esPremiumActivo(appState.perfilActual)) return verContenido(id);
+        const vistos = appState.perfilActual.vistos || [];
+        if (vistos.includes(id)) return verContenido(id);
+        if (vistos.length >= MAX_ARCHIVOS_GRATIS) return abrirModalPago();
+        return verContenido(id);
+    }
+    return verContenido(id);
+}
+function abrirModalPago() { document.getElementById("modal-pago").style.display = "flex"; }
+
+// ============ RENDER PÚBLICO ============
+function tarjetaPublica(a, esPremium) {
+    const ic = ({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion] || "📦";
+    return `<article class="contenido-card" onclick="${esPremium?`usuarioVerArchivo('${a.id}')`:`verContenido('${a.id}')`}">
+        <div class="contenido-thumb">${a.miniatura?`<img src="${a.miniatura}" alt="">`:`<span style="font-size:64px">${ic}</span>`}</div>
+        <div class="contenido-body">
+            <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
+            <h4>${esc(a.titulo)}</h4>
+            ${a.descripcion?`<p>${esc(a.descripcion)}</p>`:""}
+        </div>
+    </article>`;
+}
+function renderSeccionVideos() {
+    const g = document.getElementById("videos-grid"); if (!g) return;
+    const v = appState.archivosPublicos.filter(a => a.seccion==="video" || a.tipo==="url-video");
+    g.innerHTML = v.length ? v.map(a => tarjetaPublica(a, false)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay videos.</p>`;
+}
+function renderSeccionPDFs() {
+    const g = document.getElementById("pdfs-grid"); if (!g) return;
+    const p = appState.archivosPublicos.filter(a => a.seccion==="pdf");
+    g.innerHTML = p.length ? p.map(a => tarjetaPublica(a, false)).join("") : `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:32px">Aún no hay PDFs.</p>`;
+}
+function renderSeccionPremium() {
+    const info = document.getElementById("suscripcion-info");
+    const cont = document.getElementById("suscripcion-contenido");
+    const cuota = document.getElementById("premium-cuota-info");
+    const grid  = document.getElementById("premium-grid");
+    if (!info || !cont) return;
+
+    const p = appState.perfilActual;
+
+    // === Banner de estado del usuario actual ===
+    let banner = "";
+    if (!p) {
+        banner = `<div class="premium-banner-estado banner-gratis">
+            <h3 style="color:#fbbf24;margin:0 0 6px">👋 ¡Hola! Ingresá para acceder a más contenido</h3>
+            <p style="color:rgba(255,255,255,.85);margin:0 0 12px">Creá una cuenta gratis y empezá a usar la plataforma.</p>
+            <button type="button" class="btn-hero-main" onclick="abrirAuth(event)" style="margin:0">Registrarme gratis</button>
+        </div>`;
+    } else if (esPremiumActivo(p)) {
+        banner = `<div class="premium-banner-estado banner-activo">
+            <h3 style="color:#fde68a;margin:0 0 6px">⭐ Sos usuario PREMIUM</h3>
+            <p style="color:rgba(255,255,255,.9);margin:0">Te quedan <strong>${diasRestantes(p)} días</strong> de acceso completo (hasta ${formatearFecha(p.premium_hasta)}).</p>
+        </div>`;
+    } else {
+        const v = (p.vistos||[]).length;
+        banner = `<div class="premium-banner-estado banner-gratis">
+            <h3 style="color:#fbbf24;margin:0 0 6px">🆓 Estás en el plan Gratis</h3>
+            <p style="color:rgba(255,255,255,.85);margin:0">Tenés acceso limitado a 3 archivos/día. ¿Querés más? Elegí un plan abajo.</p>
+        </div>`;
     }
 
-    // ── API pública ────────────────────────────────────────────
-    window._calc = {
-        nuevo: nuevoEjercicio,
-        verificar: verificar,
-        pista: pista,
-        setDif: setDificultad,
-        init: init,
-    };
-    window.initCalculadora = init;
+    // === Cards de los 3 planes (siempre visibles en la home) ===
+    const planesHtml = `
+    <div class="planes-grid planes-home">
+        <div class="plan-card">
+            <div class="plan-tag" style="background:#94a3b8">GRATIS</div>
+            <h3>Plan Gratis</h3>
+            <p class="plan-precio">$ 0</p>
+            <p class="plan-sub">Para siempre</p>
+            <ul class="plan-features">
+                <li>✅ 3 archivos públicos por día</li>
+                <li>✅ 3 usos de calculadora/graficadora por día</li>
+                <li>✅ Acceso al ranking</li>
+                <li>⏱️ Renovación cada 24hs</li>
+                <li>❌ Sin archivos premium</li>
+                <li>❌ Sin subir archivos personales</li>
+            </ul>
+            <button type="button" class="plan-btn plan-btn-gratis" disabled>Plan por defecto</button>
+        </div>
+        <div class="plan-card plan-card-popular">
+            <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
+            <h3>Plan Básico</h3>
+            <p class="plan-precio">$ 7.000</p>
+            <p class="plan-sub">23 días de acceso</p>
+            <ul class="plan-features">
+                <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
+                <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
+                <li>✅ Sistema de puntos y ranking</li>
+                <li>✅ Comentarios en todo el contenido</li>
+                <li>❌ No podés subir archivos personales</li>
+            </ul>
+            <a class="plan-btn plan-btn-basico" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📩 Suscribirme por WhatsApp</a>
+        </div>
+        <div class="plan-card plan-card-premium">
+            <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
+            <h3>Plan Premium</h3>
+            <p class="plan-precio">$ 12.000</p>
+            <p class="plan-sub">30 días de acceso completo</p>
+            <ul class="plan-features">
+                <li>✅ <strong>Todo lo del plan Básico</strong></li>
+                <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
+                <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
+                <li>✅ Carpeta personal ilimitada</li>
+                <li>✅ Soporte prioritario</li>
+            </ul>
+            <a class="plan-btn plan-btn-premium" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">⭐ Suscribirme por WhatsApp</a>
+        </div>
+    </div>
+    <div style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:14px 18px;margin-top:18px;text-align:center;color:#fde68a">
+        <p style="margin:0;font-size:13px"><strong>📋 ¿Cómo suscribirte?</strong> Apretá "Suscribirme por WhatsApp" del plan que quieras. Te pasamos los datos para pagar y, una vez hecho el pago, mandás el comprobante con tu nombre de usuario. La activación es en pocos minutos. <a href="guia-pago.html" target="_blank" style="color:#fde68a;text-decoration:underline">Ver guía completa →</a></p>
+    </div>
+    `;
 
-})();
+    info.innerHTML = banner + planesHtml;
+
+    // === Grid de contenido premium (solo si hay) ===
+    const premium = appState.archivosPublicos.filter(a => a.seccion==="premium");
+    if (premium.length > 0) {
+        cont.style.display = "block";
+        if (cuota && p && !esPremiumActivo(p)) {
+            const v = (p.vistos||[]).length;
+            cuota.style.display = "block";
+            cuota.innerHTML = `Tu cuota: <strong>${v}/${MAX_ARCHIVOS_GRATIS}</strong> archivos premium ya vistos`;
+        } else if (cuota) {
+            cuota.style.display = "none";
+        }
+        grid.innerHTML = premium.map(a => tarjetaPublica(a, true)).join("");
+    } else {
+        cont.style.display = "none";
+    }
+}
+
+// ============ MIS ARCHIVOS (sección personal) ============
+function renderSeccionMisArchivos() {
+    const sec = document.getElementById("mis-archivos-section");
+    if (!sec) return;
+    if (!appState.perfilActual) { sec.style.display = "none"; return; }
+    sec.style.display = "block";
+    const grid = document.getElementById("mis-archivos-grid");
+    if (!appState.misArchivos.length) {
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:24px">Aún no subiste ningún archivo. Usá el formulario de arriba.</p>`;
+        return;
+    }
+    grid.innerHTML = appState.misArchivos.map(a => `
+        <article class="contenido-card">
+            <div class="contenido-thumb" onclick="verContenido('${a.id}')">${a.miniatura?`<img src="${a.miniatura}" alt="">`:`<span style="font-size:64px">${({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion]||"📦"}</span>`}</div>
+            <div class="contenido-body">
+                <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
+                <h4>${esc(a.titulo)}</h4>
+                ${a.descripcion?`<p>${esc(a.descripcion)}</p>`:""}
+                <p style="font-size:11px;color:#94a3b8">${formatearFecha(a.creado_en)} · ${formatearTamano(a.tamano_bytes)}</p>
+                <div style="display:flex;gap:6px;margin-top:8px">
+                    <button type="button" onclick="verContenido('${a.id}')" style="flex:1;padding:6px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer">👁 Ver</button>
+                    <button type="button" onclick="eliminarArchivo('${a.id}')" style="padding:6px 10px;background:#dc2626;color:white;border:none;border-radius:6px;cursor:pointer">🗑</button>
+                </div>
+            </div>
+        </article>`).join("");
+}
+
+// ============ RANKING ============
+async function renderRankingPublico() {
+    const cont = document.getElementById("ranking-grid"); if (!cont) return;
+    const lista = await MA().sbRanking();
+    if (!lista.length) { cont.innerHTML = `<p style="text-align:center;color:#64748b">Aún no hay usuarios en el ranking.</p>`; return; }
+    cont.innerHTML = lista.map((u, i) => {
+        const medalla = i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
+        return `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:white;border-radius:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+            <div style="font-size:24px;min-width:48px;text-align:center">${medalla}</div>
+            <div style="flex:1">
+                <h4 style="margin:0;font-size:15px;color:#0f172a">${esc(u.username||"(sin nombre)")}${u.es_premium?' <span style="font-size:11px;color:#f59e0b">⭐</span>':""}</h4>
+                <p style="margin:2px 0 0;font-size:12px;color:#64748b">🔥 racha ${u.racha} días</p>
+            </div>
+            <div style="font-size:18px;font-weight:700;color:#2563eb">${u.puntos} pts</div>
+        </div>`;
+    }).join("");
+}
+
+// ============ EJERCICIOS DIARIOS (admin) ============
+async function renderAdminEjercicios() {
+    const cont = document.getElementById("admin-ejercicios-lista"); if (!cont) return;
+    const { data: lista } = await MA().sb.from("ejercicios_diarios").select("*").order("creado_en", { ascending: false });
+    cont.innerHTML = `
+        <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px">
+            <h4 style="margin:0 0 12px;font-size:14px;color:#0f172a">➕ Agregar ejercicio</h4>
+            <div class="form-group"><label for="ej-pregunta">Pregunta</label><input type="text" id="ej-pregunta" placeholder="Ej: ¿Cuánto es 12 × 7?"></div>
+            <div class="form-group"><label for="ej-respuesta">Respuesta correcta</label><input type="text" id="ej-respuesta" placeholder="Ej: 84"></div>
+            <div class="form-group"><label for="ej-pista">Pista (opcional)</label><input type="text" id="ej-pista" placeholder="Ej: descomponé en 10×7 + 2×7"></div>
+            <div class="form-group"><label for="ej-dif">Dificultad</label><select id="ej-dif"><option value="facil">Fácil</option><option value="medio" selected>Medio</option><option value="dificil">Difícil</option></select></div>
+            <button type="button" class="btn-subir" onclick="adminCrearEjercicio()">➕ Crear ejercicio</button>
+        </div>
+        <h4 style="font-size:14px;margin:0 0 8px">Catálogo (${lista?.length||0} ejercicios)</h4>
+        ${(lista||[]).map(e => `<div style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px">
+            <p style="font-size:13px;margin:0 0 4px"><strong>${esc(e.pregunta)}</strong> → <span style="color:#16a34a">${esc(e.respuesta)}</span></p>
+            <p style="font-size:11px;color:#64748b;margin:0">Dificultad: ${e.dificultad}${e.pista?" · Pista: "+esc(e.pista):""}</p>
+        </div>`).join("") || "<p style='color:#94a3b8;font-size:13px'>Aún no hay ejercicios. Agregá el primero arriba.</p>"}`;
+}
+async function adminCrearEjercicio() {
+    const pregunta = sanitizar(document.getElementById("ej-pregunta").value);
+    const respuesta = sanitizar(document.getElementById("ej-respuesta").value);
+    const pista = sanitizar(document.getElementById("ej-pista").value);
+    const dif = document.getElementById("ej-dif").value;
+    if (!pregunta || !respuesta) return mostrarToast("Completá pregunta y respuesta","warn");
+    const { error } = await MA().sbCrearEjercicio(pregunta, respuesta, pista, dif);
+    if (error) return mostrarToast("Error: "+error.message,"error");
+    mostrarToast("✅ Ejercicio creado","ok");
+    renderAdminEjercicios();
+}
+
+// ============ TRADUCCIÓN ERRORES ============
+function traducirError(msg) {
+    if (!msg) return "Error desconocido.";
+    const m = msg.toLowerCase();
+    if (m.includes("invalid login")) return "Email o contraseña incorrectos.";
+    if (m.includes("email not confirmed")) return "Confirmá tu email primero.";
+    if (m.includes("user already registered")) return "Ese email ya está registrado.";
+    if (m.includes("password should be at least")) return "Contraseña muy corta.";
+    if (m.includes("rate limit")) return "Demasiados intentos. Esperá unos minutos.";
+    if (m.includes("network")) return "Error de red.";
+    return msg;
+}
+
+// ============ BOOT ============
+document.addEventListener("DOMContentLoaded", function () {
+    iniciarMonitoreoSesion();
+    inicializarSistema();
+});
+
+
+
+// ============ BANNER DE QUOTA EXCEDIDA ============
+function mostrarBannerQuota(tipo) {
+    const modal = document.getElementById("modal-visor");
+    document.getElementById("visor-titulo").textContent = "Llegaste al límite diario";
+    const tipoTxt = tipo === "archivo" ? "archivos públicos" : "usos de la calculadora";
+    document.getElementById("visor-cuerpo").innerHTML = `
+        <div class="quota-banner">
+            <h4>⏱️ Llegaste al límite gratuito de hoy</h4>
+            <p>Como usuario gratis podés ver hasta <strong>3 ${tipoTxt} por día</strong>. Se reinicia automáticamente en las próximas 24hs.</p>
+            <p><strong>¿Querés acceso ilimitado ahora?</strong></p>
+            <button type="button" onclick="document.getElementById('modal-visor').style.display='none';abrirModalPago()" style="background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;border:none;padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">⭐ Ver planes</button>
+        </div>`;
+    modal.style.display = "flex";
+}
+
+// ============ FAB DE CONTACTO ============
+function toggleFabContacto() {
+    const btn  = document.getElementById("fab-contacto-btn");
+    const menu = document.getElementById("fab-menu-contacto");
+    if (!btn || !menu) return;
+    const abierto = menu.classList.toggle("open");
+    btn.classList.toggle("abierto", abierto);
+    btn.textContent = abierto ? "✕" : "💬";
+}
+// Cerrar el FAB al clickear fuera
+document.addEventListener("click", (e) => {
+    const menu = document.getElementById("fab-menu-contacto");
+    const btn  = document.getElementById("fab-contacto-btn");
+    if (!menu || !btn) return;
+    if (!menu.contains(e.target) && !btn.contains(e.target) && menu.classList.contains("open")) {
+        menu.classList.remove("open");
+        btn.classList.remove("abierto");
+        btn.textContent = "💬";
+    }
+});
+
+
+// ============ BLOQUEAR Ctrl+S / Ctrl+P / clic derecho cuando hay modal visor abierto ============
+function bloquearAtajosImpresion(e) {
+    const visorAbierto = document.getElementById("modal-visor")?.style.display === "flex";
+    if (!visorAbierto) return;
+    // Solo si el archivo en visor no es personal (creado por el propio user)
+    if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S" || e.key === "p" || e.key === "P")) {
+        e.preventDefault();
+        mostrarToast("🔒 Este contenido no se puede guardar ni imprimir", "warn");
+    }
+}
+document.addEventListener("keydown", bloquearAtajosImpresion);
+document.addEventListener("contextmenu", function(e){
+    // Bloquear clic derecho dentro del visor cuando hay marca de agua activa
+    const visor = document.getElementById("modal-visor");
+    if (visor && visor.classList.contains("con-marca-agua") && visor.contains(e.target)) {
+        e.preventDefault();
+        mostrarToast("🔒 Contenido protegido", "warn");
+    }
+}, true);
+
+// Expose
+Object.assign(window, {
+    buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
+    mostrarForm, usuarioLogin, usuarioRegistro, adminLogin, enviarOlvideContrasena, setearPasswordRecovery,
+    guardarUsername, cambiarMiPassword,
+    adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
+    verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
+    activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
+    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto, mostrarBannerQuota, cargarTemasParaMateria,
+    enviarComentario, borrarComentario,
+    adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
+});
