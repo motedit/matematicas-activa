@@ -14,10 +14,13 @@ const sb = (typeof supabase !== "undefined" && supabase.createClient)
 if (!sb) console.error("Supabase SDK no se cargó.");
 
 // ============================ AUTH ==============================
-async function sbRegistro({ email, password, username }) {
+async function sbRegistro({ email, password, username, nombreCompleto }) {
     const { data, error } = await sb.auth.signUp({
         email, password,
-        options: { data: { username }, emailRedirectTo: window.location.origin + window.location.pathname }
+        options: {
+            data: { username, nombre_completo: nombreCompleto || null },
+            emailRedirectTo: window.location.origin + window.location.pathname
+        }
     });
     return { data, error };
 }

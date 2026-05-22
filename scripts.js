@@ -84,15 +84,51 @@ function iniciarMonitoreoSesion(){
 }
 
 // ============ BÚSQUEDA ============
+const MATERIA_RUTA = {
+    algebra:"materias/Algebra/Algebra.html", aritmetica:"materias/Aritmetica/Aritmetica.html",
+    geometria:"materias/Geometria/Geometria.html", estadistica:"materias/Estadistica/Estadistica.html",
+    trigonometria:"materias/Trigonometria/Trigonometria.html", calculo:"materias/Calculo/Calculo.html",
+    razonamiento:"materias/Razonamiento/Razonamiento.html", juegos:"materias/Juegos/Juegos.html",
+};
+let todosLosTemas = [];
+async function cargarTodosLosTemas() {
+    if (!MA()?.sb) return;
+    try { todosLosTemas = await MA().sbListarTemas(); } catch(e) { todosLosTemas = []; }
+}
 function buscarContenido() {
-    const input = sanitizar(document.getElementById("buscador").value).toLowerCase();
-    const cont = document.getElementById("lista-contenidos"); if (!cont) return;
-    [...cont.getElementsByTagName("a")].forEach(a => {
-        const visible = a.innerText.toLowerCase().includes(input);
+    const input = sanitizar(document.getElementById("buscador").value).toLowerCase().trim();
+    const cont = document.getElementById("lista-contenidos");
+    if (cont) [...cont.getElementsByTagName("a")].forEach(a => {
+        const visible = !input || a.innerText.toLowerCase().includes(input);
         const t = a.parentElement?.tagName === "LI" ? a.parentElement : a;
         t.style.display = visible ? "" : "none";
     });
+    const caja = document.getElementById("buscador-resultados");
+    if (!caja) return;
+    if (input.length < 2) { caja.classList.remove("activo"); caja.innerHTML = ""; return; }
+    const matches = todosLosTemas.filter(t =>
+        (t.nombre||"").toLowerCase().includes(input) ||
+        (t.categoria||"").toLowerCase().includes(input) ||
+        (MATERIAS[t.materia]||"").toLowerCase().includes(input)
+    ).slice(0, 14);
+    if (!matches.length) {
+        caja.innerHTML = `<div style="padding:14px 16px;color:#94a3b8;font-size:13px;text-align:center">No se encontraron temas para "${esc(input)}". Probá con otra palabra.</div>`;
+        caja.classList.add("activo");
+        return;
+    }
+    caja.innerHTML = matches.map(t => `
+        <a class="buscador-res-item" href="${MATERIA_RUTA[t.materia] || '#'}">
+            <span class="buscador-res-mat">${esc(MATERIAS[t.materia] || t.materia)}</span>
+            <span style="flex:1;min-width:0">${esc(t.nombre)}</span>
+            <span class="buscador-res-nivel">Nivel ${t.nivel} · ${esc(t.categoria)}</span>
+        </a>`).join("");
+    caja.classList.add("activo");
 }
+document.addEventListener("click", function(e){
+    const wrap = document.querySelector(".buscador-wrap");
+    const caja = document.getElementById("buscador-resultados");
+    if (caja && wrap && !wrap.contains(e.target)) caja.classList.remove("activo");
+});
 
 // ============ PREMIUM helpers ============
 function esPremiumActivo(p) { return p?.premium_hasta && new Date(p.premium_hasta).getTime() > Date.now(); }
@@ -161,6 +197,7 @@ async function initSelectoresTemas() {
 async function inicializarSistema() {
     await detectarRecuperacionPassword();
     await refrescarEstado();
+    await cargarTodosLosTemas();
     actualizarNavbar();
     renderSeccionVideos();
     renderSeccionPDFs();
@@ -271,21 +308,23 @@ function mostrarExito(id, msg) { const el = document.getElementById(id); if (el)
 // ============ REGISTRO / LOGIN / LOGOUT ============
 async function usuarioRegistro() {
     mostrarError("re-error",""); mostrarExito("re-success","");
+    const nombreCompleto = sanitizar(document.getElementById("re-nombre").value);
     const username = sanitizar(document.getElementById("re-user").value);
     const email    = sanitizar(document.getElementById("re-email").value);
     const pass     = document.getElementById("re-pass").value;
     const pass2    = document.getElementById("re-pass2").value;
+    if (!nombreCompleto || nombreCompleto.length < 3) return mostrarError("re-error","Ingresá tu nombre completo.");
     if (!validarUsuario(username)) return mostrarError("re-error","Usuario 3-40 caracteres alfanuméricos.");
     if (!validarEmail(email))      return mostrarError("re-error","Email inválido.");
     if (pass.length < SEG.PASS_MIN_LENGTH) return mostrarError("re-error",`Contraseña mínimo ${SEG.PASS_MIN_LENGTH} caracteres.`);
     if (pass !== pass2)            return mostrarError("re-error","Las contraseñas no coinciden.");
     if (!document.getElementById("re-acepto")?.checked) return mostrarError("re-error","Tenés que aceptar los Términos y Condiciones para registrarte.");
     if (!MA()?.sb)                 return mostrarError("re-error","Supabase no configurado.");
-    const { data, error } = await MA().sbRegistro({ email, password: pass, username });
+    const { data, error } = await MA().sbRegistro({ email, password: pass, username, nombreCompleto });
     if (error) return mostrarError("re-error", traducirError(error.message));
     if (data?.user && !data?.session) mostrarExito("re-success","✅ Cuenta creada. Revisá tu email para confirmar.");
     else { mostrarExito("re-success","✅ Cuenta creada."); setTimeout(()=>document.getElementById("overlay-auth").style.display="none", 1500); }
-    ["re-user","re-email","re-pass","re-pass2"].forEach(id=>document.getElementById(id).value="");
+    ["re-nombre","re-user","re-email","re-pass","re-pass2"].forEach(id=>document.getElementById(id).value="");
 }
 
 async function usuarioLogin() {
@@ -808,10 +847,10 @@ function renderSeccionPremium() {
             <p class="plan-precio">$ 0</p>
             <p class="plan-sub">Para siempre</p>
             <ul class="plan-features">
-                <li>✅ 3 archivos públicos por día</li>
-                <li>✅ 3 usos de calculadora/graficadora por día</li>
+                <li>✅ 3 archivos públicos por semana</li>
+                <li>✅ 3 usos de calculadora/graficadora por semana</li>
                 <li>✅ Acceso al ranking</li>
-                <li>⏱️ Renovación cada 24hs</li>
+                <li>⏱️ Renovación cada 7 días</li>
                 <li>❌ Sin archivos premium</li>
                 <li>❌ Sin subir archivos personales</li>
             </ul>
@@ -829,7 +868,10 @@ function renderSeccionPremium() {
                 <li>✅ Comentarios en todo el contenido</li>
                 <li>❌ No podés subir archivos personales</li>
             </ul>
-            <a class="plan-btn plan-btn-basico" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📩 Suscribirme por WhatsApp</a>
+            <div class="plan-pago-pasos">
+                <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Paso 1: Pagar con MercadoPago</button>
+                <a class="plan-btn plan-btn-whatsapp disabled" data-plan="basico" aria-disabled="true" href="https://wa.me/5493827654154?text=Hola%21%20Pagu%C3%A9%20el%20PLAN%20B%C3%81SICO%20%28%247.000%29%20y%20env%C3%ADo%20el%20comprobante.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📲 Paso 2: Enviar comprobante</a>
+            </div>
         </div>
         <div class="plan-card plan-card-premium">
             <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
@@ -841,9 +883,12 @@ function renderSeccionPremium() {
                 <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
                 <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
                 <li>✅ Carpeta personal ilimitada</li>
-                <li>✅ Soporte prioritario</li>
+                <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
             </ul>
-            <a class="plan-btn plan-btn-premium" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">⭐ Suscribirme por WhatsApp</a>
+            <div class="plan-pago-pasos">
+                <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Paso 1: Pagar con MercadoPago</button>
+                <a class="plan-btn plan-btn-whatsapp disabled" data-plan="premium" aria-disabled="true" href="https://wa.me/5493827654154?text=Hola%21%20Pagu%C3%A9%20el%20PLAN%20PREMIUM%20%28%2412.000%29%20y%20env%C3%ADo%20el%20comprobante.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📲 Paso 2: Enviar comprobante</a>
+            </div>
         </div>
     </div>
     <div style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:14px 18px;margin-top:18px;text-align:center;color:#fde68a">
@@ -975,7 +1020,7 @@ function mostrarBannerQuota(tipo) {
     document.getElementById("visor-cuerpo").innerHTML = `
         <div class="quota-banner">
             <h4>⏱️ Llegaste al límite gratuito de hoy</h4>
-            <p>Como usuario gratis podés ver hasta <strong>3 ${tipoTxt} por día</strong>. Se reinicia automáticamente en las próximas 24hs.</p>
+            <p>Como usuario gratis podés ver hasta <strong>3 ${tipoTxt} por semana</strong>. Se reinicia automáticamente cada 7 días.</p>
             <p><strong>¿Querés acceso ilimitado ahora?</strong></p>
             <button type="button" onclick="document.getElementById('modal-visor').style.display='none';abrirModalPago()" style="background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;border:none;padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">⭐ Ver planes</button>
         </div>`;
@@ -1024,6 +1069,17 @@ document.addEventListener("contextmenu", function(e){
     }
 }, true);
 
+
+function iniciarPagoMP(plan, btn) {
+    window.open(LINK_MERCADOPAGO, "_blank", "noopener");
+    const card = btn.closest(".plan-card");
+    if (card) {
+        const wa = card.querySelector(".plan-btn-whatsapp");
+        if (wa) { wa.classList.remove("disabled"); wa.removeAttribute("aria-disabled"); }
+    }
+    mostrarToast("Cuando termines el pago, usá el botón verde para enviar el comprobante 📲", "info");
+}
+
 // Expose
 Object.assign(window, {
     buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
@@ -1032,7 +1088,7 @@ Object.assign(window, {
     adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
     verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
     activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
-    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, toggleFabContacto, mostrarBannerQuota, cargarTemasParaMateria,
+    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, iniciarPagoMP, toggleFabContacto, mostrarBannerQuota, cargarTemasParaMateria,
     enviarComentario, borrarComentario,
     adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
 });

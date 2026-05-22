@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matemáticas Activa — Plataforma educativa de matemáticas</title>
-    <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos.">
+    <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios, juegos y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos.">
     <meta name="theme-color" content="#2563eb">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="no-referrer">
@@ -12,11 +12,53 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=1779236486">
+    <link rel="stylesheet" href="styles.css?v=12">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
       .perfil-section h4{margin:0 0 10px;font-size:14px;color:#0f172a}
+      .buscador-resultados{max-width:600px;margin:0 auto;background:white;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden;display:none}
+      .buscador-resultados.activo{display:block}
+      .buscador-res-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f1f5f9;text-decoration:none;color:#0f172a;transition:background .15s}
+      .buscador-res-item:hover{background:#f8fafc}
+      .buscador-res-item:last-child{border-bottom:none}
+      .buscador-res-mat{font-size:11px;color:#2563eb;font-weight:700;background:#eff6ff;padding:2px 8px;border-radius:99px;white-space:nowrap}
+      .buscador-res-nivel{font-size:11px;color:#94a3b8}
+      .banner-juegos{max-width:1100px;margin:40px auto;padding:38px 32px;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#312e81 100%);border-radius:20px;text-align:center;color:white;box-shadow:0 12px 40px rgba(15,23,42,.3)}
+      .banner-juegos .bj-emoji{font-size:54px;line-height:1}
+      .banner-juegos h2{font-family:'Poppins',sans-serif;font-size:clamp(22px,4vw,32px);font-weight:800;margin:10px 0 6px;color:white}
+      .banner-juegos p{font-size:15px;color:rgba(255,255,255,.8);margin:0 0 22px;max-width:520px;margin-left:auto;margin-right:auto}
+      .banner-juegos a{display:inline-block;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;font-weight:700;font-size:16px;padding:14px 34px;border-radius:12px;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 6px 20px rgba(245,158,11,.4)}
+      .banner-juegos a:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(245,158,11,.55)}
+      @media(max-width:600px){.banner-juegos{margin:28px 16px;padding:30px 20px}}
+      .que-podes{max-width:1100px;margin:0 auto;padding:0 24px}
+      .qp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:8px}
+      .qp-card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:24px;text-align:center;transition:transform .2s,box-shadow .2s}
+      .qp-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+      .qp-card .qp-icon{font-size:40px;margin-bottom:10px}
+      .qp-card h3{font-size:16px;color:#0f172a;margin:0 0 6px;font-family:'Poppins',sans-serif}
+      .qp-card p{font-size:13px;color:#64748b;margin:0;line-height:1.5}
+      .tabla-planes-wrap{overflow-x:auto;margin:0 auto 28px;max-width:860px}
+      .tabla-planes{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08);min-width:560px}
+      .tabla-planes th,.tabla-planes td{padding:12px 14px;text-align:center;font-size:13px;border-bottom:1px solid #e2e8f0}
+      .tabla-planes th{background:#1e293b;color:white;font-weight:700;font-family:'Poppins',sans-serif}
+      .tabla-planes th.col-premium{background:linear-gradient(135deg,#f59e0b,#dc2626)}
+      .tabla-planes td:first-child,.tabla-planes th:first-child{text-align:left;font-weight:600;color:#0f172a}
+      .tabla-planes tbody tr:nth-child(even){background:#f8fafc}
+      .tabla-planes .col-premium{border-left:2px solid #f59e0b;border-right:2px solid #f59e0b;background:rgba(245,158,11,.06)}
+      .tabla-planes tbody tr:last-child .col-premium{border-bottom:2px solid #f59e0b}
+      .sobre-mi{background:#f8fafc;padding:64px 24px}
+      .sobre-mi-inner{max-width:760px;margin:0 auto;text-align:center}
+      .sobre-mi h2{font-family:'Poppins',sans-serif;font-size:clamp(22px,4vw,30px);color:#0f172a;margin:0 0 28px}
+      .foto-profe{width:128px;height:128px;border-radius:50%;margin:0 auto 18px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;color:white;font-family:'Poppins',sans-serif;box-shadow:0 8px 24px rgba(37,99,235,.3)}
+      .sobre-mi h3{font-size:22px;color:#0f172a;margin:0 0 14px;font-family:'Poppins',sans-serif}
+      .sobre-mi p.bio{font-size:15px;color:#475569;line-height:1.75;margin:0 0 22px;text-align:left}
+      .sobre-mi-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+      .sobre-mi-badge{background:white;border:1.5px solid #e2e8f0;border-radius:99px;padding:8px 16px;font-size:13px;font-weight:600;color:#334155}
+      .plan-pago-pasos{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+      .plan-btn-whatsapp{background:linear-gradient(135deg,#25d366,#128c7e)!important;color:white!important}
+      .plan-btn-whatsapp.disabled{background:#cbd5e1!important;color:#94a3b8!important;pointer-events:none;cursor:not-allowed;opacity:.7}
+      .plan-features li.feature-destacada{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(220,38,38,.1));border-radius:8px;padding:8px 10px;margin-top:4px;border:1px solid rgba(245,158,11,.35);font-weight:600;color:#92400e}
     </style>
 </head>
 <body>
@@ -31,10 +73,11 @@
             <button type="button" class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" onclick="(function(b){var l=document.getElementById('navbar-links');l.classList.toggle('open');b.setAttribute('aria-expanded',l.classList.contains('open'));})(this)">☰</button>
             <ul class="navbar-links" id="navbar-links">
                 <li><a href="#materias">Materias</a></li>
-                <li><a href="#videos">Videos</a></li>
-                <li><a href="#PDFs">PDFs</a></li>
+                <li><a href="materias/Juegos/Juegos.html">🎮 Juegos</a></li>
+                <li><a href="#que-podes">¿Qué podés hacer?</a></li>
                 <li><a href="#ranking">🏆 Ranking</a></li>
-                <li><a href="#suscripcion">Premium</a></li>
+                <li><a href="#suscripcion">Planes</a></li>
+                <li><a href="#sobre-mi">Sobre el profe</a></li>
                 <li id="nav-admin-link" style="display:none"><a href="#" onclick="abrirAdmin(event)" class="nav-admin-btn">⚙️ Admin</a></li>
                 <li id="nav-mis-archivos-link" style="display:none"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
                 <li id="nav-perfil-link" style="display:none"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
@@ -57,7 +100,7 @@
         <div class="hero-content">
             <div class="hero-badge">📚 Plataforma educativa</div>
             <h1 class="hero-title">Aprende Matemáticas<br><span class="hero-gradient">de forma diferente</span></h1>
-            <p class="hero-sub">Videos, ejercicios, PDFs y contenido premium para secundaria y universidad. Ganá puntos, subí tus propios archivos y competí en el ranking.</p>
+            <p class="hero-sub">Videos, ejercicios, PDFs, juegos y contenido premium para secundaria y universidad. Ganá puntos, subí tus propios archivos y competí en el ranking.</p>
             <div class="hero-btns">
                 <a href="#materias" class="btn-hero-main">Explorar materias →</a>
                 <a href="#" onclick="abrirAuth(event)" class="btn-hero-sec">Crear cuenta gratis</a>
@@ -75,9 +118,10 @@
     <div class="buscador-wrap">
         <div class="buscador-inner">
             <span class="buscador-icon" aria-hidden="true">🔍</span>
-            <label for="buscador" class="sr-only">Buscar materia</label>
-            <input type="search" id="buscador" placeholder="Buscar materia..." aria-label="Buscar materia" onkeyup="buscarContenido()">
+            <label for="buscador" class="sr-only">Buscar materia o tema</label>
+            <input type="search" id="buscador" placeholder="Buscar materia o tema (ej: ecuaciones, derivadas, fracciones)..." aria-label="Buscar materia o tema" autocomplete="off" onkeyup="buscarContenido()">
         </div>
+        <div id="buscador-resultados" class="buscador-resultados"></div>
     </div>
 
     <section class="section" id="materias">
@@ -133,7 +177,31 @@
         </div>
     </section>
 
-    <section class="section" id="videos">
+    <div class="banner-juegos">
+        <div class="bj-emoji" aria-hidden="true">🎮</div>
+        <h2>¡Aprendé matemáticas jugando!</h2>
+        <p>Puzzles, desafíos y juegos interactivos para todas las materias</p>
+        <a href="materias/Juegos/Juegos.html">Jugar ahora →</a>
+    </div>
+
+    <section class="section" id="que-podes">
+        <div class="section-inner que-podes">
+            <div class="section-header">
+                <h2 class="section-title">¿Qué podés hacer en Matemáticas Activa?</h2>
+                <p class="section-sub">Todo lo que la plataforma te ofrece para aprender mejor</p>
+            </div>
+            <div class="qp-grid">
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📚</div><h3>Estudiá por materias</h3><p>8 áreas de matemática organizadas por niveles, desde aritmética hasta matemática universitaria.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎬</div><h3>Videos y PDFs</h3><p>Explicaciones paso a paso en video y guías descargables para repasar cuando quieras.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🧮</div><h3>Calculadora y graficadora</h3><p>Herramientas interactivas para resolver ejercicios y visualizar funciones al instante.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎮</div><h3>Juegos matemáticos</h3><p>Sudoku, cálculo mental, wordle matemático y más — aprendé mientras te divertís.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🏆</div><h3>Puntos y ranking</h3><p>Ganá puntos viendo contenido y comentando. Competí en el ranking semanal de estudiantes.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📁</div><h3>Tu carpeta personal</h3><p>Subí tus propios apuntes, PDFs y videos a un espacio privado solo para vos.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section section-alt" id="videos">
         <div class="section-inner">
             <div class="section-header">
                 <div class="section-icon video-icon">▶</div>
@@ -144,7 +212,7 @@
         </div>
     </section>
 
-    <section class="section section-alt" id="PDFs">
+    <section class="section" id="PDFs">
         <div class="section-inner">
             <div class="section-header">
                 <div class="section-icon pdf-icon">📄</div>
@@ -155,8 +223,7 @@
         </div>
     </section>
 
-    <!-- 🆕 MIS ARCHIVOS (solo para usuarios logueados) -->
-    <section class="section" id="mis-archivos-section" style="display:none">
+    <section class="section section-alt" id="mis-archivos-section" style="display:none">
         <div class="section-inner">
             <div class="section-header">
                 <div class="section-icon" style="background:linear-gradient(135deg,#10b981,#059669)">📁</div>
@@ -183,7 +250,6 @@
         </div>
     </section>
 
-    <!-- 🆕 RANKING SEMANAL -->
     <section class="section section-alt" id="ranking">
         <div class="section-inner">
             <div class="section-header">
@@ -198,13 +264,30 @@
     <section class="section premium-section" id="suscripcion">
         <div class="section-inner">
             <div class="section-header">
-                <h2 class="section-title light">Contenido Premium ⭐</h2>
+                <h2 class="section-title light">Planes y Contenido Premium ⭐</h2>
                 <p class="section-sub light">Accedé a todo el material exclusivo sin límites</p>
             </div>
             <div id="suscripcion-info"></div>
             <div id="suscripcion-contenido" style="display:none">
                 <div id="premium-cuota-info" class="cuota-info"></div>
                 <div id="premium-grid" class="contenido-grid"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="sobre-mi" id="sobre-mi">
+        <div class="sobre-mi-inner">
+            <h2>¿Quién está detrás de Matemáticas Activa?</h2>
+            <div class="foto-profe" aria-label="Foto de Marcos Diaz">MD</div>
+            <h3>Marcos Diaz</h3>
+            <p class="bio">Soy profesor de Matemática con formación docente de nivel secundario y una vocación genuina por hacer que las matemáticas tengan sentido. Me especializo en la enseñanza con un enfoque práctico: que entiendas el porqué, no solo el cómo.<br><br>
+            Complementé mi carrera con formación en neurociencias aplicadas a la educación, tecnología educativa y oratoria — porque enseñar bien requiere más que saber matemáticas.<br><br>
+            Matemáticas Activa nació de esa combinación: rigor académico + claridad para explicar + herramientas digitales al servicio del aprendizaje.</p>
+            <div class="sobre-mi-badges">
+                <span class="sobre-mi-badge">🎓 Formación docente</span>
+                <span class="sobre-mi-badge">📊 Estadística</span>
+                <span class="sobre-mi-badge">🧠 Neurociencias educativas</span>
+                <span class="sobre-mi-badge">🎤 Oratoria</span>
             </div>
         </div>
     </section>
@@ -220,9 +303,10 @@
             <p class="footer-copy">Copyright © 2025 Matemáticas Activa · Todos los derechos reservados</p>
             <div class="footer-links">
                 <a href="#materias">Materias</a>
-                <a href="#videos">Videos</a>
+                <a href="materias/Juegos/Juegos.html">Juegos</a>
                 <a href="#ranking">Ranking</a>
-                <a href="#suscripcion">Premium</a>
+                <a href="#suscripcion">Planes</a>
+                <a href="#sobre-mi">Sobre el profe</a>
                 <a href="politica-privacidad.html">Política de Privacidad</a>
                 <a href="terminos-servicio.html">Términos de Servicio</a>
                 <a href="guia-pago.html">Guía de pago</a>
@@ -230,7 +314,6 @@
         </div>
     </footer>
 
-    <!-- OVERLAY AUTH -->
     <div id="overlay-auth" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="auth-titulo" onclick="cerrarOverlaySiClick(event,'overlay-auth')">
         <div class="overlay-panel">
             <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('overlay-auth').style.display='none'">✕</button>
@@ -256,12 +339,13 @@
             <div id="form-registro" style="display:none">
                 <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
                 <div class="auth-logo" aria-hidden="true">✏️</div><h2>Crear cuenta</h2>
+                <div class="form-group"><label for="re-nombre">Nombre completo</label><input type="text" id="re-nombre" placeholder="Ej: Juan Pérez" autocomplete="name"></div>
                 <div class="form-group"><label for="re-user">Nombre de usuario</label><input type="text" id="re-user" placeholder="Como querés que te llamen" autocomplete="username"></div>
                 <div class="form-group"><label for="re-email">Email</label><input type="email" id="re-email" placeholder="tu@email.com" autocomplete="email"></div>
                 <div class="form-group"><label for="re-pass">Contraseña</label><input type="password" id="re-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
                 <div class="form-group"><label for="re-pass2">Confirmar contraseña</label><input type="password" id="re-pass2" placeholder="Repetí la contraseña" autocomplete="new-password"></div>
                 <div class="form-group" style="display:flex;align-items:flex-start;gap:8px;background:#f8fafc;padding:10px 12px;border-radius:8px;margin:8px 0">
-                    <input type="checkbox" id="re-acepto" style="margin-top:3px;cursor:pointer;width:18px;height:18px;flex-shrink:0">
+                    <input type="checkbox" id="re-acepto" required style="margin-top:3px;cursor:pointer;width:18px;height:18px;flex-shrink:0">
                     <label for="re-acepto" style="font-size:13px;color:#475569;line-height:1.4;cursor:pointer">
                         Acepto los <a href="terminos-servicio.html" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600">Términos y Condiciones</a> y la <a href="politica-privacidad.html" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600">Política de Privacidad</a> de Matemáticas Activa.
                     </label>
@@ -290,7 +374,6 @@
         </div>
     </div>
 
-    <!-- 🆕 MODAL MI PERFIL -->
     <div id="modal-perfil" class="overlay" style="display:none" role="dialog" aria-modal="true" onclick="cerrarOverlaySiClick(event,'modal-perfil')">
         <div class="overlay-panel" style="max-width:480px">
             <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-perfil').style.display='none'">✕</button>
@@ -298,13 +381,11 @@
             <h2 style="margin-bottom:6px">Mi Perfil</h2>
             <p id="perfil-puntos-display" style="font-size:13px;color:#7c3aed;font-weight:600;margin:0 0 4px"></p>
             <p id="perfil-email-display" style="font-size:11px;color:#94a3b8;margin:0 0 16px"></p>
-
             <div class="perfil-section">
                 <h4>📝 Cambiar nombre de usuario</h4>
                 <div class="form-group"><label for="perfil-username">Nuevo nombre</label><input type="text" id="perfil-username" placeholder="Ej: marcos.99"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="guardarUsername()" style="margin-top:6px">💾 Guardar nombre</button>
             </div>
-
             <div class="perfil-section">
                 <h4>🔑 Cambiar contraseña</h4>
                 <p style="font-size:12px;color:#94a3b8;margin:0 0 10px">Por seguridad necesitamos tu contraseña actual. <strong>Nadie (ni siquiera el admin) puede ver tu contraseña</strong> — están cifradas con bcrypt.</p>
@@ -313,13 +394,11 @@
                 <div class="form-group"><label for="perfil-pass-nueva2">Confirmar nueva</label><input type="password" id="perfil-pass-nueva2" autocomplete="new-password"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="cambiarMiPassword()" style="margin-top:6px">🔒 Cambiar contraseña</button>
             </div>
-
             <div id="pf-error" class="form-error" role="alert"></div>
             <div id="pf-success" class="form-success" role="status"></div>
         </div>
     </div>
 
-    <!-- 🆕 MODAL RECOVERY (cuando llega del email de reset) -->
     <div id="modal-recovery" class="overlay" style="display:none" role="dialog" aria-modal="true">
         <div class="overlay-panel" style="max-width:420px">
             <div class="auth-logo" aria-hidden="true">🔑</div>
@@ -332,7 +411,6 @@
         </div>
     </div>
 
-    <!-- OVERLAY ADMIN -->
     <div id="overlay-admin" class="overlay" style="display:none" role="dialog" aria-modal="true" onclick="cerrarOverlaySiClick(event,'overlay-admin')">
         <div class="overlay-panel admin-panel">
             <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('overlay-admin').style.display='none'">✕</button>
@@ -378,7 +456,6 @@
         </div>
     </div>
 
-    <!-- MODAL VISOR -->
     <div id="modal-visor" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="visor-titulo" onclick="cerrarOverlaySiClick(event,'modal-visor')">
         <div class="overlay-panel visor-panel" style="max-width:860px">
             <div class="visor-header">
@@ -389,7 +466,6 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR -->
     <div id="modal-editar" class="overlay" style="display:none" role="dialog" aria-modal="true" onclick="cerrarOverlaySiClick(event,'modal-editar')">
         <div class="overlay-panel" style="max-width:480px">
             <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-editar').style.display='none'">✕</button>
@@ -408,60 +484,47 @@
         </div>
     </div>
 
-    <!-- MODAL PAGO -->
     <div id="modal-pago" class="overlay" style="display:none" role="dialog" aria-modal="true" onclick="cerrarOverlaySiClick(event,'modal-pago')">
-        <div class="overlay-panel pago-panel">
-            <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-pago').style.display='none'">✕</button>
-            <div class="pago-header">
-                <div style="font-size:48px" aria-hidden="true">⭐</div>
-                <h2>Suscripción Premium</h2>
-                <div class="precio-grande">$ 10.000 <span class="precio-sub">ARS / mes</span></div>
-            </div>
-            <ul class="beneficios-lista">
-                <li>✅ Acceso ilimitado a todos los archivos premium</li>
-                <li>✅ Videos, PDFs y ejercicios sin restricciones</li>
-                <li>✅ 30 días de acceso completo</li>
-                <li>✅ Contenido de todas las materias</li>
-                <li>✅ Subida ilimitada en tu carpeta personal</li>
-            </ul>
-            <p style="font-size:13px;font-weight:600;margin:16px 0 10px">Elegí tu método de pago:</p>
-            <a href="https://mpago.la/29qTXgw" target="_blank" rel="noopener" class="btn-pago-mp">💳 Pagar con MercadoPago</a>
-            <a href="https://mpago.la/29qTXgw" target="_blank" rel="noopener" class="btn-pago-nx">🟠 Pagar con Naranja X</a>
-            <div class="pago-instrucciones">
-                <p style="font-weight:700;margin:0 0 8px">📋 ¿Qué hacer después?</p>
-                <ol><li>Completá el pago</li><li>Guardá el comprobante</li><li>Enviánoslo al administrador</li><li>Acceso premium en menos de 24hs</li></ol>
-            </div>
-        </div>
-    </div>
-
-        <!-- MODAL PAGO con 3 planes -->
-    <div id="modal-pago" class="overlay" style="display:none" role="dialog" aria-modal="true" onclick="cerrarOverlaySiClick(event,'modal-pago')">
-        <div class="overlay-panel" style="max-width:920px;padding:32px 28px">
+        <div class="overlay-panel" style="max-width:960px;padding:32px 28px">
             <button type="button" class="overlay-close" aria-label="Cerrar" onclick="document.getElementById('modal-pago').style.display='none'">✕</button>
             <div style="text-align:center;margin-bottom:24px">
                 <h2 style="font-size:24px;margin:0 0 6px">Elegí tu plan</h2>
                 <p style="color:#64748b;font-size:14px;margin:0">Mejorá tu experiencia y accedé a más contenido</p>
             </div>
-
+            <div class="tabla-planes-wrap">
+                <table class="tabla-planes">
+                    <thead>
+                        <tr><th>Característica</th><th>Plan Gratis</th><th>Plan Básico</th><th class="col-premium">Plan Premium</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Precio</td><td>$ 0</td><td>$ 7.000</td><td class="col-premium">$ 12.000</td></tr>
+                        <tr><td>Duración</td><td>Para siempre</td><td>23 días</td><td class="col-premium">30 días</td></tr>
+                        <tr><td>Archivos descargables</td><td>3 por semana</td><td>✅ Ilimitado</td><td class="col-premium">✅ Ilimitado</td></tr>
+                        <tr><td>Calculadora / Graficadora</td><td>3 usos por semana</td><td>✅ Sin límite</td><td class="col-premium">✅ Sin límite</td></tr>
+                        <tr><td>Ranking</td><td>✅</td><td>✅</td><td class="col-premium">✅</td></tr>
+                        <tr><td>Comentarios</td><td>✅</td><td>✅</td><td class="col-premium">✅</td></tr>
+                        <tr><td>Subir archivos personales</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
+                        <tr><td>Soporte personalizado con el profe</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
+                        <tr><td>Canal WhatsApp exclusivo</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
+                    </tbody>
+                </table>
+            </div>
             <div class="planes-grid">
-                <!-- PLAN GRATIS -->
                 <div class="plan-card">
                     <div class="plan-tag" style="background:#94a3b8">GRATIS</div>
                     <h3>Plan Gratis</h3>
                     <p class="plan-precio">$ 0</p>
                     <p class="plan-sub">Para siempre</p>
                     <ul class="plan-features">
-                        <li>✅ 3 archivos públicos por día</li>
-                        <li>✅ 3 usos de calculadora/graficadora por día</li>
+                        <li>✅ 3 archivos públicos por semana</li>
+                        <li>✅ 3 usos de calculadora/graficadora por semana</li>
                         <li>✅ Acceso al ranking</li>
-                        <li>⏱️ Renovación cada 24hs</li>
+                        <li>⏱️ Renovación cada 7 días</li>
                         <li>❌ Sin archivos premium</li>
                         <li>❌ Sin subir archivos personales</li>
                     </ul>
                     <button type="button" class="plan-btn plan-btn-gratis" disabled>Tu plan actual por defecto</button>
                 </div>
-
-                <!-- PLAN BÁSICO -->
                 <div class="plan-card plan-card-popular">
                     <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
                     <h3>Plan Básico</h3>
@@ -474,11 +537,11 @@
                         <li>✅ Comentarios en todo el contenido</li>
                         <li>❌ No podés subir archivos personales</li>
                     </ul>
-                    <a class="plan-btn plan-btn-basico" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📩 Pedir información por WhatsApp</a>
-                    <p style="font-size:11px;color:#64748b;text-align:center;margin:8px 0 0">Pagás por MercadoPago/Naranja X y nos enviás el comprobante</p>
+                    <div class="plan-pago-pasos">
+                        <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Paso 1: Pagar con MercadoPago</button>
+                        <a class="plan-btn plan-btn-whatsapp disabled" data-plan="basico" aria-disabled="true" href="https://wa.me/5493827654154?text=Hola%21%20Pagu%C3%A9%20el%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa%20y%20te%20env%C3%ADo%20el%20comprobante.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📲 Paso 2: Enviar comprobante</a>
+                    </div>
                 </div>
-
-                <!-- PLAN PREMIUM -->
                 <div class="plan-card plan-card-premium">
                     <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
                     <h3>Plan Premium</h3>
@@ -489,20 +552,21 @@
                         <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
                         <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
                         <li>✅ Carpeta personal ilimitada</li>
-                        <li>✅ Soporte prioritario</li>
+                        <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
                     </ul>
-                    <a class="plan-btn plan-btn-premium" href="https://wa.me/5493827654154?text=Hola%21%20Quiero%20suscribirme%20al%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">⭐ Pedir información por WhatsApp</a>
-                    <p style="font-size:11px;color:#64748b;text-align:center;margin:8px 0 0">Activación en pocos minutos tras enviar comprobante</p>
+                    <div class="plan-pago-pasos">
+                        <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Paso 1: Pagar con MercadoPago</button>
+                        <a class="plan-btn plan-btn-whatsapp disabled" data-plan="premium" aria-disabled="true" href="https://wa.me/5493827654154?text=Hola%21%20Pagu%C3%A9%20el%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa%20y%20te%20env%C3%ADo%20el%20comprobante.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📲 Paso 2: Enviar comprobante</a>
+                    </div>
                 </div>
             </div>
-
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-top:20px">
                 <h4 style="margin:0 0 8px;font-size:14px;color:#92400e">📋 Cómo funciona el pago:</h4>
                 <ol style="margin:0;padding-left:20px;font-size:13px;color:#78350f;line-height:1.7">
-                    <li>Hacé clic en "Pedir información" del plan que querés.</li>
-                    <li>Te abre WhatsApp con un mensaje predefinido — solo agregás tu nombre de usuario.</li>
-                    <li>Te enviamos los datos para pagar por MercadoPago o Naranja X.</li>
-                    <li>Realizás el pago y nos enviás el comprobante por WhatsApp.</li>
+                    <li>Apretá "Paso 1: Pagar con MercadoPago" del plan que quieras — se abre el link de pago.</li>
+                    <li>Una vez pagado, se habilita el botón verde "Paso 2: Enviar comprobante".</li>
+                    <li>Apretá ese botón: se abre WhatsApp con un mensaje predefinido. Solo agregá tu nombre de usuario.</li>
+                    <li>Adjuntá el comprobante de pago en ese chat de WhatsApp.</li>
                     <li>Tu plan se activa en pocos minutos.</li>
                 </ol>
                 <p style="font-size:12px;color:#92400e;margin:10px 0 0"><a href="guia-pago.html" target="_blank" style="color:#92400e;font-weight:600">📖 Ver guía detallada de pago</a></p>
@@ -510,30 +574,22 @@
         </div>
     </div>
 
-    <!-- 🆕 BOTÓN FLOTANTE DE CONTACTO -->
     <button type="button" class="fab-contacto" id="fab-contacto-btn" aria-label="Contactanos" onclick="toggleFabContacto()">💬</button>
     <div class="fab-menu" id="fab-menu-contacto" role="dialog" aria-label="Opciones de contacto">
         <h4>¿Necesitás ayuda?</h4>
         <p>Mandanos tu comprobante de pago o consulta:</p>
         <a class="fab-opcion wa" href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activa.%20" target="_blank" rel="noopener">
             <span class="fab-opcion-icon">💚</span>
-            <div>
-                <div>WhatsApp</div>
-                <div style="font-size:11px;opacity:.9;font-weight:400">Comprobante o consultas</div>
-            </div>
+            <div><div>WhatsApp</div><div style="font-size:11px;opacity:.9;font-weight:400">Comprobante o consultas</div></div>
         </a>
         <a class="fab-opcion ig" href="https://instagram.com/CAMBIAR_USUARIO" target="_blank" rel="noopener">
             <span class="fab-opcion-icon">📷</span>
-            <div>
-                <div>Instagram</div>
-                <div style="font-size:11px;opacity:.9;font-weight:400">Seguinos para novedades</div>
-            </div>
+            <div><div>Instagram</div><div style="font-size:11px;opacity:.9;font-weight:400">Seguinos para novedades</div></div>
         </a>
     </div>
 
-    <!-- Supabase SDK + config + scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=1779236486"></script>
-    <script src="scripts.js?v=1779236486"></script>
+    <script src="supabase-config.js?v=12"></script>
+    <script src="scripts.js?v=12"></script>
 </body>
 </html>

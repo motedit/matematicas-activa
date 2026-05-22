@@ -1,37 +1,788 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juegos Matemáticos — Matemáticas Activa</title>
-    <meta name="description" content="Juegos matemáticos para aprender jugando: lógica, números y diversión.">
-    <meta name="theme-color" content="#2563eb">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <link rel="icon" href="../../img/descarga.png" type="image/png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Estilos compartidos (raíz) -->
-    <link rel="stylesheet" href="../../materia.css?v=1779236486">
-    <!-- Estilos propios de esta materia -->
-    <link rel="stylesheet" href="materia-local.css?v=1779236486">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos Matemáticos — Matemáticas Activa</title>
+<meta name="description" content="8 juegos matemáticos interactivos: Sudoku, cálculo mental, wordle matemático, tangram y más.">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="../../img/descarga.png" type="image/png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f1f5f9;color:#0f172a;min-height:100vh}
+.jm-header{background:linear-gradient(135deg,#0f172a,#1e1b4b,#312e81);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.jm-header h1{font-size:22px;font-weight:800}
+.jm-header a{color:#93c5fd;text-decoration:none;font-weight:600;font-size:14px}
+.jm-header a:hover{text-decoration:underline}
+.jm-wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+/* Hub */
+.jm-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.jm-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px 20px;text-align:center;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.jm-card:hover{transform:translateY(-5px);box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.jm-card .ico{font-size:46px;line-height:1;margin-bottom:10px}
+.jm-card h3{font-size:16px;color:#0f172a;margin-bottom:5px}
+.jm-card p{font-size:12px;color:#64748b;line-height:1.4}
+/* Panel de juego */
+.jm-panel{display:none;background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.jm-panel.activo{display:block}
+.jm-panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;border-bottom:2px solid #e2e8f0;padding-bottom:14px}
+.jm-panel-head h2{font-size:20px;color:#0f172a}
+.jm-volver{background:#f1f5f9;border:none;color:#475569;font-weight:600;font-size:13px;padding:8px 16px;border-radius:8px;cursor:pointer}
+.jm-volver:hover{background:#e2e8f0}
+.jm-btn{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;font-weight:700;font-size:14px;padding:10px 22px;border-radius:10px;cursor:pointer;transition:opacity .2s}
+.jm-btn:hover{opacity:.9}
+.jm-btn.sec{background:#f1f5f9;color:#475569}
+.jm-btn.ok{background:linear-gradient(135deg,#16a34a,#15803d)}
+.jm-info{font-size:14px;color:#475569;margin-bottom:14px}
+.jm-stat{display:inline-block;background:#eff6ff;color:#2563eb;font-weight:700;padding:6px 14px;border-radius:99px;font-size:13px;margin:0 4px 8px 0}
+.jm-msg{margin-top:14px;font-weight:700;font-size:15px;min-height:22px}
+.jm-msg.win{color:#16a34a}.jm-msg.lose{color:#dc2626}
+/* Sudoku */
+.sdk-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:0;max-width:450px;margin:0 auto;border:3px solid #0f172a;background:#0f172a}
+.sdk-cell{aspect-ratio:1;border:1px solid #cbd5e1;background:#fff}
+.sdk-cell input{width:100%;height:100%;border:none;text-align:center;font-size:clamp(14px,4vw,20px);font-weight:600;color:#2563eb;background:transparent;outline:none}
+.sdk-cell.fija input{color:#0f172a;font-weight:800;background:#f1f5f9}
+.sdk-cell.err input{color:#dc2626;background:#fef2f2}
+.sdk-cell:nth-child(3n){border-right:2px solid #0f172a}
+.sdk-grid>.sdk-cell:nth-child(n+19):nth-child(-n+27),
+.sdk-grid>.sdk-cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid #0f172a}
+/* Cálculo mental */
+.cm-problema{font-size:clamp(32px,9vw,56px);font-weight:800;color:#0f172a;text-align:center;margin:20px 0}
+.cm-input{width:160px;font-size:28px;text-align:center;padding:10px;border:2px solid #cbd5e1;border-radius:10px;outline:none}
+.cm-input:focus{border-color:#2563eb}
+/* Función */
+.fn-canvas{background:#fff;border:1px solid #e2e8f0;border-radius:10px;display:block;margin:0 auto}
+.fn-ops{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:420px;margin:16px auto 0}
+.fn-op{padding:12px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;font-weight:600;font-size:14px;transition:all .15s}
+.fn-op:hover{border-color:#2563eb;background:#eff6ff}
+/* Memoria */
+.mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:520px;margin:0 auto}
+.mem-carta{aspect-ratio:3/4;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;text-align:center;padding:6px;transition:transform .2s}
+.mem-carta.revelada{background:#fff;border:2px solid #2563eb;color:#0f172a}
+.mem-carta.hecha{background:#dcfce7;border:2px solid #16a34a;color:#15803d;cursor:default}
+/* Wordle */
+.wdl-fila{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+.wdl-celda{width:46px;height:46px;border:2px solid #cbd5e1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}
+.wdl-celda.ok{background:#16a34a;color:#fff;border-color:#16a34a}
+.wdl-celda.casi{background:#f59e0b;color:#fff;border-color:#f59e0b}
+.wdl-celda.no{background:#94a3b8;color:#fff;border-color:#94a3b8}
+.wdl-teclado{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:420px;margin:16px auto 0}
+.wdl-tecla{min-width:34px;height:44px;border:none;border-radius:6px;background:#e2e8f0;font-weight:700;font-size:15px;cursor:pointer;padding:0 8px}
+.wdl-tecla:hover{background:#cbd5e1}
+/* Quiz */
+.qz-pregunta{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:14px;text-align:center}
+.qz-ops{display:grid;gap:10px;max-width:480px;margin:0 auto}
+.qz-op{padding:13px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;font-weight:600;font-size:14px;text-align:left;transition:all .15s}
+.qz-op:hover{border-color:#2563eb;background:#eff6ff}
+.qz-op.correcta{border-color:#16a34a;background:#dcfce7}
+.qz-op.incorrecta{border-color:#dc2626;background:#fef2f2}
+/* Tangram */
+.tg-board{position:relative;width:340px;height:340px;margin:0 auto;background:#fff;border:2px dashed #94a3b8;border-radius:10px;touch-action:none}
+.tg-pieza{position:absolute;cursor:grab;transform-origin:center}
+.tg-pieza:active{cursor:grabbing}
+/* Fracciones */
+.fr-visual{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.fr-barra{width:240px;height:54px;border:2px solid #0f172a;border-radius:8px;display:flex;overflow:hidden}
+.fr-seg{flex:1;border-right:1px solid #0f172a}
+.fr-seg:last-child{border-right:none}
+.fr-seg.lleno{background:#2563eb}
+.fr-ops{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:420px;margin:0 auto}
+.fr-op{padding:14px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;font-weight:800;font-size:20px;transition:all .15s}
+.fr-op:hover{border-color:#2563eb;background:#eff6ff}
+.jm-footer{text-align:center;padding:24px;color:#94a3b8;font-size:13px}
+@media(max-width:560px){
+  .mem-grid{grid-template-columns:repeat(3,1fr)}
+  .jm-wrap{padding:20px 12px 50px}
+}
+</style>
 </head>
-<body data-materia="juegos" data-nombre="Juegos Matemáticos" data-emoji="🎮">
-
-    <noscript>
-        <div style="max-width:640px;margin:40px auto;padding:20px;border:1px solid #e2e8f0;border-radius:12px;font-family:sans-serif;text-align:center">
-            <h1>Juegos Matemáticos — Matemáticas Activa</h1>
-            <p>Esta página necesita JavaScript habilitado para mostrar el contenido interactivo.</p>
-            <p><a href="../../index.html">← Volver al inicio</a></p>
+<body>
+<div class="jm-header">
+    <h1>🎮 Juegos Matemáticos</h1>
+    <a href="../../index.html">← Volver al inicio</a>
+</div>
+<div class="jm-wrap">
+    <!-- HUB -->
+    <div id="jm-hub">
+        <p class="jm-info" style="text-align:center;font-size:15px;margin-bottom:22px">Elegí un juego y poné a prueba tu mente. ¡Aprendé matemática divirtiéndote!</p>
+        <div class="jm-hub-grid">
+            <div class="jm-card" onclick="abrirJuego('sudoku')"><div class="ico">🔢</div><h3>Sudoku</h3><p>Completá la grilla 9×9 sin repetir números</p></div>
+            <div class="jm-card" onclick="abrirJuego('calculo')"><div class="ico">⚡</div><h3>Cálculo Mental</h3><p>Resolvé operaciones contra reloj</p></div>
+            <div class="jm-card" onclick="abrirJuego('funcion')"><div class="ico">📈</div><h3>¿Qué función es?</h3><p>Adiviná la función según su gráfica</p></div>
+            <div class="jm-card" onclick="abrirJuego('memoria')"><div class="ico">🃏</div><h3>Memoria de Fórmulas</h3><p>Encontrá los pares de cartas</p></div>
+            <div class="jm-card" onclick="abrirJuego('wordle')"><div class="ico">🟩</div><h3>Wordle Matemático</h3><p>Adiviná la ecuación oculta</p></div>
+            <div class="jm-card" onclick="abrirJuego('quiz')"><div class="ico">📊</div><h3>Quiz de Estadística</h3><p>Preguntas con puntaje</p></div>
+            <div class="jm-card" onclick="abrirJuego('tangram')"><div class="ico">🧩</div><h3>Tangram Digital</h3><p>Armá el cuadrado con las 7 piezas</p></div>
+            <div class="jm-card" onclick="abrirJuego('fracciones')"><div class="ico">🍕</div><h3>Puzzle de Fracciones</h3><p>Identificá la fracción correcta</p></div>
         </div>
-    </noscript>
+    </div>
 
-    <!-- Supabase SDK + config + script principal compartido -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../supabase-config.js?v=1779236486"></script>
-    <script src="../../materia.js?v=1779236486"></script>
+    <!-- PANELES DE JUEGOS -->
+    <div id="jm-sudoku" class="jm-panel">
+        <div class="jm-panel-head"><h2>🔢 Sudoku</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <div><span class="jm-stat" id="sdk-dif">Dificultad: Media</span></div>
+        <div style="margin-bottom:14px"><button class="jm-btn sec" onclick="sdkNuevo('facil')">Fácil</button>
+            <button class="jm-btn sec" onclick="sdkNuevo('media')">Media</button>
+            <button class="jm-btn sec" onclick="sdkNuevo('dificil')">Difícil</button></div>
+        <div class="sdk-grid" id="sdk-grid"></div>
+        <div style="text-align:center;margin-top:16px">
+            <button class="jm-btn ok" onclick="sdkVerificar()">✓ Verificar</button>
+            <button class="jm-btn sec" onclick="sdkPista()">💡 Pista</button>
+        </div>
+        <div class="jm-msg" id="sdk-msg"></div>
+    </div>
 
-    <!-- Script local de esta materia -->
-    <script src="materia-local.js?v=1779236486"></script>
+    <div id="jm-calculo" class="jm-panel">
+        <div class="jm-panel-head"><h2>⚡ Cálculo Mental</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <div><span class="jm-stat" id="cm-tiempo">⏱️ 60s</span><span class="jm-stat" id="cm-puntos">✅ 0</span></div>
+        <div class="cm-problema" id="cm-problema">Apretá Empezar</div>
+        <div style="text-align:center">
+            <input type="number" class="cm-input" id="cm-input" placeholder="?" disabled>
+            <div style="margin-top:16px">
+                <button class="jm-btn" id="cm-start" onclick="cmEmpezar()">▶ Empezar</button>
+            </div>
+        </div>
+        <div class="jm-msg" id="cm-msg"></div>
+    </div>
 
+    <div id="jm-funcion" class="jm-panel">
+        <div class="jm-panel-head"><h2>📈 ¿Qué función es?</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <div><span class="jm-stat" id="fn-ronda">Ronda 1/8</span><span class="jm-stat" id="fn-puntos">✅ 0</span></div>
+        <canvas class="fn-canvas" id="fn-canvas" width="340" height="280"></canvas>
+        <div class="fn-ops" id="fn-ops"></div>
+        <div class="jm-msg" id="fn-msg"></div>
+    </div>
+
+    <div id="jm-memoria" class="jm-panel">
+        <div class="jm-panel-head"><h2>🃏 Memoria de Fórmulas</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <div><span class="jm-stat" id="mem-mov">Movimientos: 0</span><span class="jm-stat" id="mem-pares">Pares: 0/6</span></div>
+        <div style="margin-bottom:14px"><button class="jm-btn" onclick="memNuevo()">🔄 Nuevo juego</button></div>
+        <div class="mem-grid" id="mem-grid"></div>
+        <div class="jm-msg" id="mem-msg"></div>
+    </div>
+
+    <div id="jm-wordle" class="jm-panel">
+        <div class="jm-panel-head"><h2>🟩 Wordle Matemático</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <p class="jm-info">Adiviná la ecuación de 5 caracteres (ej: 7+5=12 sería de 6... usamos 5). Verde = correcto, Naranja = mal lugar, Gris = no está.</p>
+        <div id="wdl-tablero"></div>
+        <div class="wdl-teclado" id="wdl-teclado"></div>
+        <div style="text-align:center;margin-top:12px"><button class="jm-btn" onclick="wdlNuevo()">🔄 Nueva ecuación</button></div>
+        <div class="jm-msg" id="wdl-msg"></div>
+    </div>
+
+    <div id="jm-quiz" class="jm-panel">
+        <div class="jm-panel-head"><h2>📊 Quiz de Estadística</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <div><span class="jm-stat" id="qz-prog">Pregunta 1/8</span><span class="jm-stat" id="qz-puntos">Puntaje: 0</span></div>
+        <div class="qz-pregunta" id="qz-pregunta"></div>
+        <div class="qz-ops" id="qz-ops"></div>
+        <div class="jm-msg" id="qz-msg"></div>
+    </div>
+
+    <div id="jm-tangram" class="jm-panel">
+        <div class="jm-panel-head"><h2>🧩 Tangram Digital</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <p class="jm-info">Arrastrá las 7 piezas para armar el cuadrado completo. Tocá una pieza para rotarla 45°.</p>
+        <div class="tg-board" id="tg-board"></div>
+        <div style="text-align:center;margin-top:14px"><button class="jm-btn" onclick="tgReiniciar()">🔄 Mezclar piezas</button></div>
+        <div class="jm-msg" id="tg-msg"></div>
+    </div>
+
+    <div id="jm-fracciones" class="jm-panel">
+        <div class="jm-panel-head"><h2>🍕 Puzzle de Fracciones</h2><button class="jm-volver" onclick="volverHub()">← Juegos</button></div>
+        <div><span class="jm-stat" id="fr-ronda">Ronda 1/10</span><span class="jm-stat" id="fr-puntos">✅ 0</span></div>
+        <p class="jm-info" style="text-align:center">¿Qué fracción representa la parte azul?</p>
+        <div class="fr-visual" id="fr-visual"></div>
+        <div class="fr-ops" id="fr-ops"></div>
+        <div class="jm-msg" id="fr-msg"></div>
+    </div>
+</div>
+<div class="jm-footer">Matemáticas Activa · Juegos educativos</div>
+
+<script>
+// ============================================================
+//  NAVEGACIÓN ENTRE JUEGOS
+// ============================================================
+const JUEGOS = ["sudoku","calculo","funcion","memoria","wordle","quiz","tangram","fracciones"];
+function abrirJuego(id){
+    document.getElementById("jm-hub").style.display = "none";
+    JUEGOS.forEach(j => document.getElementById("jm-"+j).classList.remove("activo"));
+    document.getElementById("jm-"+id).classList.add("activo");
+    window.scrollTo(0,0);
+    if(id==="sudoku") sdkNuevo("media");
+    if(id==="calculo") cmReset();
+    if(id==="funcion") fnNuevo();
+    if(id==="memoria") memNuevo();
+    if(id==="wordle") wdlNuevo();
+    if(id==="quiz") qzNuevo();
+    if(id==="tangram") tgReiniciar();
+    if(id==="fracciones") frNuevo();
+}
+function volverHub(){
+    JUEGOS.forEach(j => document.getElementById("jm-"+j).classList.remove("activo"));
+    document.getElementById("jm-hub").style.display = "block";
+    window.scrollTo(0,0);
+}
+
+// ============================================================
+//  1. SUDOKU
+// ============================================================
+let sdkSolucion=[], sdkTablero=[];
+function sdkBaseValida(){
+    // Patrón base de un sudoku resuelto
+    const p=(r)=> (3*(r%3)+Math.floor(r/3));
+    let g=[];
+    for(let r=0;r<9;r++){ g.push([]); for(let c=0;c<9;c++) g[r].push((p(r)+c)%9+1); }
+    return g;
+}
+function sdkMezclar(g){
+    const swapFilas=(a,b)=>{ [g[a],g[b]]=[g[b],g[a]]; };
+    const swapCols=(a,b)=>{ for(let r=0;r<9;r++)[g[r][a],g[r][b]]=[g[r][b],g[r][a]]; };
+    for(let i=0;i<30;i++){
+        const banda=Math.floor(Math.random()*3)*3;
+        const a=banda+Math.floor(Math.random()*3), b=banda+Math.floor(Math.random()*3);
+        if(Math.random()<0.5) swapFilas(a,b); else swapCols(a,b);
+    }
+    // permutar dígitos
+    const perm=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++) g[r][c]=perm[g[r][c]-1];
+    return g;
+}
+function sdkNuevo(dif){
+    document.getElementById("sdk-dif").textContent = "Dificultad: "+(dif==="facil"?"Fácil":dif==="dificil"?"Difícil":"Media");
+    document.getElementById("sdk-msg").textContent = "";
+    sdkSolucion = sdkMezclar(sdkBaseValida());
+    sdkTablero = sdkSolucion.map(f=>f.slice());
+    const quitar = dif==="facil"?38:dif==="dificil"?56:47;
+    let q=0;
+    while(q<quitar){
+        const r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
+        if(sdkTablero[r][c]!==0){ sdkTablero[r][c]=0; q++; }
+    }
+    sdkRender();
+}
+function sdkRender(){
+    const grid=document.getElementById("sdk-grid");
+    grid.innerHTML="";
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+        const cell=document.createElement("div");
+        cell.className="sdk-cell";
+        const v=sdkTablero[r][c];
+        if(v!==0){
+            cell.classList.add("fija");
+            cell.innerHTML=`<input value="${v}" disabled>`;
+        }else{
+            cell.innerHTML=`<input maxlength="1" inputmode="numeric" data-r="${r}" data-c="${c}">`;
+        }
+        grid.appendChild(cell);
+    }
+    grid.querySelectorAll("input:not([disabled])").forEach(inp=>{
+        inp.addEventListener("input",()=>{
+            inp.value=inp.value.replace(/[^1-9]/g,"");
+            inp.parentElement.classList.remove("err");
+        });
+    });
+}
+function sdkLeer(){
+    const g=sdkTablero.map(f=>f.slice());
+    document.querySelectorAll("#sdk-grid input:not([disabled])").forEach(inp=>{
+        const r=+inp.dataset.r,c=+inp.dataset.c;
+        g[r][c]=inp.value?+inp.value:0;
+    });
+    return g;
+}
+function sdkVerificar(){
+    const g=sdkLeer();
+    const msg=document.getElementById("sdk-msg");
+    let completo=true,correcto=true;
+    document.querySelectorAll("#sdk-grid input:not([disabled])").forEach(inp=>{
+        const r=+inp.dataset.r,c=+inp.dataset.c;
+        inp.parentElement.classList.remove("err");
+        if(g[r][c]===0){ completo=false; }
+        else if(g[r][c]!==sdkSolucion[r][c]){ correcto=false; inp.parentElement.classList.add("err"); }
+    });
+    if(!completo){ msg.className="jm-msg lose"; msg.textContent="Todavía faltan celdas por completar."; }
+    else if(!correcto){ msg.className="jm-msg lose"; msg.textContent="Hay errores (marcados en rojo). ¡Seguí intentando!"; }
+    else{ msg.className="jm-msg win"; msg.textContent="🎉 ¡Sudoku resuelto correctamente! Sos un crack."; }
+}
+function sdkPista(){
+    const inputs=[...document.querySelectorAll("#sdk-grid input:not([disabled])")].filter(i=>!i.value);
+    if(!inputs.length) return;
+    const inp=inputs[Math.floor(Math.random()*inputs.length)];
+    const r=+inp.dataset.r,c=+inp.dataset.c;
+    inp.value=sdkSolucion[r][c];
+    inp.parentElement.classList.remove("err");
+    document.getElementById("sdk-msg").className="jm-msg";
+    document.getElementById("sdk-msg").textContent="💡 Te revelamos una celda.";
+}
+
+// ============================================================
+//  2. CÁLCULO MENTAL
+// ============================================================
+let cmTimer=null,cmSeg=60,cmPts=0,cmResp=0,cmActivo=false;
+function cmReset(){
+    cmActivo=false; clearInterval(cmTimer);
+    cmSeg=60;cmPts=0;
+    document.getElementById("cm-tiempo").textContent="⏱️ 60s";
+    document.getElementById("cm-puntos").textContent="✅ 0";
+    document.getElementById("cm-problema").textContent="Apretá Empezar";
+    document.getElementById("cm-input").disabled=true;
+    document.getElementById("cm-input").value="";
+    document.getElementById("cm-start").style.display="";
+    document.getElementById("cm-msg").textContent="";
+}
+function cmNuevoProblema(){
+    const ops=["+","-","×"];
+    const op=ops[Math.floor(Math.random()*3)];
+    let a,b;
+    if(op==="×"){ a=Math.floor(Math.random()*11)+2; b=Math.floor(Math.random()*11)+2; cmResp=a*b; }
+    else if(op==="+"){ a=Math.floor(Math.random()*50)+10; b=Math.floor(Math.random()*50)+10; cmResp=a+b; }
+    else { a=Math.floor(Math.random()*60)+30; b=Math.floor(Math.random()*a); cmResp=a-b; }
+    document.getElementById("cm-problema").textContent=`${a} ${op} ${b}`;
+}
+function cmEmpezar(){
+    cmActivo=true;cmSeg=60;cmPts=0;
+    document.getElementById("cm-start").style.display="none";
+    document.getElementById("cm-msg").textContent="";
+    document.getElementById("cm-puntos").textContent="✅ 0";
+    const inp=document.getElementById("cm-input");
+    inp.disabled=false;inp.value="";inp.focus();
+    cmNuevoProblema();
+    clearInterval(cmTimer);
+    cmTimer=setInterval(()=>{
+        cmSeg--;
+        document.getElementById("cm-tiempo").textContent="⏱️ "+cmSeg+"s";
+        if(cmSeg<=0) cmFin();
+    },1000);
+}
+function cmFin(){
+    cmActivo=false;clearInterval(cmTimer);
+    document.getElementById("cm-input").disabled=true;
+    document.getElementById("cm-start").style.display="";
+    document.getElementById("cm-start").textContent="▶ Jugar de nuevo";
+    document.getElementById("cm-problema").textContent="¡Tiempo!";
+    const m=document.getElementById("cm-msg");
+    m.className="jm-msg win";
+    m.textContent=`🏁 Resolviste ${cmPts} operaciones. ${cmPts>=15?"¡Excelente!":cmPts>=8?"¡Muy bien!":"Seguí practicando."}`;
+}
+document.getElementById("cm-input").addEventListener("keydown",e=>{
+    if(e.key!=="Enter"||!cmActivo) return;
+    const v=+document.getElementById("cm-input").value;
+    if(v===cmResp){
+        cmPts++;
+        document.getElementById("cm-puntos").textContent="✅ "+cmPts;
+    }
+    document.getElementById("cm-input").value="";
+    cmNuevoProblema();
+});
+
+// ============================================================
+//  3. ¿QUÉ FUNCIÓN ES?
+// ============================================================
+const FN_TIPOS=[
+    {n:"Lineal",f:x=>0.6*x},
+    {n:"Cuadrática",f:x=>0.12*x*x-2},
+    {n:"Cúbica",f:x=>0.02*x*x*x},
+    {n:"Seno",f:x=>3*Math.sin(x/1.6)},
+    {n:"Exponencial",f:x=>0.4*Math.pow(1.35,x)-3},
+    {n:"Valor absoluto",f:x=>Math.abs(x)-3}
+];
+let fnRonda=0,fnPts=0,fnCorrecta=null;
+function fnNuevo(){ fnRonda=0;fnPts=0;document.getElementById("fn-puntos").textContent="✅ 0";fnSiguiente(); }
+function fnSiguiente(){
+    if(fnRonda>=8){
+        document.getElementById("fn-msg").className="jm-msg win";
+        document.getElementById("fn-msg").textContent=`🏁 Terminaste: ${fnPts}/8 correctas.`;
+        return;
+    }
+    fnRonda++;
+    document.getElementById("fn-ronda").textContent=`Ronda ${fnRonda}/8`;
+    document.getElementById("fn-msg").textContent="";
+    fnCorrecta=FN_TIPOS[Math.floor(Math.random()*FN_TIPOS.length)];
+    fnDibujar(fnCorrecta.f);
+    // opciones
+    const ops=[fnCorrecta];
+    while(ops.length<4){
+        const cand=FN_TIPOS[Math.floor(Math.random()*FN_TIPOS.length)];
+        if(!ops.includes(cand)) ops.push(cand);
+    }
+    ops.sort(()=>Math.random()-0.5);
+    const cont=document.getElementById("fn-ops");
+    cont.innerHTML="";
+    ops.forEach(o=>{
+        const b=document.createElement("button");
+        b.className="fn-op";b.textContent=o.n;
+        b.onclick=()=>fnResponder(o,b);
+        cont.appendChild(b);
+    });
+}
+function fnDibujar(f){
+    const cv=document.getElementById("fn-canvas"),ctx=cv.getContext("2d");
+    const W=cv.width,H=cv.height,cx=W/2,cy=H/2,esc=14;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle="#e2e8f0";ctx.lineWidth=1;
+    for(let i=0;i<=W;i+=esc){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}
+    for(let i=0;i<=H;i+=esc){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+    ctx.strokeStyle="#94a3b8";ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+    ctx.strokeStyle="#2563eb";ctx.lineWidth=3;ctx.beginPath();
+    let primero=true;
+    for(let px=0;px<=W;px+=2){
+        const x=(px-cx)/esc;
+        const y=cy-f(x)*esc;
+        if(y<-50||y>H+50){primero=true;continue;}
+        if(primero){ctx.moveTo(px,y);primero=false;}else ctx.lineTo(px,y);
+    }
+    ctx.stroke();
+}
+function fnResponder(op,btn){
+    document.querySelectorAll("#fn-ops .fn-op").forEach(b=>b.style.pointerEvents="none");
+    const m=document.getElementById("fn-msg");
+    if(op===fnCorrecta){
+        fnPts++;btn.style.background="#dcfce7";btn.style.borderColor="#16a34a";
+        m.className="jm-msg win";m.textContent="✅ ¡Correcto!";
+    }else{
+        btn.style.background="#fef2f2";btn.style.borderColor="#dc2626";
+        m.className="jm-msg lose";m.textContent="❌ Era: "+fnCorrecta.n;
+    }
+    document.getElementById("fn-puntos").textContent="✅ "+fnPts;
+    setTimeout(fnSiguiente,1400);
+}
+
+// ============================================================
+//  4. MEMORIA DE FÓRMULAS
+// ============================================================
+const MEM_PARES=[
+    ["Área círculo","π · r²"],["Área triángulo","b · h / 2"],
+    ["Teorema Pitágoras","a² + b² = c²"],["Perímetro círculo","2 · π · r"],
+    ["Volumen cubo","a³"],["Pendiente recta","(y₂-y₁)/(x₂-x₁)"]
+];
+let memCartas=[],memReveladas=[],memMov=0,memHechos=0,memBloqueo=false;
+function memNuevo(){
+    memMov=0;memHechos=0;memReveladas=[];memBloqueo=false;
+    document.getElementById("mem-mov").textContent="Movimientos: 0";
+    document.getElementById("mem-pares").textContent="Pares: 0/6";
+    document.getElementById("mem-msg").textContent="";
+    memCartas=[];
+    MEM_PARES.forEach((p,i)=>{ memCartas.push({id:i,txt:p[0]}); memCartas.push({id:i,txt:p[1]}); });
+    memCartas.sort(()=>Math.random()-0.5);
+    const grid=document.getElementById("mem-grid");
+    grid.innerHTML="";
+    memCartas.forEach((c,idx)=>{
+        const d=document.createElement("div");
+        d.className="mem-carta";d.dataset.idx=idx;d.textContent="?";
+        d.onclick=()=>memClick(idx,d);
+        grid.appendChild(d);
+    });
+}
+function memClick(idx,el){
+    if(memBloqueo||el.classList.contains("revelada")||el.classList.contains("hecha"))return;
+    el.classList.add("revelada");el.textContent=memCartas[idx].txt;
+    memReveladas.push({idx,el});
+    if(memReveladas.length===2){
+        memMov++;
+        document.getElementById("mem-mov").textContent="Movimientos: "+memMov;
+        const [a,b]=memReveladas;
+        if(memCartas[a.idx].id===memCartas[b.idx].id){
+            a.el.classList.add("hecha");b.el.classList.add("hecha");
+            memHechos++;
+            document.getElementById("mem-pares").textContent="Pares: "+memHechos+"/6";
+            memReveladas=[];
+            if(memHechos===6){
+                const m=document.getElementById("mem-msg");
+                m.className="jm-msg win";
+                m.textContent=`🎉 ¡Completado en ${memMov} movimientos!`;
+            }
+        }else{
+            memBloqueo=true;
+            setTimeout(()=>{
+                a.el.classList.remove("revelada");a.el.textContent="?";
+                b.el.classList.remove("revelada");b.el.textContent="?";
+                memReveladas=[];memBloqueo=false;
+            },900);
+        }
+    }
+}
+
+// ============================================================
+//  5. WORDLE MATEMÁTICO
+// ============================================================
+let wdlSol="",wdlFila=0,wdlCol=0,wdlGrilla=[],wdlFin=false;
+function wdlGenerar(){
+    // ecuaciones de 5 caracteres: a+b=c o a-b=c
+    const lista=[];
+    for(let a=1;a<=9;a++)for(let b=1;b<=9;b++){
+        const s=a+b;
+        if(s<10) lista.push(`${a}+${b}=${s}`);
+        if(a-b>0) lista.push(`${a}-${b}=${a-b}`);
+    }
+    return lista[Math.floor(Math.random()*lista.length)];
+}
+function wdlNuevo(){
+    wdlSol=wdlGenerar();wdlFila=0;wdlCol=0;wdlFin=false;
+    wdlGrilla=Array.from({length:6},()=>["","","","",""]);
+    document.getElementById("wdl-msg").textContent="";
+    wdlRender();
+    wdlTeclado();
+}
+function wdlRender(){
+    const t=document.getElementById("wdl-tablero");
+    t.innerHTML="";
+    for(let f=0;f<6;f++){
+        const fila=document.createElement("div");fila.className="wdl-fila";
+        for(let c=0;c<5;c++){
+            const cel=document.createElement("div");
+            cel.className="wdl-celda";cel.id=`wdl-${f}-${c}`;
+            cel.textContent=wdlGrilla[f][c];
+            fila.appendChild(cel);
+        }
+        t.appendChild(fila);
+    }
+}
+function wdlTeclado(){
+    const cont=document.getElementById("wdl-teclado");
+    cont.innerHTML="";
+    ["1","2","3","4","5","6","7","8","9","0","+","-","="].forEach(k=>{
+        const b=document.createElement("button");
+        b.className="wdl-tecla";b.textContent=k;
+        b.onclick=()=>wdlTecla(k);
+        cont.appendChild(b);
+    });
+    const del=document.createElement("button");
+    del.className="wdl-tecla";del.textContent="⌫";del.onclick=()=>wdlTecla("DEL");
+    cont.appendChild(del);
+    const ent=document.createElement("button");
+    ent.className="wdl-tecla";ent.textContent="↵";ent.style.background="#2563eb";ent.style.color="#fff";
+    ent.onclick=()=>wdlTecla("ENTER");
+    cont.appendChild(ent);
+}
+function wdlTecla(k){
+    if(wdlFin)return;
+    if(k==="DEL"){ if(wdlCol>0){wdlCol--;wdlGrilla[wdlFila][wdlCol]="";} }
+    else if(k==="ENTER"){ wdlEnviar(); return; }
+    else if(wdlCol<5){ wdlGrilla[wdlFila][wdlCol]=k;wdlCol++; }
+    document.getElementById(`wdl-${wdlFila}-${Math.min(wdlCol,4)}`);
+    for(let c=0;c<5;c++) document.getElementById(`wdl-${wdlFila}-${c}`).textContent=wdlGrilla[wdlFila][c];
+}
+function wdlEnviar(){
+    if(wdlCol<5){ wdlMsg("Completá los 5 caracteres","lose");return; }
+    const intento=wdlGrilla[wdlFila].join("");
+    // validar que sea ecuación correcta
+    if(!/^\d[+\-]\d=\d$/.test(intento)){ wdlMsg("No es una ecuación válida (ej: 3+4=7)","lose");return; }
+    try{ const izq=intento.split("=")[0],der=+intento.split("=")[1];
+        if(eval(izq.replace("×","*"))!==der){ wdlMsg("La ecuación no es correcta","lose");return; }
+    }catch(e){ wdlMsg("Ecuación inválida","lose");return; }
+    // pintar
+    for(let c=0;c<5;c++){
+        const cel=document.getElementById(`wdl-${wdlFila}-${c}`);
+        if(intento[c]===wdlSol[c]) cel.classList.add("ok");
+        else if(wdlSol.includes(intento[c])) cel.classList.add("casi");
+        else cel.classList.add("no");
+    }
+    if(intento===wdlSol){
+        wdlFin=true;wdlMsg("🎉 ¡Adivinaste la ecuación!","win");return;
+    }
+    wdlFila++;wdlCol=0;
+    if(wdlFila>=6){ wdlFin=true;wdlMsg("😔 Se acabó. Era: "+wdlSol,"lose"); }
+}
+function wdlMsg(t,cls){
+    const m=document.getElementById("wdl-msg");
+    m.className="jm-msg "+cls;m.textContent=t;
+}
+document.addEventListener("keydown",e=>{
+    if(!document.getElementById("jm-wordle").classList.contains("activo"))return;
+    if(/^[0-9+\-=]$/.test(e.key)) wdlTecla(e.key);
+    else if(e.key==="Backspace") wdlTecla("DEL");
+    else if(e.key==="Enter") wdlTecla("ENTER");
+});
+
+// ============================================================
+//  6. QUIZ DE ESTADÍSTICA
+// ============================================================
+const QZ_PREGUNTAS=[
+    {q:"¿Qué es la media de: 4, 8, 6, 2?",o:["5","6","4","8"],r:0},
+    {q:"¿Cuál es la mediana de: 3, 7, 1, 9, 5?",o:["7","1","5","9"],r:2},
+    {q:"¿La moda de: 2, 3, 3, 5, 7, 3?",o:["3","5","2","7"],r:0},
+    {q:"Si tiro un dado, ¿probabilidad de sacar un 4?",o:["1/2","1/3","1/6","1/4"],r:2},
+    {q:"¿El rango de: 12, 5, 20, 8?",o:["15","20","12","8"],r:0},
+    {q:"En un gráfico de torta, ¿cuánto suman todos los sectores?",o:["180°","100°","360°","90°"],r:2},
+    {q:"¿Qué mide la desviación estándar?",o:["El promedio","La dispersión de los datos","El valor máximo","La cantidad de datos"],r:1},
+    {q:"Probabilidad de sacar cara al tirar una moneda:",o:["1/2","1/4","1/3","1"],r:0}
+];
+let qzIdx=0,qzPts=0,qzOrden=[];
+function qzNuevo(){
+    qzIdx=0;qzPts=0;
+    qzOrden=[...Array(QZ_PREGUNTAS.length).keys()].sort(()=>Math.random()-0.5);
+    document.getElementById("qz-puntos").textContent="Puntaje: 0";
+    document.getElementById("qz-msg").textContent="";
+    qzMostrar();
+}
+function qzMostrar(){
+    if(qzIdx>=qzOrden.length){
+        const m=document.getElementById("qz-msg");
+        m.className="jm-msg win";
+        m.textContent=`🏁 Terminaste con ${qzPts}/${QZ_PREGUNTAS.length} puntos. ${qzPts>=6?"¡Muy bien!":"Repasá un poco más."}`;
+        document.getElementById("qz-pregunta").textContent="";
+        document.getElementById("qz-ops").innerHTML=`<button class="jm-btn" onclick="qzNuevo()" style="margin:0 auto;display:block">🔄 Jugar de nuevo</button>`;
+        return;
+    }
+    const p=QZ_PREGUNTAS[qzOrden[qzIdx]];
+    document.getElementById("qz-prog").textContent=`Pregunta ${qzIdx+1}/${QZ_PREGUNTAS.length}`;
+    document.getElementById("qz-pregunta").textContent=p.q;
+    document.getElementById("qz-msg").textContent="";
+    const cont=document.getElementById("qz-ops");
+    cont.innerHTML="";
+    p.o.forEach((op,i)=>{
+        const b=document.createElement("button");
+        b.className="qz-op";b.textContent=op;
+        b.onclick=()=>qzResponder(i,b,p.r);
+        cont.appendChild(b);
+    });
+}
+function qzResponder(i,btn,correcta){
+    document.querySelectorAll("#qz-ops .qz-op").forEach((b,idx)=>{
+        b.style.pointerEvents="none";
+        if(idx===correcta) b.classList.add("correcta");
+    });
+    const m=document.getElementById("qz-msg");
+    if(i===correcta){ qzPts++;m.className="jm-msg win";m.textContent="✅ ¡Correcto!"; }
+    else{ btn.classList.add("incorrecta");m.className="jm-msg lose";m.textContent="❌ Incorrecto."; }
+    document.getElementById("qz-puntos").textContent="Puntaje: "+qzPts;
+    qzIdx++;
+    setTimeout(qzMostrar,1300);
+}
+
+// ============================================================
+//  7. TANGRAM DIGITAL
+// ============================================================
+// 7 piezas con posición "home" (forman el cuadrado) y color
+const TG_PIEZAS=[
+    {nom:"t1",color:"#2563eb",poly:"0,0 170,0 85,85",hx:0,hy:0},
+    {nom:"t2",color:"#7c3aed",poly:"0,0 0,170 85,85",hx:0,hy:0},
+    {nom:"t3",color:"#16a34a",poly:"0,0 85,85 0,170",hx:170,hy:0,rot:90},
+    {nom:"t4",color:"#f59e0b",poly:"0,0 85,0 42,42",hx:128,hy:42},
+    {nom:"t5",color:"#dc2626",poly:"0,0 85,0 85,85 0,85",hx:85,hy:85},
+    {nom:"t6",color:"#0d9488",poly:"0,42 42,0 85,42 42,85",hx:42,hy:128},
+    {nom:"t7",color:"#db2777",poly:"0,85 85,0 170,85",hx:0,hy:170}
+];
+let tgEstado=[];
+function tgReiniciar(){
+    const board=document.getElementById("tg-board");
+    board.innerHTML="";
+    document.getElementById("tg-msg").textContent="";
+    tgEstado=TG_PIEZAS.map((p,i)=>({
+        i, hx:p.hx, hy:p.hy,
+        x:30+Math.random()*150, y:30+Math.random()*150, rot:0
+    }));
+    tgEstado.forEach((e,i)=>{
+        const p=TG_PIEZAS[i];
+        const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+        svg.setAttribute("width","170");svg.setAttribute("height","170");
+        svg.classList.add("tg-pieza");
+        svg.style.left=e.x+"px";svg.style.top=e.y+"px";
+        svg.style.zIndex=i+1;
+        const poly=document.createElementNS("http://www.w3.org/2000/svg","polygon");
+        poly.setAttribute("points",p.poly);
+        poly.setAttribute("fill",p.color);
+        poly.setAttribute("opacity","0.85");
+        poly.setAttribute("stroke","#0f172a");poly.setAttribute("stroke-width","1.5");
+        svg.appendChild(poly);
+        svg.dataset.idx=i;
+        tgArrastrable(svg,e);
+        board.appendChild(svg);
+    });
+}
+function tgArrastrable(el,e){
+    let dragging=false,sx,sy,ox,oy,moved=false;
+    const inicio=(cx,cy)=>{ dragging=true;moved=false;sx=cx;sy=cy;ox=e.x;oy=e.y;el.style.zIndex=99; };
+    const mover=(cx,cy)=>{
+        if(!dragging)return;
+        moved=true;
+        e.x=ox+(cx-sx);e.y=oy+(cy-sy);
+        el.style.left=e.x+"px";el.style.top=e.y+"px";
+    };
+    const fin=()=>{
+        if(!dragging)return;
+        dragging=false;
+        if(!moved){ // tap = rotar
+            e.rot=(e.rot+45)%360;
+            el.style.transform=`rotate(${e.rot}deg)`;
+        }
+        tgChequear();
+    };
+    el.addEventListener("mousedown",ev=>{ev.preventDefault();inicio(ev.clientX,ev.clientY);});
+    document.addEventListener("mousemove",ev=>mover(ev.clientX,ev.clientY));
+    document.addEventListener("mouseup",fin);
+    el.addEventListener("touchstart",ev=>{const t=ev.touches[0];inicio(t.clientX,t.clientY);},{passive:true});
+    document.addEventListener("touchmove",ev=>{if(dragging){const t=ev.touches[0];mover(t.clientX,t.clientY);}},{passive:true});
+    document.addEventListener("touchend",fin);
+}
+function tgChequear(){
+    // gana si todas las piezas están cerca de su home y sin rotar
+    const ok=tgEstado.every(e=>
+        Math.abs(e.x-e.hx)<22 && Math.abs(e.y-e.hy)<22 && e.rot%360===0
+    );
+    if(ok){
+        const m=document.getElementById("tg-msg");
+        m.className="jm-msg win";
+        m.textContent="🎉 ¡Armaste el cuadrado perfecto!";
+    }
+}
+
+// ============================================================
+//  8. PUZZLE DE FRACCIONES
+// ============================================================
+let frRonda=0,frPts=0,frCorrecta="";
+function frNuevo(){ frRonda=0;frPts=0;document.getElementById("fr-puntos").textContent="✅ 0";frSiguiente(); }
+function frSiguiente(){
+    if(frRonda>=10){
+        const m=document.getElementById("fr-msg");
+        m.className="jm-msg win";
+        m.textContent=`🏁 Terminaste: ${frPts}/10 correctas.`;
+        document.getElementById("fr-visual").innerHTML="";
+        document.getElementById("fr-ops").innerHTML=`<button class="jm-btn" onclick="frNuevo()" style="grid-column:1/-1;margin:0 auto">🔄 Jugar de nuevo</button>`;
+        return;
+    }
+    frRonda++;
+    document.getElementById("fr-ronda").textContent=`Ronda ${frRonda}/10`;
+    document.getElementById("fr-msg").textContent="";
+    const den=[2,3,4,5,6,8][Math.floor(Math.random()*6)];
+    const num=Math.floor(Math.random()*(den-1))+1;
+    frCorrecta=num+"/"+den;
+    // dibujar barra
+    const vis=document.getElementById("fr-visual");
+    let barra='<div class="fr-barra">';
+    for(let i=0;i<den;i++) barra+=`<div class="fr-seg${i<num?' lleno':''}"></div>`;
+    barra+='</div>';
+    vis.innerHTML=barra;
+    // opciones
+    const ops=new Set([frCorrecta]);
+    while(ops.size<6){
+        const d=[2,3,4,5,6,8][Math.floor(Math.random()*6)];
+        const n=Math.floor(Math.random()*(d-1))+1;
+        ops.add(n+"/"+d);
+    }
+    const arr=[...ops].sort(()=>Math.random()-0.5);
+    const cont=document.getElementById("fr-ops");
+    cont.innerHTML="";
+    arr.forEach(o=>{
+        const b=document.createElement("button");
+        b.className="fr-op";b.textContent=o;
+        b.onclick=()=>frResponder(o,b);
+        cont.appendChild(b);
+    });
+}
+function frResponder(o,btn){
+    document.querySelectorAll("#fr-ops .fr-op").forEach(b=>b.style.pointerEvents="none");
+    const m=document.getElementById("fr-msg");
+    if(o===frCorrecta){
+        frPts++;btn.style.background="#dcfce7";btn.style.borderColor="#16a34a";
+        m.className="jm-msg win";m.textContent="✅ ¡Correcto!";
+    }else{
+        btn.style.background="#fef2f2";btn.style.borderColor="#dc2626";
+        m.className="jm-msg lose";m.textContent="❌ Era "+frCorrecta;
+    }
+    document.getElementById("fr-puntos").textContent="✅ "+frPts;
+    setTimeout(frSiguiente,1200);
+}
+</script>
 </body>
 </html>
