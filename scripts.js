@@ -205,6 +205,7 @@ async function inicializarSistema() {
     renderSeccionMisArchivos();
     renderRankingPublico();
     if (appState.perfilActual) resetSesionTimer();
+    accesoAdminPorHash();
     initSelectoresTemas();
 
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
@@ -294,7 +295,7 @@ function abrirMisArchivos(e) {
 }
 function cerrarOverlaySiClick(e, id) { if (e.target.id === id) document.getElementById(id).style.display = "none"; }
 function mostrarForm(id) {
-    ["auth-selector","form-login","form-registro","form-admin","form-olvide"].forEach(f => {
+    ["auth-selector","form-login","form-registro","form-registro-ok","form-admin","form-olvide"].forEach(f => {
         const el = document.getElementById(f);
         if (el) el.style.display = (f === id) ? "block" : "none";
     });
@@ -322,9 +323,10 @@ async function usuarioRegistro() {
     if (!MA()?.sb)                 return mostrarError("re-error","Supabase no configurado.");
     const { data, error } = await MA().sbRegistro({ email, password: pass, username, nombreCompleto });
     if (error) return mostrarError("re-error", traducirError(error.message));
-    if (data?.user && !data?.session) mostrarExito("re-success","✅ Cuenta creada. Revisá tu email para confirmar.");
-    else { mostrarExito("re-success","✅ Cuenta creada."); setTimeout(()=>document.getElementById("overlay-auth").style.display="none", 1500); }
-    ["re-nombre","re-user","re-email","re-pass","re-pass2"].forEach(id=>document.getElementById(id).value="");
+    // Limpiar campos y mostrar la pantalla de confirmación por email
+    ["re-nombre","re-user","re-email","re-pass","re-pass2"].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=""; });
+    const chk=document.getElementById("re-acepto"); if(chk) chk.checked=false;
+    mostrarForm("form-registro-ok");
 }
 
 async function usuarioLogin() {
@@ -1079,6 +1081,21 @@ function iniciarPagoMP(plan, btn) {
     }
     mostrarToast("Cuando termines el pago, usá el botón verde para enviar el comprobante 📲", "info");
 }
+
+
+function accesoAdminPorHash() {
+    const h = (location.hash||"").toLowerCase();
+    if (h!=="#admin" && h!=="#panel") return;
+    if (appState.perfilActual?.rol==="admin") {
+        abrirAdmin();
+    } else if (!appState.perfilActual) {
+        document.getElementById("overlay-auth").style.display="flex";
+        mostrarForm("form-admin");
+    } else {
+        mostrarToast("Esta cuenta no tiene permisos de administrador","warn");
+    }
+}
+window.addEventListener("hashchange", accesoAdminPorHash);
 
 // Expose
 Object.assign(window, {

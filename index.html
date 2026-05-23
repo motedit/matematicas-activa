@@ -78,7 +78,6 @@
                 <li><a href="#ranking">🏆 Ranking</a></li>
                 <li><a href="#suscripcion">Planes</a></li>
                 <li><a href="#sobre-mi">Sobre el profe</a></li>
-                <li id="nav-admin-link" style="display:none"><a href="#" onclick="abrirAdmin(event)" class="nav-admin-btn">⚙️ Admin</a></li>
                 <li id="nav-mis-archivos-link" style="display:none"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
                 <li id="nav-perfil-link" style="display:none"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
                 <li id="nav-salir-link" style="display:none"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
@@ -301,8 +300,6 @@
                 <p style="color:#666;font-size:14px;margin-bottom:1.5rem">Ingresá o creá tu cuenta para acceder al contenido premium.</p>
                 <button type="button" class="btn-auth btn-primary" onclick="mostrarForm('form-login')">Iniciar sesión</button>
                 <button type="button" class="btn-auth btn-secondary" onclick="mostrarForm('form-registro')">Crear cuenta gratis</button>
-                <hr style="margin:1.2rem 0;border:none;border-top:1px solid #eee">
-                <p style="font-size:12px;color:#999">¿Sos administrador? <a href="#" onclick="mostrarForm('form-admin')" style="color:#2563eb">Acceder aquí</a></p>
             </div>
             <div id="form-login" style="display:none">
                 <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
@@ -331,6 +328,26 @@
                 <div id="re-error" class="form-error" role="alert" aria-live="polite"></div>
                 <div id="re-success" class="form-success" role="status" aria-live="polite"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="usuarioRegistro()">Registrarme</button>
+            </div>
+            <div id="form-registro-ok" style="display:none;text-align:center">
+                <div style="font-size:56px;line-height:1;margin-bottom:8px">📧</div>
+                <h2 style="color:#16a34a;margin:0 0 10px">¡Cuenta creada!</h2>
+                <p style="font-size:15px;color:#475569;line-height:1.6;margin:0 0 14px">
+                    Te enviamos un <strong>correo de confirmación</strong> a tu email.
+                </p>
+                <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;text-align:left;margin-bottom:16px">
+                    <p style="font-size:14px;color:#1e3a8a;margin:0 0 8px;font-weight:700">Para activar tu cuenta:</p>
+                    <p style="font-size:13px;color:#1e40af;line-height:1.8;margin:0">
+                        1. Abrí tu casilla de correo.<br>
+                        2. Buscá el email de <strong>Matemáticas Activa</strong>.<br>
+                        3. Hacé clic en el botón <strong>"Activar mi cuenta"</strong>.<br>
+                        4. Volvé acá e iniciá sesión.
+                    </p>
+                </div>
+                <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">
+                    ⚠️ Si no lo ves en unos minutos, revisá la carpeta de <strong>spam o correo no deseado</strong>.
+                </p>
+                <button type="button" class="btn-auth btn-primary" onclick="mostrarForm('form-login')">Ir a iniciar sesión</button>
             </div>
             <div id="form-admin" style="display:none">
                 <button type="button" class="back-btn" onclick="mostrarForm('auth-selector')">← Volver</button>
