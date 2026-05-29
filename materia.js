@@ -196,19 +196,34 @@
         return `<div class="mat-card">${miniPreview(a)}<span style="font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;background:${bgSeccion(a.seccion)};color:${colorSeccion(a.seccion)};align-self:flex-start">${etiquetaSeccion(a.seccion)}</span><p class="mat-card-titulo">${esc(a.titulo)}</p>${a.descripcion ? `<p class="mat-card-desc">${esc(a.descripcion)}</p>` : ""}${a.tamano_bytes ? `<p style="font-size:11px;color:#888">📦 ${formatearTamano(a.tamano_bytes)}</p>` : ""}${accion}</div>`;
     }
 
-    // ---- Render público ----
+    // ---- Render público (acordeón) ----
+    function toggleAcordeon(id) {
+        const panel = document.getElementById('acc-panel-' + id);
+        const pill  = document.getElementById('acc-pill-' + id);
+        if (!panel) return;
+        const abierto = panel.classList.toggle('acc-abierto');
+        pill?.classList.toggle('acc-activo', abierto);
+        // Cerrar los demás
+        document.querySelectorAll('.acc-panel.acc-abierto').forEach(p => {
+            if (p.id !== 'acc-panel-' + id) { p.classList.remove('acc-abierto'); }
+        });
+        document.querySelectorAll('.acc-pill.acc-activo').forEach(p => {
+            if (p.id !== 'acc-pill-' + id) { p.classList.remove('acc-activo'); }
+        });
+    }
+    window._materia_toggleAcc = toggleAcordeon;
+
     function renderPublicos() {
         const lista = archivos.filter(a => a.seccion !== "premium");
         const grid = document.getElementById("mat-publicos-grid");
         if (!grid) return;
 
-        // Ruta de aprendizaje: mostrar las categorías incluso si no hay archivos
+        // Ruta de aprendizaje
         const categorias = {};
         temasMateria.forEach(t => {
             if (!categorias[t.categoria]) categorias[t.categoria] = { nivel: t.nivel, temas: [], archivos: [] };
             categorias[t.categoria].temas.push(t);
         });
-        // Asignar archivos a su tema correspondiente
         const archivosSinTema = [];
         lista.forEach(a => {
             let asignado = false;
@@ -224,35 +239,62 @@
             if (!asignado) archivosSinTema.push(a);
         });
 
-        let html = "";
-        // Renderizar cada categoría con sus archivos y los temas pendientes
-        const orden = Object.entries(categorias).sort((a,b)=>a[1].nivel - b[1].nivel);
+        const orden = Object.entries(categorias).sort((a,b) => a[1].nivel - b[1].nivel);
         if (orden.length === 0 && lista.length === 0) {
             grid.innerHTML = `<p class="mat-vacio">El administrador publicará contenido de ${esc(NOMBRE)} pronto.</p>`;
             return;
         }
-        orden.forEach(([cat, data]) => {
-            html += `<div class="mat-categoria">
-                <h3 class="mat-categoria-titulo">📚 Nivel ${data.nivel} — ${esc(cat)}</h3>
-                <ul class="mat-categoria-temas">${data.temas.map(t=>{
-                    const tieneArch = data.archivos.some(a=>a.tema_id===t.id);
+
+        // Pills de categorías
+        let pillsHtml = '<div class="acc-pills">';
+        orden.forEach(([cat, data], i) => {
+            const temaCount = data.temas.length;
+            const dispCount = data.temas.filter(t => data.archivos.some(a=>a.tema_id===t.id) || !!PDF_MANIFEST[_norm(t.nombre)]).length;
+            pillsHtml += `<button type="button" class="acc-pill" id="acc-pill-${i}" onclick="window._materia_toggleAcc(${i})">
+                ${esc(cat)} <span class="acc-pill-count">${dispCount}/${temaCount}</span>
+                <span class="acc-pill-arrow">▾</span>
+            </button>`;
+        });
+        if (archivosSinTema.length > 0) {
+            pillsHtml += `<button type="button" class="acc-pill" id="acc-pill-otros" onclick="window._materia_toggleAcc('otros')">
+                Otros contenidos <span class="acc-pill-count">${archivosSinTema.length}</span>
+                <span class="acc-pill-arrow">▾</span>
+            </button>`;
+        }
+        pillsHtml += '</div>';
+
+        // Paneles expandibles
+        let panelsHtml = '';
+        orden.forEach(([cat, data], i) => {
+            panelsHtml += `<div class="acc-panel" id="acc-panel-${i}">
+                <div class="acc-panel-header">
+                    <h3 class="acc-panel-titulo">${esc(cat)}</h3>
+                    <span class="acc-panel-nivel">Nivel ${data.nivel}</span>
+                </div>
+                <ul class="acc-temas-lista">${data.temas.map(t => {
+                    const tieneArch = data.archivos.some(a => a.tema_id === t.id);
                     const enManifest = !!PDF_MANIFEST[_norm(t.nombre)];
                     const disp = tieneArch || enManifest;
-                    const marca = disp ? '<span style="color:#16a34a">✓</span>' : '<span style="color:#94a3b8;font-size:11px">próximamente</span>';
-                    return `<li class="tema-clickable" onclick="window._materia.abrirSubtema('${t.id}')">${esc(t.nombre)} ${marca}<span class="tema-flecha">›</span></li>`;
+                    const marca = disp
+                        ? '<span class="acc-tema-badge disp">✓ disponible</span>'
+                        : '<span class="acc-tema-badge pend">próximamente</span>';
+                    return `<li class="acc-tema-item${disp ? ' disponible' : ''}" onclick="window._materia.abrirSubtema('${t.id}')">
+                        <span class="acc-tema-nombre">» ${esc(t.nombre)}</span>
+                        ${marca}
+                    </li>`;
                 }).join("")}</ul>
-                ${data.archivos.length > 0
-                    ? '<div class="mat-grid">' + data.archivos.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("") + '</div>'
-                    : '<p style="text-align:center;color:#94a3b8;font-size:13px;padding:12px 0">Aún no hay material publicado en esta categoría.</p>'}
             </div>`;
         });
         if (archivosSinTema.length > 0) {
-            html += `<div class="mat-categoria">
-                <h3 class="mat-categoria-titulo">📌 Otros contenidos</h3>
+            panelsHtml += `<div class="acc-panel" id="acc-panel-otros">
+                <div class="acc-panel-header">
+                    <h3 class="acc-panel-titulo">Otros contenidos</h3>
+                </div>
                 <div class="mat-grid">${archivosSinTema.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("")}</div>
             </div>`;
         }
-        grid.innerHTML = html;
+
+        grid.innerHTML = pillsHtml + panelsHtml;
     }
 
     // ---- Render premium ----

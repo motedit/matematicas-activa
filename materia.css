@@ -169,12 +169,56 @@ a{text-decoration:none;color:inherit;}
 }
 
 
-/* === Categorías de la ruta de aprendizaje === */
-.mat-categoria{background:white;border-radius:14px;padding:20px;margin-bottom:18px;border:1px solid #e2e8f0;}
-.mat-categoria-titulo{font-size:17px;color:#1e293b;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid #e2e8f0;font-family:'Poppins',sans-serif;}
-.mat-categoria-temas{list-style:none;padding:0;margin:0 0 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px;}
-.mat-categoria-temas li{font-size:13px;color:#475569;padding:5px 10px;background:#f8fafc;border-radius:6px;}
-.mat-categoria .mat-grid{margin-top:8px;}
+/* === Acordeón de categorías (estilo Matemóvil) === */
+.acc-pills{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+.acc-pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 18px;border-radius:12px;
+    border:2px solid var(--gray200);background:white;
+    font-family:var(--font);font-size:14px;font-weight:600;color:var(--purple);
+    cursor:pointer;transition:all .2s;
+}
+.acc-pill:hover{border-color:var(--purple);background:#f5f3ff;}
+.acc-pill.acc-activo{border-color:var(--purple);background:var(--purple);color:white;}
+.acc-pill-count{font-size:11px;font-weight:700;background:var(--gray100);color:var(--gray400);padding:2px 7px;border-radius:99px;}
+.acc-pill.acc-activo .acc-pill-count{background:rgba(255,255,255,.25);color:white;}
+.acc-pill-arrow{font-size:12px;transition:transform .25s;opacity:.6;}
+.acc-pill.acc-activo .acc-pill-arrow{transform:rotate(180deg);opacity:1;}
+
+/* Panel expandible */
+.acc-panel{
+    max-height:0;overflow:hidden;opacity:0;
+    transition:max-height .35s ease,opacity .25s ease,margin .25s ease;
+    margin-bottom:0;
+}
+.acc-panel.acc-abierto{
+    max-height:2000px;opacity:1;margin-bottom:20px;
+}
+.acc-panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:12px 12px 0 0;border:1px solid #e2e8f0;border-bottom:none;}
+.acc-panel-titulo{font-family:var(--font);font-size:16px;font-weight:700;color:#1e1b4b;margin:0;}
+.acc-panel-nivel{font-size:11px;font-weight:700;color:var(--purple);background:white;padding:3px 10px;border-radius:99px;}
+
+/* Lista de temas dentro del panel */
+.acc-temas-lista{list-style:none;padding:0;margin:0;border:1px solid #e2e8f0;border-radius:0 0 12px 12px;overflow:hidden;}
+.acc-tema-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 18px;border-bottom:1px solid #f1f5f9;
+    font-size:14px;color:#475569;transition:background .15s;
+}
+.acc-tema-item:last-child{border-bottom:none;}
+.acc-tema-item.disponible{cursor:pointer;color:#1e293b;}
+.acc-tema-item.disponible:hover{background:#f8fafc;}
+.acc-tema-nombre{font-weight:500;}
+.acc-tema-item.disponible .acc-tema-nombre{color:var(--blue);}
+.acc-tema-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;}
+.acc-tema-badge.disp{background:#f0fdf4;color:#16a34a;}
+.acc-tema-badge.pend{background:#f8fafc;color:#94a3b8;}
+
+@media(max-width:600px){
+    .acc-pills{gap:8px;}
+    .acc-pill{padding:8px 14px;font-size:13px;}
+    .acc-tema-item{padding:10px 14px;font-size:13px;}
+}
 
 /* === Temas clickeables === */
 .mat-categoria-temas li.tema-clickable{cursor:pointer;padding:8px 12px;border-radius:8px;transition:background .15s}
