@@ -353,7 +353,7 @@
         document.body.innerHTML = `
             <header class="mat-header">
                 <a href="../../index.html" class="mat-brand" title="Volver al inicio">
-                    <img src="../../img/Logo.jpeg" alt="Matemáticas Activa" class="mat-brand-logo">
+                    <span class="mat-brand-icon" aria-hidden="true">∑</span>
                     <span class="mat-brand-text">Matemáticas<strong>Activa</strong></span>
                 </a>
                 <h1>${EMOJI} ${esc(NOMBRE)}</h1>

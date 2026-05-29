@@ -71,18 +71,22 @@
                 <span>Matemáticas<strong>Activa</strong></span>
             </a>
             <button type="button" class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" onclick="(function(b){var l=document.getElementById('navbar-links');l.classList.toggle('open');b.setAttribute('aria-expanded',l.classList.contains('open'));})(this)">☰</button>
+            <div class="navbar-search" role="search">
+                <span class="navbar-search-icon" aria-hidden="true">🔍</span>
+                <label for="buscador-nav" class="sr-only">Buscar tema o subtema</label>
+                <input type="search" id="buscador-nav" placeholder="Buscar tema o subtema…" aria-label="Buscar tema o subtema" autocomplete="off" onkeyup="buscarContenido('nav')">
+                <div id="buscador-resultados-nav" class="buscador-resultados nav"></div>
+            </div>
             <ul class="navbar-links" id="navbar-links">
                 <li><a href="#materias">Materias</a></li>
-                <li><a href="materias/Juegos/Juegos.html">🎮 Juegos</a></li>
-                <li><a href="#que-podes">¿Qué podés hacer?</a></li>
-                <li><a href="#ranking">🏆 Ranking</a></li>
                 <li><a href="#suscripcion">Planes</a></li>
-                <li><a href="#sobre-mi">Sobre el profe</a></li>
+                <li><a href="materias/Juegos/Juegos.html">🎮 Juegos</a></li>
+                <li><a href="#ranking">🏆 Ranking</a></li>
                 <li id="nav-mis-archivos-link" style="display:none"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
                 <li id="nav-perfil-link" style="display:none"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
                 <li id="nav-salir-link" style="display:none"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
                 <li><a href="#" onclick="abrirAuth(event)" class="nav-cta-btn"><span id="nav-cuenta-label">Ingresar</span></a></li>
-                <li><span id="nav-puntos" class="nav-puntos" style="display:none"></span></li>
+                <li><span id="nav-puntos" class="nav-puntos" style="display:none" title="Puntos del Ranking"></span></li>
             </ul>
         </div>
     </nav>
@@ -278,6 +282,14 @@
                 <span>Matemáticas<strong>Activa</strong></span>
             </div>
             <p class="footer-copy">Copyright © 2025 Matemáticas Activa · Todos los derechos reservados</p>
+            <div class="footer-contacto">
+                <a class="footer-contacto-link wa" href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activa.%20" target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp">
+                    <span aria-hidden="true">💚</span> WhatsApp · +54 9 3827 65-4154
+                </a>
+                <a class="footer-contacto-link ig" href="https://www.instagram.com/matematicas_activa" target="_blank" rel="noopener" aria-label="Seguinos en Instagram">
+                    <span aria-hidden="true">📷</span> Instagram · @matematicas_activa
+                </a>
+            </div>
             <div class="footer-links">
                 <a href="#materias">Materias</a>
                 <a href="materias/Juegos/Juegos.html">Juegos</a>
@@ -524,7 +536,7 @@
                     <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
                     <h3>Plan Básico</h3>
                     <p class="plan-precio">$ 7.000</p>
-                    <p class="plan-sub">15 días de acceso</p>
+                    <p class="plan-sub">23 días de acceso</p>
                     <ul class="plan-features">
                         <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
                         <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
@@ -577,7 +589,7 @@
             <span class="fab-opcion-icon">💚</span>
             <div><div>WhatsApp</div><div style="font-size:11px;opacity:.9;font-weight:400">Comprobante o consultas</div></div>
         </a>
-        <a class="fab-opcion ig" href="https://www.instagram.com/matematicas_activa?igsh=MXVsOHhxZ3owNWNtZA%3D%3D&utm_source=qr" target="_blank" rel="noopener">
+        <a class="fab-opcion ig" href="https://www.instagram.com/matematicas_activa" target="_blank" rel="noopener">
             <span class="fab-opcion-icon">📷</span>
             <div><div>Instagram</div><div style="font-size:11px;opacity:.9;font-weight:400">Seguinos para novedades</div></div>
         </a>
