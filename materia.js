@@ -735,6 +735,7 @@
 
     // ============ INIT ============
     (async function () {
+        construirPagina();
         await cargar();
         renderNavbar();
         renderPublicos();
@@ -767,5 +768,8 @@
         sc.src = '../../calculadora.js';
         sc.onload = () => { if (window.initCalculadora) window.initCalculadora(MATERIA_ID); };
         document.head.appendChild(sc);
+    }
+})();
+pendChild(sc);
     }
 })();
