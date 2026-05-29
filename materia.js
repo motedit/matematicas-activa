@@ -770,6 +770,3 @@
         document.head.appendChild(sc);
     }
 })();
-pendChild(sc);
-    }
-})();
