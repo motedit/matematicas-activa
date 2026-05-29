@@ -234,7 +234,13 @@
         orden.forEach(([cat, data]) => {
             html += `<div class="mat-categoria">
                 <h3 class="mat-categoria-titulo">📚 Nivel ${data.nivel} — ${esc(cat)}</h3>
-                <ul class="mat-categoria-temas">${data.temas.map(t=>`<li>${esc(t.nombre)}${data.archivos.some(a=>a.tema_id===t.id)?' <span style="color:#16a34a">✓</span>':' <span style="color:#94a3b8;font-size:11px">(pendiente)</span>'}</li>`).join("")}</ul>
+                <ul class="mat-categoria-temas">${data.temas.map(t=>{
+                    const tieneArch = data.archivos.some(a=>a.tema_id===t.id);
+                    const enManifest = !!PDF_MANIFEST[_norm(t.nombre)];
+                    const disp = tieneArch || enManifest;
+                    const marca = disp ? '<span style="color:#16a34a">✓</span>' : '<span style="color:#94a3b8;font-size:11px">próximamente</span>';
+                    return `<li class="tema-clickable" onclick="window._materia.abrirSubtema('${t.id}')">${esc(t.nombre)} ${marca}<span class="tema-flecha">›</span></li>`;
+                }).join("")}</ul>
                 ${data.archivos.length > 0
                     ? '<div class="mat-grid">' + data.archivos.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("") + '</div>'
                     : '<p style="text-align:center;color:#94a3b8;font-size:13px;padding:12px 0">Aún no hay material publicado en esta categoría.</p>'}
@@ -297,9 +303,20 @@
     function renderNavbar() {
         const nb = document.getElementById("mat-navbar-sesion");
         if (!nb) return;
-        if (!perfilActual) { nb.innerHTML = `<a href="../../index.html#suscripcion" class="mat-nav-btn">🔐 Ingresar</a>`; return; }
+        if (!perfilActual) {
+            nb.innerHTML = `<a href="../../index.html#suscripcion" class="mat-nav-btn">🔐 Ingresar</a>`;
+            const pts = document.getElementById("mat-nav-puntos");
+            if (pts) pts.style.display = "none";
+            return;
+        }
         const activo = esPremiumActivo(perfilActual);
-        nb.innerHTML = `<span style="font-size:13px">${activo ? "⭐" : "👤"} ${esc(perfilActual.username)}</span><button type="button" class="mat-nav-btn" onclick="window._materia.salir()">Salir</button>`;
+        const puntos = perfilActual.puntos || 0;
+        nb.innerHTML = `
+            <a href="#" class="mat-nav-btn" onclick="event.preventDefault();window.location.href='../../index.html#suscripcion'" style="font-size:12px">📋 Planes</a>
+            <span style="font-size:13px">${activo ? "⭐" : "👤"} ${esc(perfilActual.username)}</span>
+            <button type="button" class="mat-nav-btn" onclick="window._materia.salir()" style="color:#f87171">Salir</button>`;
+        const pts = document.getElementById("mat-nav-puntos");
+        if (pts) { pts.textContent = "🏆 " + puntos + " pts"; pts.style.display = "inline-flex"; }
     }
 
     // ---- Sesión ----
@@ -335,9 +352,20 @@
         document.title = NOMBRE + " — Matemáticas Activa";
         document.body.innerHTML = `
             <header class="mat-header">
-                <a href="../../index.html" class="mat-back">← Inicio</a>
+                <a href="../../index.html" class="mat-brand" title="Volver al inicio">
+                    <img src="../../img/Logo.jpeg" alt="Matemáticas Activa" class="mat-brand-logo">
+                    <span class="mat-brand-text">Matemáticas<strong>Activa</strong></span>
+                </a>
                 <h1>${EMOJI} ${esc(NOMBRE)}</h1>
-                <div id="mat-navbar-sesion"></div>
+                <div class="mat-header-right">
+                    <div class="mat-search-wrap" role="search">
+                        <span class="mat-search-icon" aria-hidden="true">🔍</span>
+                        <input type="search" id="mat-buscador" placeholder="Buscar tema…" aria-label="Buscar tema o subtema" autocomplete="off">
+                        <div id="mat-buscador-resultados" class="mat-buscador-resultados"></div>
+                    </div>
+                    <span id="mat-nav-puntos" class="mat-nav-puntos" style="display:none"></span>
+                    <div id="mat-navbar-sesion"></div>
+                </div>
             </header>
             <main class="mat-main">
                 <section class="mat-section">
@@ -365,7 +393,22 @@
                 </section>
             </main>
             <footer class="mat-footer">
-                <p>Copyright © 2025 Matemáticas Activa. Todos los derechos reservados.</p>
+                <div class="mat-footer-contacto">
+                    <a href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activa.%20" target="_blank" rel="noopener" class="mat-footer-link wa">
+                        💚 WhatsApp · +54 9 3827 65-4154
+                    </a>
+                    <a href="https://www.instagram.com/matematicas_activa?igsh=MXVsOHhxZ3owNWNtZA%3D%3D&utm_source=qr" target="_blank" rel="noopener" class="mat-footer-link ig">
+                        📷 Instagram · @matematicas_activa
+                    </a>
+                </div>
+                <div class="mat-footer-links">
+                    <a href="../../index.html#materias">Materias</a>
+                    <a href="../../index.html#suscripcion">Planes</a>
+                    <a href="../../index.html#ranking">Ranking</a>
+                    <a href="../../politica-privacidad.html">Privacidad</a>
+                    <a href="../../terminos-servicio.html">Términos</a>
+                </div>
+                <p>Copyright © 2025 Matemáticas Activa · Todos los derechos reservados</p>
             </footer>
 
             <!-- VISOR -->
@@ -412,28 +455,303 @@
         document.getElementById("mat-visor-overlay").style.display = "none";
     }
 
-    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer };
+    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema };
 
-    // ---- Boot ----
-    construirPagina();
+    // ============ MANIFIESTO DE PDF POR SUBTEMA ============
+    // Mapeo nombre de subtema normalizado -> archivos disponibles
+    function _norm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim(); }
+    const PDF_RUTA = "../../"; // los PDF estan en la raiz del sitio
+    const PDF_MANIFEST = {
+        "conjuntos numericos":                  {b:"Conjuntos-Numericos",   d:"Repaso de los conjuntos numericos N, Z, Q, R y C, con explicacion intuitiva y formal."},
+        "suma resta multiplicacion y division": {b:"Operaciones-Basicas",   d:"Las cuatro operaciones basicas y sus propiedades, con ejemplos y demostraciones."},
+        "operaciones basicas":                  {b:"Operaciones-Basicas",   d:"Las cuatro operaciones basicas y sus propiedades, con ejemplos y demostraciones."},
+        "fracciones":                           {b:"Fracciones",            d:"Propiedades, operaciones y representacion de las fracciones, con graficos."},
+        "decimales":                            {b:"Decimales",             d:"Operaciones y representacion de los numeros decimales, con grillas y la recta numerica."},
+        "numeros decimales":                    {b:"Decimales",             d:"Operaciones y representacion de los numeros decimales, con grillas y la recta numerica."},
+        "porcentajes":                          {b:"Porcentajes",           d:"Tipos de casos, formula, aumentos y descuentos, graficos de torta."},
+        "potencias y raices":                   {b:"Potencias-y-Raices",    d:"Potenciacion, radicacion y sus propiedades, con visualizaciones geometricas."},
+        "numeros naturales":                    {b:"Numeros-Naturales",     d:"El conjunto N, valor posicional, operaciones, pares e impares, multiplos y divisores."},
+        "numeros enteros":                      {b:"Numeros-Enteros",       d:"El conjunto Z, opuestos, valor absoluto, orden y la regla de los signos."},
+        "divisibilidad":                        {b:"Divisibilidad",         d:"Multiplos, divisores y los criterios de divisibilidad, con demostraciones."},
+        "numeros primos":                       {b:"Numeros-Primos",        d:"Primos y compuestos, criba de Eratostenes, factorizacion en primos y aplicaciones."},
+        "mcd y mcm":                            {b:"MCD-y-MCM",             d:"Maximo comun divisor y minimo comun multiplo, con metodos de calculo y el algoritmo de Euclides."},
+        "proporcionalidad":                     {b:"Proporcionalidad",      d:"Razones, proporciones, magnitudes directa e inversamente proporcionales."},
+    };
 
-    (async () => {
+    const _subtemaPlanesCache = { plan: null };
+    async function obtenerPlan(){
+        if (_subtemaPlanesCache.plan) return _subtemaPlanesCache.plan;
+        try {
+            const p = await MA()?.sbPlanVigente?.();
+            _subtemaPlanesCache.plan = p || "gratis";
+        } catch(e){ _subtemaPlanesCache.plan = "gratis"; }
+        return _subtemaPlanesCache.plan;
+    }
+
+    function _bloque(base, tipo, plan){
+        const accesos = { apunte: ["gratis","basico","premium"], problemas: ["basico","premium"], soluciones: ["premium"] };
+        const meta = ({
+            apunte:    {icon:"📘", titulo:"Apunte teorico",            sub:"Teoria, ejemplos y ejercicios para nivel Secundario y Universitario.", file:"Apunte-"+base+".pdf",     badgeCls:""},
+            problemas: {icon:"📝", titulo:"15 problemas para resolver", sub:"Situaciones problematicas con espacio para escribir el procedimiento.", file:"Problemas-"+base+".pdf",  badgeCls:"basico"},
+            soluciones:{icon:"✅", titulo:"Soluciones desarrolladas",   sub:"Resolucion paso a paso de los 15 problemas.",                          file:"Soluciones-"+base+".pdf", badgeCls:"premium"},
+        })[tipo];
+        const ok = accesos[tipo].includes(plan);
+        const planLabel = { apunte:"Gratis", problemas:"Basico", soluciones:"Premium" }[tipo];
+        const badge = `<span class="subtema-plan-badge ${meta.badgeCls}">${planLabel}</span>`;
+        if (ok) {
+            return `<div class="subtema-archivo disponible" onclick="window.open('${PDF_RUTA}${meta.file}','_blank','noopener')">
+                <div class="subtema-archivo-icon">${meta.icon}</div>
+                <div class="subtema-archivo-body">
+                    <p class="subtema-archivo-titulo">${meta.titulo} ${badge}</p>
+                    <p class="subtema-archivo-sub">${meta.sub}</p>
+                </div>
+                <a class="subtema-archivo-cta abrir" href="${PDF_RUTA}${meta.file}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Abrir →</a>
+            </div>`;
+        }
+        const planReq = tipo === "problemas" ? "Basico" : "Premium";
+        return `<div class="subtema-archivo bloqueado">
+            <div class="subtema-archivo-icon">🔒</div>
+            <div class="subtema-archivo-body">
+                <p class="subtema-archivo-titulo">${meta.titulo} ${badge}</p>
+                <p class="subtema-archivo-sub">Requiere plan <strong>${planReq}</strong>. ${meta.sub}</p>
+            </div>
+            <a class="subtema-archivo-cta bloqueado" href="../../index.html#suscripcion" onclick="event.stopPropagation()">Desbloquear</a>
+        </div>`;
+    }
+
+    function _asegurarOverlay(){
+        let ov = document.getElementById("subtema-overlay");
+        if (ov) return ov;
+        ov = document.createElement("div");
+        ov.id = "subtema-overlay";
+        ov.className = "subtema-overlay";
+        ov.addEventListener("click", e => { if (e.target === ov) ov.classList.remove("activo"); });
+        document.body.appendChild(ov);
+        return ov;
+    }
+
+    // Contenido explicativo breve por subtema
+    const SUBTEMA_CONTENIDO = {
+        "conjuntos numericos": {
+            intro: "Los conjuntos numéricos organizan todos los tipos de números que usamos en matemática: naturales, enteros, racionales, reales y complejos.",
+            puntos: ["Naturales (ℕ): 0, 1, 2, 3…","Enteros (ℤ): …−2, −1, 0, 1, 2…","Racionales (ℚ): fracciones a/b","Reales (ℝ): todos los números de la recta","Complejos (ℂ): incluyen la unidad imaginaria i"],
+            tip: "Cada conjunto está contenido en el siguiente: ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ"
+        },
+        "suma resta multiplicacion y division": {
+            intro: "Las cuatro operaciones fundamentales son la base de toda la aritmética y se aplican en cada rama de la matemática.",
+            puntos: ["Suma y resta: operaciones inversas entre sí","Multiplicación: suma abreviada","División: operación inversa de la multiplicación","Propiedades: conmutativa, asociativa, distributiva"],
+            tip: "La división por cero no está definida — es uno de los errores más comunes."
+        },
+        "operaciones basicas": {
+            intro: "Las cuatro operaciones fundamentales son la base de toda la aritmética y se aplican en cada rama de la matemática.",
+            puntos: ["Suma y resta: operaciones inversas entre sí","Multiplicación: suma abreviada","División: operación inversa de la multiplicación","Propiedades: conmutativa, asociativa, distributiva"],
+            tip: "La división por cero no está definida — es uno de los errores más comunes."
+        },
+        "fracciones": {
+            intro: "Una fracción representa una parte de un todo. Se escribe como a/b donde a es el numerador y b el denominador.",
+            puntos: ["Fracciones equivalentes: representan el mismo valor","Operaciones: suma, resta, multiplicación y división","Simplificación: dividir numerador y denominador por su MCD","Fracciones mixtas: número entero + fracción propia"],
+            tip: "Para sumar fracciones con distinto denominador, primero encontrá el MCM."
+        },
+        "decimales": {
+            intro: "Los números decimales son otra forma de representar fracciones, usando el sistema posicional con la coma decimal.",
+            puntos: ["Decimales exactos: tienen una cantidad finita de cifras","Decimales periódicos: se repite un patrón infinitamente","Conversión: de fracción a decimal y viceversa","Operaciones: mismas reglas que con enteros, cuidando la coma"],
+            tip: "Todo decimal periódico se puede escribir como fracción — es un número racional."
+        },
+        "numeros decimales": {
+            intro: "Los números decimales son otra forma de representar fracciones, usando el sistema posicional con la coma decimal.",
+            puntos: ["Decimales exactos: tienen una cantidad finita de cifras","Decimales periódicos: se repite un patrón infinitamente","Conversión: de fracción a decimal y viceversa","Operaciones: mismas reglas que con enteros, cuidando la coma"],
+            tip: "Todo decimal periódico se puede escribir como fracción — es un número racional."
+        },
+        "porcentajes": {
+            intro: "Un porcentaje expresa una proporción como una fracción de 100. Es fundamental en finanzas, estadística y la vida diaria.",
+            puntos: ["Fórmula básica: porcentaje = (parte / total) × 100","Aumentos y descuentos: aplicar porcentajes sobre un valor","Porcentaje de un porcentaje: composición de tasas","Gráficos de torta: representación visual de porcentajes"],
+            tip: "Un aumento del 50% seguido de un descuento del 50% NO te deja en el valor original."
+        },
+        "potencias y raices": {
+            intro: "La potenciación es una multiplicación repetida y la radicación es su operación inversa.",
+            puntos: ["Potencia: aⁿ = a × a × … × a (n veces)","Propiedades: producto, cociente y potencia de potencia","Raíz n-ésima: el número que elevado a n da el radicando","Racionalización: eliminar raíces del denominador"],
+            tip: "Toda raíz se puede escribir como potencia con exponente fraccionario: ⁿ√a = a^(1/n)."
+        },
+        "numeros naturales": {
+            intro: "Los números naturales (ℕ) son los primeros que aprendemos: sirven para contar y ordenar.",
+            puntos: ["Valor posicional: cada cifra vale según su posición","Pares e impares: divisibles o no por 2","Múltiplos y divisores: relaciones entre números","Operaciones fundamentales dentro de ℕ"],
+            tip: "ℕ es cerrado para la suma y la multiplicación, pero no para la resta ni la división."
+        },
+        "numeros enteros": {
+            intro: "Los números enteros (ℤ) amplían los naturales incluyendo los negativos y el cero.",
+            puntos: ["Opuesto de un número: a y −a","Valor absoluto: distancia al cero en la recta","Regla de los signos para multiplicar y dividir","Orden: todo negativo es menor que todo positivo"],
+            tip: "La regla de los signos: (+)(+) = + , (−)(−) = + , (+)(−) = − , (−)(+) = −"
+        },
+        "divisibilidad": {
+            intro: "La divisibilidad estudia cuándo un número se puede dividir exactamente por otro, sin resto.",
+            puntos: ["Criterios de divisibilidad: por 2, 3, 4, 5, 6, 9, 10, 11","Múltiplos y divisores","Relación con la factorización en primos","Aplicaciones: simplificación de fracciones"],
+            tip: "Un número es divisible por 3 si la suma de sus cifras es múltiplo de 3."
+        },
+        "numeros primos": {
+            intro: "Un número primo tiene exactamente dos divisores: 1 y sí mismo. Son los ladrillos de los números naturales.",
+            puntos: ["Criba de Eratóstenes: método para encontrar primos","Factorización en primos: descomponer un número","Teorema fundamental de la aritmética: la factorización es única","Aplicaciones: criptografía, MCD y MCM"],
+            tip: "El 1 no es primo ni compuesto. El 2 es el único primo par."
+        },
+        "mcd y mcm": {
+            intro: "El MCD (máximo común divisor) y el MCM (mínimo común múltiplo) son herramientas esenciales para trabajar con fracciones.",
+            puntos: ["MCD: el mayor número que divide a ambos","MCM: el menor múltiplo común a ambos","Método de factorización en primos","Algoritmo de Euclides para el MCD"],
+            tip: "Relación clave: MCD(a,b) × MCM(a,b) = a × b"
+        },
+        "proporcionalidad": {
+            intro: "La proporcionalidad estudia la relación entre magnitudes que crecen o decrecen de manera constante.",
+            puntos: ["Razón y proporción: conceptos básicos","Directamente proporcional: si una crece, la otra también","Inversamente proporcional: si una crece, la otra decrece","Regla de tres: simple y compuesta"],
+            tip: "En una proporción a/b = c/d, se cumple que a×d = b×c (productos cruzados)."
+        },
+    };
+
+    async function abrirSubtema(temaId, nombre){
+        const ov = _asegurarOverlay();
+        const tema = temasMateria.find(t => t.id === temaId);
+        const titulo = nombre || tema?.nombre || "Subtema";
+        const cat = tema?.categoria || "";
+        const nivel = tema?.nivel ? `Nivel ${tema.nivel}` : "";
+        const key = _norm(titulo);
+        const m = PDF_MANIFEST[key];
+        const contenido = SUBTEMA_CONTENIDO[key];
+
+        // Construir sección explicativa
+        let explicacionHtml = "";
+        if (contenido) {
+            explicacionHtml = `
+                <div class="subtema-explicacion">
+                    <p class="subtema-intro">${esc(contenido.intro)}</p>
+                    <div class="subtema-puntos-clave">
+                        <h4>📌 Puntos clave</h4>
+                        <ul>${contenido.puntos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+                    </div>
+                    ${contenido.tip ? `<div class="subtema-tip"><span class="subtema-tip-icon">💡</span><span>${esc(contenido.tip)}</span></div>` : ""}
+                </div>`;
+        }
+
+        ov.innerHTML = `<div class="subtema-panel" onclick="event.stopPropagation()">
+            <button type="button" class="subtema-close" aria-label="Cerrar" onclick="document.getElementById('subtema-overlay').classList.remove('activo')">✕</button>
+            <p class="subtema-eyebrow">${esc(NOMBRE)} · ${esc(cat)} ${nivel ? '· '+nivel : ''}</p>
+            <h2 class="subtema-titulo">${esc(titulo)}</h2>
+            <p class="subtema-desc">${esc(m?.d || "Este subtema todavia no tiene material publicado. Cuando este disponible, vas a encontrar aca la teoria, los problemas y las soluciones desarrolladas.")}</p>
+            ${explicacionHtml}
+            <p class="subtema-archivos-titulo">📁 Material disponible</p>
+            <div class="subtema-archivos" id="subtema-archivos-cont"><p style="padding:16px;color:#94a3b8;text-align:center">Cargando…</p></div>
+        </div>`;
+        ov.classList.add("activo");
+
+        const plan = await obtenerPlan();
+        const cont = document.getElementById("subtema-archivos-cont");
+
+        // Archivos del manifiesto (PDFs estáticos)
+        let htmlArchivos = "";
+        if (m) {
+            htmlArchivos += _bloque(m.b, "apunte", plan) + _bloque(m.b, "problemas", plan) + _bloque(m.b, "soluciones", plan);
+        }
+
+        // Archivos cargados en Supabase para este tema (públicos)
+        const archivosPublicos = archivos.filter(a => a.tema_id === temaId && a.seccion !== "premium");
+        if (archivosPublicos.length > 0) {
+            htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#334155;margin:16px 0 8px;padding-top:12px;border-top:1px solid #e2e8f0">📂 Contenido cargado</p>`;
+            htmlArchivos += archivosPublicos.map(a => `
+                <div class="subtema-archivo disponible" onclick="window._materia.ver('${a.id}')">
+                    <div class="subtema-archivo-icon">${({video:"🎬",pdf:"📄",imagen:"🖼️",texto:"📝"})[a.seccion] || "📁"}</div>
+                    <div class="subtema-archivo-body">
+                        <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo')}</p>
+                        <p class="subtema-archivo-sub">${esc(a.descripcion || 'Material del equipo.')}</p>
+                    </div>
+                    <button type="button" class="subtema-archivo-cta abrir" onclick="event.stopPropagation();window._materia.ver('${a.id}')">Ver →</button>
+                </div>`).join("");
+        }
+
+        // Archivos premium para este tema
+        const archivosPremium = archivos.filter(a => a.tema_id === temaId && a.seccion === "premium");
+        if (archivosPremium.length > 0) {
+            htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#92400e;margin:16px 0 8px;padding-top:12px;border-top:1px solid #fde68a">⭐ Contenido Premium</p>`;
+            const premiumActivo = perfilActual && esPremiumActivo(perfilActual);
+            htmlArchivos += archivosPremium.map(a => {
+                if (premiumActivo) {
+                    return `<div class="subtema-archivo disponible" onclick="window._materia.ver('${a.id}')">
+                        <div class="subtema-archivo-icon">⭐</div>
+                        <div class="subtema-archivo-body">
+                            <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo premium')}</p>
+                            <p class="subtema-archivo-sub">${esc(a.descripcion || 'Contenido exclusivo.')}</p>
+                        </div>
+                        <button type="button" class="subtema-archivo-cta abrir" onclick="event.stopPropagation();window._materia.ver('${a.id}')">Ver →</button>
+                    </div>`;
+                }
+                return `<div class="subtema-archivo bloqueado">
+                    <div class="subtema-archivo-icon">🔒</div>
+                    <div class="subtema-archivo-body">
+                        <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo premium')}</p>
+                        <p class="subtema-archivo-sub">Requiere suscripción Premium. ${esc(a.descripcion || '')}</p>
+                    </div>
+                    <a class="subtema-archivo-cta bloqueado" href="../../index.html#suscripcion" onclick="event.stopPropagation()">Desbloquear</a>
+                </div>`;
+            }).join("");
+        }
+
+        if (!htmlArchivos) {
+            htmlArchivos = `<div class="subtema-archivo pendiente">
+                <div class="subtema-archivo-icon">🕒</div>
+                <div class="subtema-archivo-body">
+                    <p class="subtema-archivo-titulo">Material en preparacion</p>
+                    <p class="subtema-archivo-sub">Estamos preparando la teoria y los problemas de este subtema. Volve pronto.</p>
+                </div>
+                <button type="button" class="subtema-archivo-cta">Pronto</button>
+            </div>`;
+        }
+
+        cont.innerHTML = htmlArchivos;
+    }
+
+    // ---- Buscador de subtemas dentro de la materia ----
+    function initBuscador() {
+        const inp = document.getElementById("mat-buscador");
+        const caja = document.getElementById("mat-buscador-resultados");
+        if (!inp || !caja) return;
+        inp.addEventListener("input", function() {
+            const q = (inp.value || "").toLowerCase().trim();
+            if (q.length < 2) { caja.classList.remove("activo"); caja.innerHTML = ""; return; }
+            const hits = temasMateria.filter(t =>
+                (t.nombre||"").toLowerCase().includes(q) ||
+                (t.categoria||"").toLowerCase().includes(q)
+            ).slice(0, 10);
+            if (!hits.length) {
+                caja.innerHTML = '<div style="padding:12px 16px;color:#94a3b8;font-size:13px;text-align:center">Sin resultados</div>';
+                caja.classList.add("activo"); return;
+            }
+            caja.innerHTML = hits.map(t => `
+                <a class="mat-buscador-item" href="#" onclick="event.preventDefault();window._materia.abrirSubtema('${t.id}');document.getElementById('mat-buscador-resultados').classList.remove('activo')">
+                    <span style="font-size:11px;color:#2563eb;font-weight:700;background:#eff6ff;padding:2px 8px;border-radius:99px;white-space:nowrap">Nivel ${t.nivel}</span>
+                    <span style="flex:1;min-width:0">${esc(t.nombre)}</span>
+                    <span style="font-size:11px;color:#94a3b8">${esc(t.categoria)}</span>
+                </a>`).join("");
+            caja.classList.add("activo");
+        });
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest(".mat-search-wrap")) caja.classList.remove("activo");
+        });
+    }
+
+    // ============ INIT ============
+    (async function () {
         await cargar();
         renderNavbar();
         renderPublicos();
         renderPremium();
+        initBuscador();
         if (perfilActual) iniciarTimer();
-        // Escuchar cambios de auth
         MA()?.sb?.auth.onAuthStateChange(async (event) => {
             if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
                 await cargar();
                 renderNavbar();
+                renderPublicos();
                 renderPremium();
             }
         });
     })();
 
-    // ---- Módulos interactivos por materia ----
+    // ---- Modulos interactivos por materia ----
     if (MATERIA_ID === 'calculo') {
         const sf = document.createElement('script');
         sf.src = '../../funciones.js';
