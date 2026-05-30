@@ -497,7 +497,7 @@
         document.getElementById("mat-visor-overlay").style.display = "none";
     }
 
-    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema };
+    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema, toggleEditor, insertarImagenQuill, guardarContenido };
 
     // ============ MANIFIESTO DE PDF POR SUBTEMA ============
     // Mapeo nombre de subtema normalizado -> archivos disponibles
@@ -646,6 +646,134 @@
         },
     };
 
+    // ---- Quill editor (carga lazy) ----
+    let _quillLoaded = false;
+    function cargarQuill() {
+        if (_quillLoaded) return Promise.resolve();
+        return new Promise(resolve => {
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css';
+            document.head.appendChild(css);
+            const js = document.createElement('script');
+            js.src = 'https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js';
+            js.onload = () => { _quillLoaded = true; resolve(); };
+            document.head.appendChild(js);
+        });
+    }
+
+    let _quillInstance = null;
+    async function initQuillEditor(temaId, contenidoActual) {
+        await cargarQuill();
+        const editorWrap = document.getElementById('subtema-editor-wrap');
+        if (!editorWrap) return;
+
+        editorWrap.innerHTML = `
+            <div class="subtema-editor-toolbar">
+                <button type="button" class="subtema-editor-toggle" id="btn-toggle-editor" onclick="window._materia.toggleEditor()">✏️ Editar contenido</button>
+                <button type="button" class="subtema-editor-save" id="btn-save-editor" style="display:none" onclick="window._materia.guardarContenido('${temaId}')">💾 Guardar</button>
+                <span id="subtema-editor-status" style="font-size:12px;color:#94a3b8;margin-left:8px"></span>
+            </div>
+            <div id="subtema-quill-container" style="display:none">
+                <div id="subtema-quill-editor"></div>
+            </div>`;
+
+        // Inicializar Quill cuando se abra
+        editorWrap._temaId = temaId;
+        editorWrap._contenido = contenidoActual;
+        _quillInstance = null;
+    }
+
+    function toggleEditor() {
+        const container = document.getElementById('subtema-quill-container');
+        const btnToggle = document.getElementById('btn-toggle-editor');
+        const btnSave = document.getElementById('btn-save-editor');
+        if (!container) return;
+
+        const visible = container.style.display !== 'none';
+        if (visible) {
+            container.style.display = 'none';
+            btnToggle.textContent = '✏️ Editar contenido';
+            btnSave.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        btnToggle.textContent = '✕ Cerrar editor';
+        btnSave.style.display = 'inline-block';
+
+        if (!_quillInstance) {
+            _quillInstance = new Quill('#subtema-quill-editor', {
+                theme: 'snow',
+                placeholder: 'Escribí el contenido del tema acá...',
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ header: [2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ color: [] }, { background: [] }],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['blockquote', 'code-block'],
+                            ['link', 'image'],
+                            [{ align: [] }],
+                            ['clean']
+                        ],
+                        handlers: {
+                            image: function() { window._materia.insertarImagenQuill(); }
+                        }
+                    }
+                }
+            });
+            const wrap = document.getElementById('subtema-editor-wrap');
+            if (wrap?._contenido) {
+                _quillInstance.root.innerHTML = wrap._contenido;
+            }
+        }
+    }
+
+    function insertarImagenQuill() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+            const status = document.getElementById('subtema-editor-status');
+            if (status) status.textContent = '⏳ Subiendo imagen...';
+            const wrap = document.getElementById('subtema-editor-wrap');
+            const temaId = wrap?._temaId;
+            try {
+                const result = await MA().sbSubirImagenTema(file, temaId);
+                if (result.error) throw result.error;
+                const range = _quillInstance.getSelection(true);
+                _quillInstance.insertEmbed(range.index, 'image', result.url);
+                _quillInstance.setSelection(range.index + 1);
+                if (status) status.textContent = '✅ Imagen insertada';
+                setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+            } catch (err) {
+                if (status) status.textContent = '❌ Error: ' + (err.message || err);
+            }
+        };
+        input.click();
+    }
+
+    async function guardarContenido(temaId) {
+        if (!_quillInstance) return;
+        const status = document.getElementById('subtema-editor-status');
+        if (status) status.textContent = '⏳ Guardando...';
+        const html = _quillInstance.root.innerHTML;
+        const result = await MA().sbGuardarContenidoTema(temaId, html);
+        if (result.error) {
+            if (status) status.textContent = '❌ Error: ' + (result.error.message || result.error);
+        } else {
+            if (status) status.textContent = '✅ Guardado';
+            // Actualizar la vista de lectura
+            const viewer = document.getElementById('subtema-contenido-viewer');
+            if (viewer) { viewer.innerHTML = html; viewer.style.display = html.trim() ? 'block' : 'none'; }
+            setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+        }
+    }
+
     async function abrirSubtema(temaId, nombre){
         const ov = _asegurarOverlay();
         const tema = temasMateria.find(t => t.id === temaId);
@@ -654,43 +782,60 @@
         const nivel = tema?.nivel ? `Nivel ${tema.nivel}` : "";
         const key = _norm(titulo);
         const m = PDF_MANIFEST[key];
-        const contenido = SUBTEMA_CONTENIDO[key];
-
-        // Construir sección explicativa
-        let explicacionHtml = "";
-        if (contenido) {
-            explicacionHtml = `
-                <div class="subtema-explicacion">
-                    <p class="subtema-intro">${esc(contenido.intro)}</p>
-                    <div class="subtema-puntos-clave">
-                        <h4>📌 Puntos clave</h4>
-                        <ul>${contenido.puntos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
-                    </div>
-                    ${contenido.tip ? `<div class="subtema-tip"><span class="subtema-tip-icon">💡</span><span>${esc(contenido.tip)}</span></div>` : ""}
-                </div>`;
-        }
+        const esAdmin = perfilActual?.rol === 'admin';
 
         ov.innerHTML = `<div class="subtema-panel" onclick="event.stopPropagation()">
             <button type="button" class="subtema-close" aria-label="Cerrar" onclick="document.getElementById('subtema-overlay').classList.remove('activo')">✕</button>
             <p class="subtema-eyebrow">${esc(NOMBRE)} · ${esc(cat)} ${nivel ? '· '+nivel : ''}</p>
             <h2 class="subtema-titulo">${esc(titulo)}</h2>
-            <p class="subtema-desc">${esc(m?.d || "Este subtema todavia no tiene material publicado. Cuando este disponible, vas a encontrar aca la teoria, los problemas y las soluciones desarrolladas.")}</p>
-            ${explicacionHtml}
+            <div id="subtema-contenido-viewer" class="subtema-contenido-viewer" style="display:none"></div>
+            <div id="subtema-contenido-fallback"></div>
+            ${esAdmin ? '<div id="subtema-editor-wrap" class="subtema-editor-wrap"></div>' : ''}
             <p class="subtema-archivos-titulo">📁 Material disponible</p>
             <div class="subtema-archivos" id="subtema-archivos-cont"><p style="padding:16px;color:#94a3b8;text-align:center">Cargando…</p></div>
         </div>`;
         ov.classList.add("activo");
 
+        // Cargar contenido de la DB
+        const contenidoDB = await MA()?.sbObtenerContenidoTema?.(temaId);
+        const viewer = document.getElementById('subtema-contenido-viewer');
+        const fallback = document.getElementById('subtema-contenido-fallback');
+
+        if (contenidoDB?.contenido_html?.trim()) {
+            // Mostrar contenido escrito por el admin
+            if (viewer) { viewer.innerHTML = contenidoDB.contenido_html; viewer.style.display = 'block'; }
+        } else {
+            // Fallback: mostrar contenido hardcoded si existe
+            const contenido = SUBTEMA_CONTENIDO[key];
+            if (contenido && fallback) {
+                fallback.innerHTML = `
+                    <div class="subtema-explicacion">
+                        <p class="subtema-intro">${esc(contenido.intro)}</p>
+                        <div class="subtema-puntos-clave">
+                            <h4>📌 Puntos clave</h4>
+                            <ul>${contenido.puntos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+                        </div>
+                        ${contenido.tip ? `<div class="subtema-tip"><span class="subtema-tip-icon">💡</span><span>${esc(contenido.tip)}</span></div>` : ""}
+                    </div>`;
+            } else if (m && fallback) {
+                fallback.innerHTML = `<p class="subtema-desc">${esc(m.d)}</p>`;
+            }
+        }
+
+        // Editor para admin
+        if (esAdmin) {
+            initQuillEditor(temaId, contenidoDB?.contenido_html || '');
+        }
+
+        // Archivos
         const plan = await obtenerPlan();
         const cont = document.getElementById("subtema-archivos-cont");
 
-        // Archivos del manifiesto (PDFs estáticos)
         let htmlArchivos = "";
         if (m) {
             htmlArchivos += _bloque(m.b, "apunte", plan) + _bloque(m.b, "problemas", plan) + _bloque(m.b, "soluciones", plan);
         }
 
-        // Archivos cargados en Supabase para este tema (públicos)
         const archivosPublicos = archivos.filter(a => a.tema_id === temaId && a.seccion !== "premium");
         if (archivosPublicos.length > 0) {
             htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#334155;margin:16px 0 8px;padding-top:12px;border-top:1px solid #e2e8f0">📂 Contenido cargado</p>`;
@@ -705,7 +850,6 @@
                 </div>`).join("");
         }
 
-        // Archivos premium para este tema
         const archivosPremium = archivos.filter(a => a.tema_id === temaId && a.seccion === "premium");
         if (archivosPremium.length > 0) {
             htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#92400e;margin:16px 0 8px;padding-top:12px;border-top:1px solid #fde68a">⭐ Contenido Premium</p>`;

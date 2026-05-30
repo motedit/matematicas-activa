@@ -243,6 +243,35 @@ async function sbListarTemas(materia) {
     return data || [];
 }
 
+// ===================== CONTENIDO DE TEMAS =======================
+async function sbObtenerContenidoTema(temaId) {
+    const { data, error } = await sb.from("temas_contenido")
+        .select("*").eq("tema_id", temaId).maybeSingle();
+    if (error) { console.warn("Error contenido tema:", error); return null; }
+    return data;
+}
+async function sbGuardarContenidoTema(temaId, contenidoHtml) {
+    const u = await sbUsuario(); if (!u) return { error: "Sin sesión" };
+    // Upsert: insertar o actualizar
+    const { data, error } = await sb.from("temas_contenido")
+        .upsert({
+            tema_id: temaId,
+            contenido_html: contenidoHtml,
+            actualizado_en: new Date().toISOString(),
+            actualizado_por: u.id
+        }, { onConflict: "tema_id" })
+        .select().single();
+    return { data, error };
+}
+async function sbSubirImagenTema(file, temaId) {
+    const ext = file.name.split('.').pop();
+    const path = `temas/${temaId}/${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from("archivos").upload(path, file, { contentType: file.type, upsert: false });
+    if (error) return { error };
+    const { data: urlData } = sb.storage.from("archivos").getPublicUrl(path);
+    return { url: urlData?.publicUrl, path };
+}
+
 window.MA_SUPABASE = {
     sb,
     sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
@@ -256,4 +285,5 @@ window.MA_SUPABASE = {
     sbSumarPuntos, sbRegistrarVisitaDiaria, sbRanking,
     sbListarComentarios, sbCrearComentario, sbBorrarComentario,
     sbEjercicioDeHoy, sbResponderEjercicio, sbYaRespondioHoy, sbCrearEjercicio,
+    sbObtenerContenidoTema, sbGuardarContenidoTema, sbSubirImagenTema,
 };
