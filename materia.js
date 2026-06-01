@@ -519,7 +519,7 @@
         document.getElementById("mat-visor-overlay").style.display = "none";
     }
 
-    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema, toggleEditor, insertarImagenQuill, guardarContenido, filtrarEjercicios, responderEjercicio, abrirFormEjercicio, editarEjercicio, eliminarEjercicio, _toggleOpcionesForm };
+    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema, toggleEditor, insertarImagenQuill, guardarContenido, filtrarEjercicios, responderEjercicio, abrirFormEjercicio, editarEjercicio, eliminarEjercicio, _toggleOpcionesForm, ejecutarBusqueda };
 
     // ============ MANIFIESTO DE PDF POR SUBTEMA ============
     // Mapeo nombre de subtema normalizado -> archivos disponibles
@@ -912,33 +912,141 @@
         cont.innerHTML = htmlArchivos;
     }
 
-    // ---- Buscador de subtemas dentro de la materia ----
+    // ---- Buscador Mejorado ----
+    let _busqTimer = null;
+    const BUSQ_HISTORIAL_KEY = 'ma_busquedas_' + MATERIA_ID;
+
+    function _getBusqHistorial() {
+        try { return JSON.parse(localStorage.getItem(BUSQ_HISTORIAL_KEY) || '[]'); } catch(e) { return []; }
+    }
+    function _addBusqHistorial(q) {
+        let h = _getBusqHistorial().filter(x => x !== q);
+        h.unshift(q);
+        if (h.length > 8) h = h.slice(0, 8);
+        try { localStorage.setItem(BUSQ_HISTORIAL_KEY, JSON.stringify(h)); } catch(e) {}
+    }
+
     function initBuscador() {
         const inp = document.getElementById("mat-buscador");
         const caja = document.getElementById("mat-buscador-resultados");
         if (!inp || !caja) return;
+
+        inp.addEventListener("focus", function() {
+            if (!inp.value.trim()) mostrarHistorial(caja);
+        });
         inp.addEventListener("input", function() {
-            const q = (inp.value || "").toLowerCase().trim();
+            clearTimeout(_busqTimer);
+            const q = (inp.value || "").trim();
+            if (!q) { mostrarHistorial(caja); return; }
             if (q.length < 2) { caja.classList.remove("activo"); caja.innerHTML = ""; return; }
-            const hits = temasMateria.filter(t =>
-                (t.nombre||"").toLowerCase().includes(q) ||
-                (t.categoria||"").toLowerCase().includes(q)
-            ).slice(0, 10);
-            if (!hits.length) {
-                caja.innerHTML = '<div style="padding:12px 16px;color:#94a3b8;font-size:13px;text-align:center">Sin resultados</div>';
-                caja.classList.add("activo"); return;
-            }
-            caja.innerHTML = hits.map(t => `
-                <a class="mat-buscador-item" href="#" onclick="event.preventDefault();window._materia.abrirSubtema('${t.id}');document.getElementById('mat-buscador-resultados').classList.remove('activo')">
-                    <span style="font-size:11px;color:#2563eb;font-weight:700;background:#eff6ff;padding:2px 8px;border-radius:99px;white-space:nowrap">Nivel ${t.nivel}</span>
-                    <span style="flex:1;min-width:0">${esc(t.nombre)}</span>
-                    <span style="font-size:11px;color:#94a3b8">${esc(t.categoria)}</span>
-                </a>`).join("");
-            caja.classList.add("activo");
+            _busqTimer = setTimeout(() => ejecutarBusqueda(q, caja), 300);
         });
         document.addEventListener("click", function(e) {
             if (!e.target.closest(".mat-search-wrap")) caja.classList.remove("activo");
         });
+    }
+
+    function mostrarHistorial(caja) {
+        const h = _getBusqHistorial();
+        if (!h.length) { caja.classList.remove("activo"); return; }
+        caja.innerHTML = `<div class="busq-seccion-titulo">🕒 Búsquedas recientes</div>` +
+            h.map(q => `<a class="mat-buscador-item busq-historial" href="#" onclick="event.preventDefault();document.getElementById('mat-buscador').value='${esc(q)}';window._materia.ejecutarBusqueda('${esc(q)}',document.getElementById('mat-buscador-resultados'))">
+                <span class="busq-hist-icon">↩</span><span style="flex:1">${esc(q)}</span>
+            </a>`).join("") +
+            `<a class="mat-buscador-item busq-limpiar" href="#" onclick="event.preventDefault();localStorage.removeItem('${BUSQ_HISTORIAL_KEY}');document.getElementById('mat-buscador-resultados').classList.remove('activo')">
+                <span style="color:#94a3b8;font-size:12px">Limpiar historial</span>
+            </a>`;
+        caja.classList.add("activo");
+    }
+
+    function ejecutarBusqueda(q, caja) {
+        if (!caja) caja = document.getElementById("mat-buscador-resultados");
+        const ql = q.toLowerCase();
+        _addBusqHistorial(q);
+
+        // Buscar en temas
+        const hitsTemas = temasMateria.filter(t =>
+            (t.nombre||"").toLowerCase().includes(ql) ||
+            (t.categoria||"").toLowerCase().includes(ql)
+        ).slice(0, 6);
+
+        // Buscar en archivos (PDFs, videos, etc)
+        const hitsArchivos = archivos.filter(a =>
+            (a.titulo||"").toLowerCase().includes(ql) ||
+            (a.descripcion||"").toLowerCase().includes(ql)
+        ).slice(0, 4);
+
+        // Buscar en ejercicios
+        const hitsEjercicios = ejerciciosMateria.filter(e =>
+            (e.titulo||"").toLowerCase().includes(ql) ||
+            (e.enunciado||"").toLowerCase().includes(ql)
+        ).slice(0, 4);
+
+        // Buscar en contenido hardcoded
+        const hitsPDF = Object.entries(PDF_MANIFEST).filter(([key]) => key.includes(ql)).slice(0, 3);
+
+        const totalHits = hitsTemas.length + hitsArchivos.length + hitsEjercicios.length + hitsPDF.length;
+
+        if (!totalHits) {
+            // Sugerencias: mostrar categorías similares
+            const categorias = [...new Set(temasMateria.map(t => t.categoria))];
+            const sugerencias = categorias.filter(c => c.toLowerCase().includes(ql.substring(0, 3))).slice(0, 3);
+            caja.innerHTML = `<div class="busq-sin-resultado">
+                <span style="font-size:24px">🔍</span>
+                <p>Sin resultados para "${esc(q)}"</p>
+                ${sugerencias.length ? `<p style="font-size:12px;color:#64748b;margin-top:4px">¿Quisiste decir: ${sugerencias.map(s => `<a href="#" class="busq-sugerencia" onclick="event.preventDefault();document.getElementById('mat-buscador').value='${esc(s)}';window._materia.ejecutarBusqueda('${esc(s)}')">${esc(s)}</a>`).join(", ")}?</p>` : ''}
+            </div>`;
+            caja.classList.add("activo");
+            return;
+        }
+
+        let html = '';
+        if (hitsTemas.length) {
+            html += `<div class="busq-seccion-titulo">📚 Temas</div>`;
+            html += hitsTemas.map(t => `
+                <a class="mat-buscador-item" href="#" onclick="event.preventDefault();window._materia.abrirSubtema('${t.id}');document.getElementById('mat-buscador-resultados').classList.remove('activo')">
+                    <span class="busq-badge tema">Nivel ${t.nivel}</span>
+                    <span style="flex:1;min-width:0">${_resaltar(t.nombre, ql)}</span>
+                    <span style="font-size:11px;color:#94a3b8">${esc(t.categoria)}</span>
+                </a>`).join("");
+        }
+        if (hitsArchivos.length) {
+            html += `<div class="busq-seccion-titulo">📁 Archivos</div>`;
+            html += hitsArchivos.map(a => `
+                <a class="mat-buscador-item" href="#" onclick="event.preventDefault();window._materia.ver('${a.id}');document.getElementById('mat-buscador-resultados').classList.remove('activo')">
+                    <span class="busq-badge ${a.seccion}">${etiquetaSeccion(a.seccion)}</span>
+                    <span style="flex:1;min-width:0">${_resaltar(a.titulo, ql)}</span>
+                </a>`).join("");
+        }
+        if (hitsEjercicios.length) {
+            html += `<div class="busq-seccion-titulo">✏️ Ejercicios</div>`;
+            html += hitsEjercicios.map(e => `
+                <a class="mat-buscador-item" href="#" onclick="event.preventDefault();document.getElementById('ej-card-${e.id}')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('mat-buscador-resultados').classList.remove('activo')">
+                    <span class="busq-badge ej">${e.dificultad}</span>
+                    <span style="flex:1;min-width:0">${_resaltar(e.titulo, ql)}</span>
+                </a>`).join("");
+        }
+        if (hitsPDF.length) {
+            html += `<div class="busq-seccion-titulo">📄 PDFs</div>`;
+            html += hitsPDF.map(([key, m]) => `
+                <a class="mat-buscador-item" href="#" onclick="event.preventDefault();window.open('../../Apunte-${m.b}.pdf','_blank');document.getElementById('mat-buscador-resultados').classList.remove('activo')">
+                    <span class="busq-badge pdf">PDF</span>
+                    <span style="flex:1;min-width:0">${_resaltar(key, ql)}</span>
+                </a>`).join("");
+        }
+
+        caja.innerHTML = html;
+        caja.classList.add("activo");
+    }
+
+    function _resaltar(texto, busqueda) {
+        if (!busqueda) return esc(texto);
+        const idx = (texto||"").toLowerCase().indexOf(busqueda);
+        if (idx === -1) return esc(texto);
+        const antes = texto.substring(0, idx);
+        const match = texto.substring(idx, idx + busqueda.length);
+        const despues = texto.substring(idx + busqueda.length);
+        return esc(antes) + '<mark class="busq-mark">' + esc(match) + '</mark>' + esc(despues);
     }
 
     // ============ EJERCICIOS INTERACTIVOS ============
