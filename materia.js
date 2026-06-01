@@ -422,6 +422,7 @@
                     </div>
                     <span id="mat-nav-puntos" class="mat-nav-puntos" style="display:none"></span>
                     <div id="mat-navbar-sesion"></div>
+                    <button type="button" id="dark-mode-toggle" class="dark-toggle" onclick="window.toggleDarkMode()" title="Modo oscuro">${document.body.classList.contains('dark') ? '☀️' : '🌙'}</button>
                 </div>
             </header>
             <main class="mat-main">

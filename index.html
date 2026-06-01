@@ -88,6 +88,7 @@
                 <li id="nav-salir-link" style="display:none"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
                 <li><a href="#" onclick="abrirAuth(event)" class="nav-cta-btn"><span id="nav-cuenta-label">Ingresar</span></a></li>
                 <li><span id="nav-puntos" class="nav-puntos" style="display:none" title="Puntos del Ranking"></span></li>
+                <li><button type="button" id="dark-mode-toggle" class="dark-toggle" onclick="window.toggleDarkMode()" title="Modo oscuro">🌙</button></li>
             </ul>
         </div>
     </nav>
@@ -608,8 +609,27 @@
         </a>
     </div>
 
+    <script>
+    // Dark mode: aplicar antes de render para evitar flash
+    (function(){
+        const saved = localStorage.getItem('ma_dark_mode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'true' || (saved === null && prefersDark)) document.body.classList.add('dark');
+        window.toggleDarkMode = function() {
+            const isDark = document.body.classList.toggle('dark');
+            localStorage.setItem('ma_dark_mode', isDark);
+            const btn = document.getElementById('dark-mode-toggle');
+            if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+        };
+        // Sync button icon on load
+        window.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('dark-mode-toggle');
+            if (btn) btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+        });
+    })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=12"></script>
-    <script src="scripts.js?v=12"></script>
+    <script src="supabase-config.js?v=13"></script>
+    <script src="scripts.js?v=13"></script>
 </body>
 </html>

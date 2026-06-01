@@ -12,9 +12,32 @@
     --font:'Poppins',system-ui,sans-serif;--font-body:'Inter',system-ui,sans-serif;
     --navbar-h:68px;
 }
+/* Dark mode */
+body.dark{
+    --navy:#0f172a;--navy2:#1e293b;
+    --white:#0f172a;--gray50:#0f172a;--gray100:#1e293b;--gray200:#334155;
+    --gray400:#94a3b8;--gray600:#cbd5e1;--gray800:#f1f5f9;
+    --shadow:0 4px 24px rgba(0,0,0,.30);--shadow-lg:0 12px 48px rgba(0,0,0,.40);
+    color-scheme:dark;
+}
+body.dark .section,body.dark .premium-section{background:var(--gray50)}
+body.dark .section-alt{background:var(--gray100)}
+body.dark .card,body.dark .qp-card,body.dark .mat-card,body.dark .ej-card,body.dark .diag-card,body.dark .diag-resultado{background:var(--gray100);border-color:var(--gray200);color:var(--gray800)}
+body.dark input,body.dark select,body.dark textarea{background:var(--gray100);border-color:var(--gray200);color:var(--gray800)}
+body.dark .hero{background:linear-gradient(135deg,#0c1222 0%,#111827 50%,#0c1a3a 100%)}
+body.dark .navbar{background:rgba(15,23,42,.95);border-color:#334155}
+body.dark .mat-estado-inactiva,body.dark .mat-premium-banner{background:var(--gray100);border-color:var(--gray200)}
+body.dark a{color:inherit}
+body.dark .footer{background:#080e1c}
+body.dark .perfil-section{background:var(--gray100)}
+body.dark .modal-content,body.dark .auth-form{background:var(--gray100);color:var(--gray800)}
+body.dark .toast{background:var(--gray100);color:var(--gray800);border-color:var(--gray200)}
+.dark-toggle{background:none;border:1px solid rgba(255,255,255,.2);color:white;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all .2s;line-height:1}
+.dark-toggle:hover{background:rgba(255,255,255,.15)}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;scroll-padding-top:var(--navbar-h);}
-body{font-family:var(--font-body);background:var(--gray50);color:var(--gray800);min-height:100vh;overflow-x:hidden;}
+body{font-family:var(--font-body);background:var(--gray50);color:var(--gray800);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;}
 img{display:block;max-width:100%;}
 a{text-decoration:none;color:inherit;}
 ul{list-style:none;}
