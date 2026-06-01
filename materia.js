@@ -527,20 +527,24 @@
     function _norm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim(); }
     const PDF_RUTA = "../../"; // los PDF estan en la raiz del sitio
     const PDF_MANIFEST = {
-        "conjuntos numericos":                  {b:"Conjuntos-Numericos",   d:"Repaso de los conjuntos numericos N, Z, Q, R y C, con explicacion intuitiva y formal."},
-        "suma resta multiplicacion y division": {b:"Operaciones-Basicas",   d:"Las cuatro operaciones basicas y sus propiedades, con ejemplos y demostraciones."},
-        "operaciones basicas":                  {b:"Operaciones-Basicas",   d:"Las cuatro operaciones basicas y sus propiedades, con ejemplos y demostraciones."},
-        "fracciones":                           {b:"Fracciones",            d:"Propiedades, operaciones y representacion de las fracciones, con graficos."},
-        "decimales":                            {b:"Decimales",             d:"Operaciones y representacion de los numeros decimales, con grillas y la recta numerica."},
-        "numeros decimales":                    {b:"Decimales",             d:"Operaciones y representacion de los numeros decimales, con grillas y la recta numerica."},
-        "porcentajes":                          {b:"Porcentajes",           d:"Tipos de casos, formula, aumentos y descuentos, graficos de torta."},
-        "potencias y raices":                   {b:"Potencias-y-Raices",    d:"Potenciacion, radicacion y sus propiedades, con visualizaciones geometricas."},
-        "numeros naturales":                    {b:"Numeros-Naturales",     d:"El conjunto N, valor posicional, operaciones, pares e impares, multiplos y divisores."},
-        "numeros enteros":                      {b:"Numeros-Enteros",       d:"El conjunto Z, opuestos, valor absoluto, orden y la regla de los signos."},
-        "divisibilidad":                        {b:"Divisibilidad",         d:"Multiplos, divisores y los criterios de divisibilidad, con demostraciones."},
-        "numeros primos":                       {b:"Numeros-Primos",        d:"Primos y compuestos, criba de Eratostenes, factorizacion en primos y aplicaciones."},
-        "mcd y mcm":                            {b:"MCD-y-MCM",             d:"Maximo comun divisor y minimo comun multiplo, con metodos de calculo y el algoritmo de Euclides."},
-        "proporcionalidad":                     {b:"Proporcionalidad",      d:"Razones, proporciones, magnitudes directa e inversamente proporcionales."},
+        // Nuevos nombres del mapa curricular
+        "divisibilidad y criterios":              {b:"Divisibilidad",         d:"Múltiplos, divisores y los criterios de divisibilidad."},
+        "mcm y mcd":                              {b:"MCD-y-MCM",             d:"Máximo común divisor y mínimo común múltiplo, con métodos de cálculo."},
+        "descomposicion factorial":               {b:"Numeros-Primos",        d:"Descomposición en factores primos y criba de Eratóstenes."},
+        "operaciones con enteros":                {b:"Numeros-Enteros",       d:"El conjunto Z, opuestos, valor absoluto, orden y regla de signos."},
+        "regla de signos":                        {b:"Numeros-Enteros",       d:"Regla de los signos para multiplicar y dividir enteros."},
+        "fracciones":                             {b:"Fracciones",            d:"Propiedades, operaciones y representación de fracciones."},
+        "decimales":                              {b:"Decimales",             d:"Operaciones y representación de números decimales."},
+        "porcentajes":                            {b:"Porcentajes",           d:"Tipos de casos, fórmula, aumentos y descuentos."},
+        "proporcionalidad directa e inversa":     {b:"Proporcionalidad",      d:"Razones, proporciones, magnitudes directa e inversamente proporcionales."},
+        "razones y proporciones":                 {b:"Proporcionalidad",      d:"Razones y proporciones con ejemplos prácticos."},
+        "conjuntos numericos":                    {b:"Conjuntos-Numericos",   d:"Repaso de los conjuntos numéricos N, Z, Q, R y C."},
+        "potenciacion y radicacion":              {b:"Potencias-y-Raices",    d:"Potenciación, radicación y sus propiedades."},
+        "numeros irracionales":                   {b:"Conjuntos-Numericos",   d:"Números irracionales, √2, π y densidad de Q."},
+        "numeros primos y criba de eratostenes":  {b:"Numeros-Primos",        d:"Primos y compuestos, criba de Eratóstenes, factorización."},
+        // Aliases para compatibilidad
+        "numeros naturales":                      {b:"Numeros-Naturales",     d:"El conjunto N, operaciones, pares e impares, múltiplos y divisores."},
+        "numeros enteros":                        {b:"Numeros-Enteros",       d:"El conjunto Z, opuestos, valor absoluto, orden y regla de signos."},
     };
 
     const _subtemaPlanesCache = { plan: null };
@@ -595,22 +599,32 @@
         return ov;
     }
 
-    // Contenido explicativo breve por subtema
+    // Contenido explicativo breve por subtema (keys = _norm del nombre del tema)
     const SUBTEMA_CONTENIDO = {
-        "conjuntos numericos": {
-            intro: "Los conjuntos numéricos organizan todos los tipos de números que usamos en matemática: naturales, enteros, racionales, reales y complejos.",
-            puntos: ["Naturales (ℕ): 0, 1, 2, 3…","Enteros (ℤ): …−2, −1, 0, 1, 2…","Racionales (ℚ): fracciones a/b","Reales (ℝ): todos los números de la recta","Complejos (ℂ): incluyen la unidad imaginaria i"],
-            tip: "Cada conjunto está contenido en el siguiente: ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ"
+        "divisibilidad y criterios": {
+            intro: "La divisibilidad estudia cuándo un número se puede dividir exactamente por otro, sin resto.",
+            puntos: ["Criterios de divisibilidad: por 2, 3, 4, 5, 6, 9, 10, 11","Múltiplos y divisores","Relación con la factorización en primos","Aplicaciones: simplificación de fracciones"],
+            tip: "Un número es divisible por 3 si la suma de sus cifras es múltiplo de 3."
         },
-        "suma resta multiplicacion y division": {
-            intro: "Las cuatro operaciones fundamentales son la base de toda la aritmética y se aplican en cada rama de la matemática.",
-            puntos: ["Suma y resta: operaciones inversas entre sí","Multiplicación: suma abreviada","División: operación inversa de la multiplicación","Propiedades: conmutativa, asociativa, distributiva"],
-            tip: "La división por cero no está definida — es uno de los errores más comunes."
+        "mcm y mcd": {
+            intro: "El MCD (máximo común divisor) y el MCM (mínimo común múltiplo) son herramientas esenciales para trabajar con fracciones.",
+            puntos: ["MCD: el mayor número que divide a ambos","MCM: el menor múltiplo común a ambos","Método de factorización en primos","Algoritmo de Euclides para el MCD"],
+            tip: "Relación clave: MCD(a,b) × MCM(a,b) = a × b"
         },
-        "operaciones basicas": {
-            intro: "Las cuatro operaciones fundamentales son la base de toda la aritmética y se aplican en cada rama de la matemática.",
-            puntos: ["Suma y resta: operaciones inversas entre sí","Multiplicación: suma abreviada","División: operación inversa de la multiplicación","Propiedades: conmutativa, asociativa, distributiva"],
-            tip: "La división por cero no está definida — es uno de los errores más comunes."
+        "descomposicion factorial": {
+            intro: "Descomponer un número en factores primos permite encontrar todos sus divisores y trabajar con MCD y MCM.",
+            puntos: ["Número primo: tiene exactamente 2 divisores","Criba de Eratóstenes: método para encontrar primos","Teorema fundamental: la factorización es única","Aplicaciones: criptografía, MCD y MCM"],
+            tip: "El 1 no es primo ni compuesto. El 2 es el único primo par."
+        },
+        "operaciones con enteros": {
+            intro: "Los números enteros (ℤ) amplían los naturales incluyendo los negativos y el cero.",
+            puntos: ["Opuesto de un número: a y −a","Valor absoluto: distancia al cero en la recta","Suma y resta de enteros","Multiplicación y división con signos"],
+            tip: "La regla de los signos: (+)(+) = + , (−)(−) = + , (+)(−) = − , (−)(+) = −"
+        },
+        "regla de signos": {
+            intro: "La regla de los signos permite determinar el signo del resultado al multiplicar o dividir enteros.",
+            puntos: ["Signos iguales → resultado positivo","Signos diferentes → resultado negativo","Se aplica también a fracciones y decimales","Es fundamental para resolver ecuaciones"],
+            tip: "(+)(+) = + , (−)(−) = + , (+)(−) = − , (−)(+) = −"
         },
         "fracciones": {
             intro: "Una fracción representa una parte de un todo. Se escribe como a/b donde a es el numerador y b el denominador.",
@@ -619,53 +633,33 @@
         },
         "decimales": {
             intro: "Los números decimales son otra forma de representar fracciones, usando el sistema posicional con la coma decimal.",
-            puntos: ["Decimales exactos: tienen una cantidad finita de cifras","Decimales periódicos: se repite un patrón infinitamente","Conversión: de fracción a decimal y viceversa","Operaciones: mismas reglas que con enteros, cuidando la coma"],
-            tip: "Todo decimal periódico se puede escribir como fracción — es un número racional."
-        },
-        "numeros decimales": {
-            intro: "Los números decimales son otra forma de representar fracciones, usando el sistema posicional con la coma decimal.",
-            puntos: ["Decimales exactos: tienen una cantidad finita de cifras","Decimales periódicos: se repite un patrón infinitamente","Conversión: de fracción a decimal y viceversa","Operaciones: mismas reglas que con enteros, cuidando la coma"],
+            puntos: ["Decimales exactos: cantidad finita de cifras","Decimales periódicos: se repite un patrón","Conversión: de fracción a decimal y viceversa","Operaciones: mismas reglas, cuidando la coma"],
             tip: "Todo decimal periódico se puede escribir como fracción — es un número racional."
         },
         "porcentajes": {
-            intro: "Un porcentaje expresa una proporción como una fracción de 100. Es fundamental en finanzas, estadística y la vida diaria.",
-            puntos: ["Fórmula básica: porcentaje = (parte / total) × 100","Aumentos y descuentos: aplicar porcentajes sobre un valor","Porcentaje de un porcentaje: composición de tasas","Gráficos de torta: representación visual de porcentajes"],
+            intro: "Un porcentaje expresa una proporción como una fracción de 100.",
+            puntos: ["Fórmula: porcentaje = (parte / total) × 100","Aumentos y descuentos","Porcentaje de un porcentaje","Gráficos de torta"],
             tip: "Un aumento del 50% seguido de un descuento del 50% NO te deja en el valor original."
         },
-        "potencias y raices": {
-            intro: "La potenciación es una multiplicación repetida y la radicación es su operación inversa.",
-            puntos: ["Potencia: aⁿ = a × a × … × a (n veces)","Propiedades: producto, cociente y potencia de potencia","Raíz n-ésima: el número que elevado a n da el radicando","Racionalización: eliminar raíces del denominador"],
-            tip: "Toda raíz se puede escribir como potencia con exponente fraccionario: ⁿ√a = a^(1/n)."
-        },
-        "numeros naturales": {
-            intro: "Los números naturales (ℕ) son los primeros que aprendemos: sirven para contar y ordenar.",
-            puntos: ["Valor posicional: cada cifra vale según su posición","Pares e impares: divisibles o no por 2","Múltiplos y divisores: relaciones entre números","Operaciones fundamentales dentro de ℕ"],
-            tip: "ℕ es cerrado para la suma y la multiplicación, pero no para la resta ni la división."
-        },
-        "numeros enteros": {
-            intro: "Los números enteros (ℤ) amplían los naturales incluyendo los negativos y el cero.",
-            puntos: ["Opuesto de un número: a y −a","Valor absoluto: distancia al cero en la recta","Regla de los signos para multiplicar y dividir","Orden: todo negativo es menor que todo positivo"],
-            tip: "La regla de los signos: (+)(+) = + , (−)(−) = + , (+)(−) = − , (−)(+) = −"
-        },
-        "divisibilidad": {
-            intro: "La divisibilidad estudia cuándo un número se puede dividir exactamente por otro, sin resto.",
-            puntos: ["Criterios de divisibilidad: por 2, 3, 4, 5, 6, 9, 10, 11","Múltiplos y divisores","Relación con la factorización en primos","Aplicaciones: simplificación de fracciones"],
-            tip: "Un número es divisible por 3 si la suma de sus cifras es múltiplo de 3."
-        },
-        "numeros primos": {
-            intro: "Un número primo tiene exactamente dos divisores: 1 y sí mismo. Son los ladrillos de los números naturales.",
-            puntos: ["Criba de Eratóstenes: método para encontrar primos","Factorización en primos: descomponer un número","Teorema fundamental de la aritmética: la factorización es única","Aplicaciones: criptografía, MCD y MCM"],
-            tip: "El 1 no es primo ni compuesto. El 2 es el único primo par."
-        },
-        "mcd y mcm": {
-            intro: "El MCD (máximo común divisor) y el MCM (mínimo común múltiplo) son herramientas esenciales para trabajar con fracciones.",
-            puntos: ["MCD: el mayor número que divide a ambos","MCM: el menor múltiplo común a ambos","Método de factorización en primos","Algoritmo de Euclides para el MCD"],
-            tip: "Relación clave: MCD(a,b) × MCM(a,b) = a × b"
-        },
-        "proporcionalidad": {
+        "proporcionalidad directa e inversa": {
             intro: "La proporcionalidad estudia la relación entre magnitudes que crecen o decrecen de manera constante.",
-            puntos: ["Razón y proporción: conceptos básicos","Directamente proporcional: si una crece, la otra también","Inversamente proporcional: si una crece, la otra decrece","Regla de tres: simple y compuesta"],
+            puntos: ["Directamente proporcional: si una crece, la otra también","Inversamente proporcional: si una crece, la otra decrece","Regla de tres: simple y compuesta","Constante de proporcionalidad"],
             tip: "En una proporción a/b = c/d, se cumple que a×d = b×c (productos cruzados)."
+        },
+        "conjuntos numericos": {
+            intro: "Los conjuntos numéricos organizan todos los tipos de números: naturales, enteros, racionales, reales y complejos.",
+            puntos: ["Naturales (ℕ): 0, 1, 2, 3…","Enteros (ℤ): …−2, −1, 0, 1, 2…","Racionales (ℚ): fracciones a/b","Reales (ℝ): todos los de la recta","Complejos (ℂ): incluyen i"],
+            tip: "Cada conjunto está contenido en el siguiente: ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ"
+        },
+        "potenciacion y radicacion": {
+            intro: "La potenciación es una multiplicación repetida y la radicación es su operación inversa.",
+            puntos: ["Potencia: aⁿ = a × a × … × a (n veces)","Propiedades: producto, cociente, potencia de potencia","Raíz n-ésima: el número que elevado a n da el radicando","Racionalización del denominador"],
+            tip: "Toda raíz se puede escribir como potencia fraccionaria: ⁿ√a = a^(1/n)."
+        },
+        "jerarquia de operaciones": {
+            intro: "La jerarquía de operaciones establece el orden en que se resuelven las expresiones matemáticas.",
+            puntos: ["1° Paréntesis","2° Potencias y raíces","3° Multiplicación y división","4° Suma y resta"],
+            tip: "Regla mnemotécnica: Pa-Po-Mu-Di-Su-Re (Paréntesis, Potencias, Multiplicación, División, Suma, Resta)."
         },
     };
 
