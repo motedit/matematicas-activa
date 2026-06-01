@@ -198,6 +198,14 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f1f5f9;c
 <div class="jm-footer">Matemáticas Activa · Juegos educativos</div>
 
 <script>
+    (function(){
+        var s=localStorage.getItem('ma_dark_mode');
+        var p=window.matchMedia('(prefers-color-scheme:dark)').matches;
+        if(s==='true'||(s===null&&p))document.body.classList.add('dark');
+        window.toggleDarkMode=function(){var d=document.body.classList.toggle('dark');localStorage.setItem('ma_dark_mode',d);var b=document.getElementById('dark-mode-toggle');if(b)b.textContent=d?'☀️':'🌙';};
+    })();
+    </script>
+<script>
 // ============================================================
 //  NAVEGACIÓN ENTRE JUEGOS
 // ============================================================
