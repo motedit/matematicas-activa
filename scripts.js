@@ -974,33 +974,129 @@ async function renderRankingPublico() {
 }
 
 // ============ EJERCICIOS DIARIOS (admin) ============
+let _adminEjEditId = null;
 async function renderAdminEjercicios() {
     const cont = document.getElementById("admin-ejercicios-lista"); if (!cont) return;
-    const { data: lista } = await MA().sb.from("ejercicios_diarios").select("*").order("creado_en", { ascending: false });
+    const lista = await MA().sbListarTodosEjercicios();
+    const materiaOpts = Object.entries(MATERIAS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
     cont.innerHTML = `
-        <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px">
-            <h4 style="margin:0 0 12px;font-size:14px;color:#0f172a">➕ Agregar ejercicio</h4>
-            <div class="form-group"><label for="ej-pregunta">Pregunta</label><input type="text" id="ej-pregunta" placeholder="Ej: ¿Cuánto es 12 × 7?"></div>
-            <div class="form-group"><label for="ej-respuesta">Respuesta correcta</label><input type="text" id="ej-respuesta" placeholder="Ej: 84"></div>
-            <div class="form-group"><label for="ej-pista">Pista (opcional)</label><input type="text" id="ej-pista" placeholder="Ej: descomponé en 10×7 + 2×7"></div>
-            <div class="form-group"><label for="ej-dif">Dificultad</label><select id="ej-dif"><option value="facil">Fácil</option><option value="medio" selected>Medio</option><option value="dificil">Difícil</option></select></div>
-            <button type="button" class="btn-subir" onclick="adminCrearEjercicio()">➕ Crear ejercicio</button>
+        <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;border-radius:12px">
+            <h4 style="margin:0 0 12px;font-size:14px;color:#0f172a" id="ej-form-titulo">➕ Nuevo ejercicio</h4>
+            <div class="form-group"><label for="ej-titulo">Título</label><input type="text" id="ej-titulo" placeholder="Ej: Suma de fracciones"></div>
+            <div class="form-group"><label for="ej-enunciado">Enunciado</label><textarea id="ej-enunciado" rows="2" placeholder="Ej: ¿Cuánto es 1/2 + 1/3?"></textarea></div>
+            <div class="form-group"><label for="ej-tipo">Tipo</label><select id="ej-tipo" onchange="window._toggleEjOpcionesAdmin()"><option value="opcion_multiple">Opción múltiple</option><option value="verdadero_falso">Verdadero/Falso</option><option value="completar">Completar</option></select></div>
+            <div class="form-group" id="ej-opciones-wrap"><label for="ej-opciones">Opciones (una por línea)</label><textarea id="ej-opciones" rows="3" placeholder="Opción A&#10;Opción B&#10;Opción C&#10;Opción D"></textarea></div>
+            <div class="form-group"><label for="ej-respuesta">Respuesta correcta</label><input type="text" id="ej-respuesta" placeholder="Debe coincidir exactamente con una opción"></div>
+            <div class="form-group"><label for="ej-explicacion">Explicación (opcional)</label><textarea id="ej-explicacion" rows="2" placeholder="Se muestra después de responder"></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group"><label for="ej-materia">Materia</label><select id="ej-materia">${materiaOpts}</select></div>
+                <div class="form-group"><label for="ej-dif">Dificultad</label><select id="ej-dif"><option value="facil">Fácil</option><option value="medio" selected>Medio</option><option value="dificil">Difícil</option></select></div>
+            </div>
+            <div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="ej-premium"> Es premium</label></div>
+            <div style="display:flex;gap:8px">
+                <button type="button" class="btn-subir" onclick="adminGuardarEjercicio()" id="ej-btn-guardar">➕ Crear ejercicio</button>
+                <button type="button" class="btn-subir" onclick="adminCancelarEdicion()" id="ej-btn-cancelar" style="display:none;background:#94a3b8">Cancelar</button>
+            </div>
         </div>
-        <h4 style="font-size:14px;margin:0 0 8px">Catálogo (${lista?.length||0} ejercicios)</h4>
-        ${(lista||[]).map(e => `<div style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px">
-            <p style="font-size:13px;margin:0 0 4px"><strong>${esc(e.pregunta)}</strong> → <span style="color:#16a34a">${esc(e.respuesta)}</span></p>
-            <p style="font-size:11px;color:#64748b;margin:0">Dificultad: ${e.dificultad}${e.pista?" · Pista: "+esc(e.pista):""}</p>
-        </div>`).join("") || "<p style='color:#94a3b8;font-size:13px'>Aún no hay ejercicios. Agregá el primero arriba.</p>"}`;
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h4 style="font-size:14px;margin:0">Catálogo (${lista?.length||0} ejercicios)</h4>
+            <select id="ej-filtro-materia-admin" onchange="renderAdminEjercicios()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
+                <option value="">Todas las materias</option>
+                ${materiaOpts}
+            </select>
+        </div>
+        <div id="ej-lista-admin"></div>`;
+    // Render lista filtrada
+    const filtro = document.getElementById("ej-filtro-materia-admin")?.value || '';
+    const filtrada = filtro ? lista.filter(e => e.materia === filtro) : lista;
+    const listaDiv = document.getElementById("ej-lista-admin");
+    if (listaDiv) {
+        listaDiv.innerHTML = filtrada.length ? filtrada.map(e => `<div style="padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;background:white">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="flex:1;min-width:0">
+                    <p style="font-size:14px;font-weight:700;margin:0 0 4px;color:#0f172a">${esc(e.titulo)}</p>
+                    <p style="font-size:13px;margin:0 0 4px;color:#475569">${esc(e.enunciado)}</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+                        <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#eff6ff;color:#2563eb;font-weight:600">${MATERIAS[e.materia]||e.materia}</span>
+                        <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#475569">${e.tipo}</span>
+                        <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:${e.dificultad==='facil'?'#dcfce7;color:#166534':e.dificultad==='medio'?'#fef9c3;color:#854d0e':'#fee2e2;color:#991b1b'}">${e.dificultad}</span>
+                        ${e.es_premium?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#fef3c7;color:#92400e">⭐ Premium</span>':''}
+                    </div>
+                    <p style="font-size:11px;color:#16a34a;margin:4px 0 0">✓ Respuesta: ${esc(e.respuesta_correcta)}</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+                    <button type="button" onclick="adminEditarEjercicio('${e.id}')" style="padding:6px 12px;border:1px solid #e2e8f0;background:white;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:#2563eb">✏️ Editar</button>
+                    <button type="button" onclick="adminEliminarEjercicio('${e.id}')" style="padding:6px 12px;border:1px solid #fca5a5;background:#fef2f2;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:#dc2626">🗑️ Eliminar</button>
+                </div>
+            </div>
+        </div>`).join('') : '<p style="color:#94a3b8;font-size:13px;text-align:center;padding:16px">No hay ejercicios. Creá el primero arriba.</p>';
+    }
+    window._toggleEjOpcionesAdmin();
 }
-async function adminCrearEjercicio() {
-    const pregunta = sanitizar(document.getElementById("ej-pregunta").value);
-    const respuesta = sanitizar(document.getElementById("ej-respuesta").value);
-    const pista = sanitizar(document.getElementById("ej-pista").value);
-    const dif = document.getElementById("ej-dif").value;
-    if (!pregunta || !respuesta) return mostrarToast("Completá pregunta y respuesta","warn");
-    const { error } = await MA().sbCrearEjercicio(pregunta, respuesta, pista, dif);
-    if (error) return mostrarToast("Error: "+error.message,"error");
-    mostrarToast("✅ Ejercicio creado","ok");
+
+window._toggleEjOpcionesAdmin = function() {
+    const tipo = document.getElementById("ej-tipo")?.value;
+    const wrap = document.getElementById("ej-opciones-wrap");
+    if (wrap) wrap.style.display = tipo === 'opcion_multiple' ? 'block' : 'none';
+};
+
+async function adminGuardarEjercicio() {
+    const titulo = sanitizar(document.getElementById("ej-titulo")?.value);
+    const enunciado = sanitizar(document.getElementById("ej-enunciado")?.value);
+    const tipo = document.getElementById("ej-tipo")?.value;
+    const opcionesRaw = (document.getElementById("ej-opciones")?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    const respuesta = sanitizar(document.getElementById("ej-respuesta")?.value);
+    const explicacion = sanitizar(document.getElementById("ej-explicacion")?.value) || null;
+    const materia = document.getElementById("ej-materia")?.value;
+    const dif = document.getElementById("ej-dif")?.value;
+    const premium = document.getElementById("ej-premium")?.checked || false;
+    if (!titulo || !enunciado || !respuesta || !materia) return mostrarToast("Completá título, enunciado, respuesta y materia","warn");
+    const obj = { titulo, enunciado, tipo, opciones: tipo==='opcion_multiple'?opcionesRaw:null, respuesta_correcta: respuesta, explicacion, materia, dificultad: dif, es_premium: premium };
+    let result;
+    if (_adminEjEditId) {
+        result = await MA().sbActualizarEjercicioInteractivo(_adminEjEditId, obj);
+    } else {
+        result = await MA().sbCrearEjercicioInteractivo(obj);
+    }
+    if (result.error) return mostrarToast("Error: "+(result.error.message||result.error),"error");
+    mostrarToast(_adminEjEditId ? "✅ Ejercicio actualizado" : "✅ Ejercicio creado","ok");
+    _adminEjEditId = null;
+    renderAdminEjercicios();
+}
+
+async function adminEditarEjercicio(id) {
+    const todos = await MA().sbListarTodosEjercicios();
+    const ej = todos.find(e => e.id === id);
+    if (!ej) return;
+    _adminEjEditId = id;
+    document.getElementById("ej-titulo").value = ej.titulo || '';
+    document.getElementById("ej-enunciado").value = ej.enunciado || '';
+    document.getElementById("ej-tipo").value = ej.tipo || 'opcion_multiple';
+    document.getElementById("ej-opciones").value = (ej.opciones||[]).join('\n');
+    document.getElementById("ej-respuesta").value = ej.respuesta_correcta || '';
+    document.getElementById("ej-explicacion").value = ej.explicacion || '';
+    document.getElementById("ej-materia").value = ej.materia || '';
+    document.getElementById("ej-dif").value = ej.dificultad || 'medio';
+    document.getElementById("ej-premium").checked = ej.es_premium || false;
+    document.getElementById("ej-form-titulo").textContent = '✏️ Editando ejercicio';
+    document.getElementById("ej-btn-guardar").textContent = '💾 Guardar cambios';
+    document.getElementById("ej-btn-cancelar").style.display = 'inline-block';
+    window._toggleEjOpcionesAdmin();
+    document.getElementById("ej-titulo").scrollIntoView({behavior:'smooth'});
+}
+
+function adminCancelarEdicion() {
+    _adminEjEditId = null;
+    document.getElementById("ej-form-titulo").textContent = '➕ Nuevo ejercicio';
+    document.getElementById("ej-btn-guardar").textContent = '➕ Crear ejercicio';
+    document.getElementById("ej-btn-cancelar").style.display = 'none';
+    ['ej-titulo','ej-enunciado','ej-opciones','ej-respuesta','ej-explicacion'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+}
+
+async function adminEliminarEjercicio(id) {
+    if (!confirm("¿Eliminar este ejercicio?")) return;
+    await MA().sbBorrarEjercicioInteractivo(id);
+    mostrarToast("🗑️ Ejercicio eliminado","ok");
     renderAdminEjercicios();
 }
 
@@ -1246,8 +1342,6 @@ async function finalizarDiagnostico() {
         </div>`;
 }
 
-function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-
 // Expose
 Object.assign(window, {
     buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
@@ -1259,7 +1353,7 @@ Object.assign(window, {
     usuarioVerArchivo, abrirModalPago,
     enviarComentario, borrarComentario,
     adminResetPassword, adminAsignarPasswordTemp,
-    adminCrearEjercicio,
+    adminGuardarEjercicio, adminEditarEjercicio, adminEliminarEjercicio, adminCancelarEdicion,
     iniciarPagoMP, toggleFabContacto, cerrarOverlaySiClick,
     iniciarDiagnostico, diagSiguiente
 });

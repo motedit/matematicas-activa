@@ -233,83 +233,52 @@
         const grid = document.getElementById("mat-publicos-grid");
         if (!grid) return;
 
-        // Ruta de aprendizaje
-        const categorias = {};
-        temasMateria.forEach(t => {
-            if (!categorias[t.categoria]) categorias[t.categoria] = { nivel: t.nivel, temas: [], archivos: [] };
-            categorias[t.categoria].temas.push(t);
-        });
-        const archivosSinTema = [];
-        lista.forEach(a => {
-            let asignado = false;
-            if (a.tema_id) {
-                for (const cat in categorias) {
-                    if (categorias[cat].temas.some(t => t.id === a.tema_id)) {
-                        categorias[cat].archivos.push(a);
-                        asignado = true;
-                        break;
-                    }
-                }
-            }
-            if (!asignado) archivosSinTema.push(a);
-        });
+        const temasSec = temasMateria.filter(t => t.nivel === 1).sort((a,b) => a.orden - b.orden);
+        const temasUni = temasMateria.filter(t => t.nivel === 2).sort((a,b) => a.orden - b.orden);
 
-        const orden = Object.entries(categorias).sort((a,b) => a[1].nivel - b[1].nivel);
-        if (orden.length === 0 && lista.length === 0) {
+        if (temasSec.length === 0 && temasUni.length === 0 && lista.length === 0) {
             grid.innerHTML = `<p class="mat-vacio">El administrador publicará contenido de ${esc(NOMBRE)} pronto.</p>`;
             return;
         }
 
-        // Pills de categorías
-        let pillsHtml = '<div class="acc-pills">';
-        orden.forEach(([cat, data], i) => {
-            const temaCount = data.temas.length;
-            const dispCount = data.temas.filter(t => data.archivos.some(a=>a.tema_id===t.id) || !!PDF_MANIFEST[_norm(t.nombre)]).length;
-            pillsHtml += `<button type="button" class="acc-pill" id="acc-pill-${i}" onclick="window._materia_toggleAcc(${i})">
-                ${esc(cat)} <span class="acc-pill-count">${dispCount}/${temaCount}</span>
-                <span class="acc-pill-arrow">▾</span>
-            </button>`;
-        });
-        if (archivosSinTema.length > 0) {
-            pillsHtml += `<button type="button" class="acc-pill" id="acc-pill-otros" onclick="window._materia_toggleAcc('otros')">
-                Otros contenidos <span class="acc-pill-count">${archivosSinTema.length}</span>
-                <span class="acc-pill-arrow">▾</span>
-            </button>`;
-        }
-        pillsHtml += '</div>';
-
-        // Paneles expandibles
-        let panelsHtml = '';
-        orden.forEach(([cat, data], i) => {
-            panelsHtml += `<div class="acc-panel" id="acc-panel-${i}">
-                <div class="acc-panel-header">
-                    <h3 class="acc-panel-titulo">${esc(cat)}</h3>
-                    <span class="acc-panel-nivel">Nivel ${data.nivel}</span>
+        function renderTemaCard(t) {
+            const key = _norm(t.nombre);
+            const desc = TEMA_DESC[key] || '';
+            const tieneArch = archivos.some(a => a.tema_id === t.id);
+            return `<div class="tema-card" onclick="window._materia.abrirSubtema('${t.id}')">
+                <div class="tema-card-top">
+                    <h4 class="tema-card-nombre">${esc(t.nombre)}</h4>
+                    <span class="tema-card-arrow">→</span>
                 </div>
-                <ul class="acc-temas-lista">${data.temas.map(t => {
-                    const tieneArch = data.archivos.some(a => a.tema_id === t.id);
-                    const enManifest = !!PDF_MANIFEST[_norm(t.nombre)];
-                    const disp = tieneArch || enManifest;
-                    const marca = disp
-                        ? '<span class="acc-tema-badge disp">✓ disponible</span>'
-                        : '<span class="acc-tema-badge pend">próximamente</span>';
-                    return `<li class="acc-tema-item${disp ? ' disponible' : ''}" onclick="window._materia.abrirSubtema('${t.id}')">
-                        <span class="acc-tema-nombre">» ${esc(t.nombre)}</span>
-                        ${marca}
-                    </li>`;
-                }).join("")}</ul>
+                ${desc ? `<p class="tema-card-desc">${esc(desc)}</p>` : ''}
+                ${tieneArch ? '<span class="tema-card-badge has-content">📂 Con material</span>' : ''}
             </div>`;
-        });
+        }
+
+        let html = '';
+        if (temasSec.length) {
+            html += `<div class="nivel-section">
+                <div class="nivel-header sec"><span class="nivel-icon">🎓</span> Nivel Secundario</div>
+                <div class="temas-list">${temasSec.map(renderTemaCard).join('')}</div>
+            </div>`;
+        }
+        if (temasUni.length) {
+            html += `<div class="nivel-section">
+                <div class="nivel-header uni"><span class="nivel-icon">🏛</span> Nivel Universitario / Avanzado</div>
+                <div class="temas-list">${temasUni.map(renderTemaCard).join('')}</div>
+            </div>`;
+        }
+
+        // Archivos sin tema asignado
+        const archivosSinTema = lista.filter(a => !a.tema_id || !temasMateria.some(t => t.id === a.tema_id));
         if (archivosSinTema.length > 0) {
-            panelsHtml += `<div class="acc-panel" id="acc-panel-otros">
-                <div class="acc-panel-header">
-                    <h3 class="acc-panel-titulo">Otros contenidos</h3>
-                </div>
+            html += `<div class="nivel-section">
+                <div class="nivel-header otros"><span class="nivel-icon">📁</span> Otros contenidos</div>
                 <div class="mat-grid">${archivosSinTema.map(a => tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`)).join("")}</div>
             </div>`;
         }
 
-        grid.innerHTML = pillsHtml + panelsHtml;
+        grid.innerHTML = html;
     }
 
     // ---- Render premium ----
@@ -522,30 +491,72 @@
 
     window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema, toggleEditor, insertarImagenQuill, guardarContenido, filtrarEjercicios, responderEjercicio, abrirFormEjercicio, editarEjercicio, eliminarEjercicio, _toggleOpcionesForm, ejecutarBusqueda };
 
-    // ============ MANIFIESTO DE PDF POR SUBTEMA ============
-    // Mapeo nombre de subtema normalizado -> archivos disponibles
+    // ============ DESCRIPCIONES DE TEMAS (mapa curricular) ============
     function _norm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim(); }
-    const PDF_RUTA = "../../"; // los PDF estan en la raiz del sitio
-    const PDF_MANIFEST = {
-        // Nuevos nombres del mapa curricular
-        "divisibilidad y criterios":              {b:"Divisibilidad",         d:"Múltiplos, divisores y los criterios de divisibilidad."},
-        "mcm y mcd":                              {b:"MCD-y-MCM",             d:"Máximo común divisor y mínimo común múltiplo, con métodos de cálculo."},
-        "descomposicion factorial":               {b:"Numeros-Primos",        d:"Descomposición en factores primos y criba de Eratóstenes."},
-        "operaciones con enteros":                {b:"Numeros-Enteros",       d:"El conjunto Z, opuestos, valor absoluto, orden y regla de signos."},
-        "regla de signos":                        {b:"Numeros-Enteros",       d:"Regla de los signos para multiplicar y dividir enteros."},
-        "fracciones":                             {b:"Fracciones",            d:"Propiedades, operaciones y representación de fracciones."},
-        "decimales":                              {b:"Decimales",             d:"Operaciones y representación de números decimales."},
-        "porcentajes":                            {b:"Porcentajes",           d:"Tipos de casos, fórmula, aumentos y descuentos."},
-        "proporcionalidad directa e inversa":     {b:"Proporcionalidad",      d:"Razones, proporciones, magnitudes directa e inversamente proporcionales."},
-        "razones y proporciones":                 {b:"Proporcionalidad",      d:"Razones y proporciones con ejemplos prácticos."},
-        "conjuntos numericos":                    {b:"Conjuntos-Numericos",   d:"Repaso de los conjuntos numéricos N, Z, Q, R y C."},
-        "potenciacion y radicacion":              {b:"Potencias-y-Raices",    d:"Potenciación, radicación y sus propiedades."},
-        "numeros irracionales":                   {b:"Conjuntos-Numericos",   d:"Números irracionales, √2, π y densidad de Q."},
-        "numeros primos y criba de eratostenes":  {b:"Numeros-Primos",        d:"Primos y compuestos, criba de Eratóstenes, factorización."},
-        // Aliases para compatibilidad
-        "numeros naturales":                      {b:"Numeros-Naturales",     d:"El conjunto N, operaciones, pares e impares, múltiplos y divisores."},
-        "numeros enteros":                        {b:"Numeros-Enteros",       d:"El conjunto Z, opuestos, valor absoluto, orden y regla de signos."},
+    // TEMA_DESC: descripción del mapa curricular por tema normalizado
+    const TEMA_DESC = {
+        "numeros naturales n":"Divisibilidad, criterios, MCM, MCD, descomposición factorial.",
+        "numeros enteros z":"Operaciones, regla de signos, representación en recta numérica.",
+        "numeros racionales q":"Fracciones, decimales, porcentajes, proporcionalidad directa e inversa, razones.",
+        "numeros irracionales y reales r":"√2, π, densidad de Q, conmensurabilidad, notación científica.",
+        "calculo mental y estimacion":"Estrategias de cálculo, potenciación y radicación, jerarquía de operaciones.",
+        "teoria de numeros":"Teorema fundamental de la aritmética, números primos, criba de Eratóstenes.",
+        "numeros complejos c":"Forma binómica, polar y exponencial, operaciones, módulo y argumento.",
+        "aritmetica modular":"Congruencias, criptografía básica, teorema de Fermat.",
+        "sucesiones y series":"Sucesiones aritméticas y geométricas, series convergentes, noción de límite.",
+        "expresiones algebraicas":"Factor común, cuadrado del binomio, diferencia de cuadrados, productos notables.",
+        "ecuaciones e inecuaciones lineales":"1 variable, 2 variables, sistemas de ecuaciones.",
+        "funcion lineal y cuadratica":"Pendiente, ordenada al origen, parábola, vértice, eje de simetría, ceros.",
+        "funcion exponencial y logaritmica":"Propiedades, graficación, ecuaciones exponenciales y logarítmicas.",
+        "combinatoria basica":"Variaciones, permutaciones, combinaciones simples y con repetición.",
+        "algebra lineal":"Vectores, matrices, determinantes, espacios vectoriales, transformaciones lineales.",
+        "polinomios y teoria de ecuaciones":"División de polinomios, teorema del resto, raíces complejas.",
+        "funciones avanzadas":"Parte entera, valor absoluto, funciones definidas por partes, inversas, composición.",
+        "programacion lineal":"Modelización con restricciones, función objetivo, vértices del polígono.",
+        "figuras planas":"Triángulos, cuadriláteros, polígonos regulares: propiedades, congruencia, semejanza.",
+        "transformaciones isometricas":"Simetrías, traslaciones, rotaciones, homotecia.",
+        "teoremas fundamentales":"Pitágoras, Thales, criterios de congruencia y semejanza.",
+        "circunferencia y circulo":"Arco, sector circular, ángulos inscriptos, figuras inscriptas y circunscriptas.",
+        "cuerpos geometricos":"Prismas, pirámides, cilindro, cono, esfera: áreas y volúmenes.",
+        "lugar geometrico":"Mediatriz, bisectriz, circunferencia como LG, construcciones con regla y compás.",
+        "geometria analitica conicas":"Circunferencia, parábola, elipse, hipérbola como LG.",
+        "ecuacion de la recta":"Formas explícita e implícita, distancia punto-recta, paralelas y perpendiculares.",
+        "vectores en el plano y espacio":"Operaciones vectoriales, producto escalar, producto vectorial.",
+        "geometria deductiva":"Encadenamientos deductivos, demostraciones formales, axiomas.",
+        "geometria diferencial introductoria":"Curvas en el plano, longitud de arco, curvatura.",
+        "razones trigonometricas basicas":"Seno, coseno, tangente en triángulo rectángulo.",
+        "aplicaciones en triangulos":"Distancias inaccesibles, ángulos de elevación y depresión.",
+        "teoremas del seno y del coseno":"Resolución de triángulos cualesquiera (oblicuángulos).",
+        "razones de angulos especiales":"0°, 30°, 45°, 60°, 90°; ángulos complementarios y suplementarios.",
+        "circunferencia trigonometrica":"Razones para cualquier ángulo, medida en radianes, periodicidad.",
+        "funciones trigonometricas":"Seno, coseno y tangente como funciones; dominio, imagen, período.",
+        "identidades trigonometricas":"Identidad pitagórica, ángulo doble, ángulo suma/diferencia.",
+        "ecuaciones trigonometricas":"Resolución analítica y gráfica, conjuntos solución en R.",
+        "funciones inversas arcoseno arccoseno":"Dominio restringido, aplicaciones en física e ingeniería.",
+        "nocion de limite":"Convergencia de sucesiones, tendencia de funciones, asíntotas.",
+        "comportamiento de funciones":"Crecimiento, decrecimiento, máximos y mínimos.",
+        "introduccion a la derivada":"Tasa de variación, recta tangente, optimización simple.",
+        "limites y continuidad":"Definición formal ε-δ, límites laterales, discontinuidades.",
+        "derivadas":"Reglas de derivación, regla de la cadena, derivadas implícitas.",
+        "aplicaciones de la derivada":"Máximos, mínimos, concavidad, inflexión, regla de L'Hôpital.",
+        "integral definida e indefinida":"Antiderivadas, teorema fundamental del cálculo, técnicas de integración.",
+        "aplicaciones de la integral":"Área entre curvas, volumen de revolución, longitud de arco.",
+        "calculo multivariable introductorio":"Funciones de varias variables, derivadas parciales, gradiente.",
+        "estadistica descriptiva":"Variables, tablas de frecuencia, gráficos estadísticos.",
+        "medidas de posicion":"Media, mediana, moda, cuartiles y percentiles.",
+        "medidas de dispersion":"Varianza, desviación estándar, rango.",
+        "probabilidad basica":"Espacio muestral, fórmula de Laplace, sucesos simples y compuestos.",
+        "probabilidad condicionada":"Eventos dependientes e independientes, pruebas de Bernoulli.",
+        "correlacion lineal":"Nube de puntos, recta de regresión, ajuste lineal.",
+        "distribuciones de probabilidad":"Binomial, Poisson, Normal (Gauss), estandarización con Z.",
+        "inferencia estadistica":"Intervalos de confianza, tamaño de muestra.",
+        "pruebas de hipotesis":"Hipótesis nula y alternativa, errores tipo I y II, p-valor.",
+        "regresion y correlacion avanzada":"Regresión lineal múltiple, R², análisis residual.",
+        "variable aleatoria y esperanza":"Valor esperado, varianza, momentos.",
+        "estadistica bayesiana introductoria":"Teorema de Bayes, probabilidades a priori y a posteriori.",
     };
+    const PDF_MANIFEST = {}; // Sin PDFs por ahora
+    const PDF_RUTA = "../../";
 
     const _subtemaPlanesCache = { plan: null };
     async function obtenerPlan(){
@@ -798,13 +809,18 @@
         const cat = tema?.categoria || "";
         const nivel = tema?.nivel ? `Nivel ${tema.nivel}` : "";
         const key = _norm(titulo);
-        const m = PDF_MANIFEST[key];
+        const desc = TEMA_DESC[key] || '';
+        const nivelTag = tema?.nivel === 1 ? '🎓 Secundario' : tema?.nivel === 2 ? '🏛 Universitario' : '';
         const esAdmin = perfilActual?.rol === 'admin';
 
         ov.innerHTML = `<div class="subtema-panel" onclick="event.stopPropagation()">
             <button type="button" class="subtema-close" aria-label="Cerrar" onclick="document.getElementById('subtema-overlay').classList.remove('activo')">✕</button>
-            <p class="subtema-eyebrow">${esc(NOMBRE)} · ${esc(cat)} ${nivel ? '· '+nivel : ''}</p>
+            <div class="subtema-header-row">
+                <p class="subtema-eyebrow">${esc(NOMBRE)}</p>
+                ${nivelTag ? `<span class="subtema-nivel-tag nivel-${tema?.nivel}">${nivelTag}</span>` : ''}
+            </div>
             <h2 class="subtema-titulo">${esc(titulo)}</h2>
+            ${desc ? `<p class="subtema-desc-curricular">${esc(desc)}</p>` : ''}
             <div id="subtema-contenido-viewer" class="subtema-contenido-viewer" style="display:none"></div>
             <div id="subtema-contenido-fallback"></div>
             ${esAdmin ? '<div id="subtema-editor-wrap" class="subtema-editor-wrap"></div>' : ''}
@@ -834,8 +850,6 @@
                         </div>
                         ${contenido.tip ? `<div class="subtema-tip"><span class="subtema-tip-icon">💡</span><span>${esc(contenido.tip)}</span></div>` : ""}
                     </div>`;
-            } else if (m && fallback) {
-                fallback.innerHTML = `<p class="subtema-desc">${esc(m.d)}</p>`;
             }
         }
 
@@ -849,9 +863,6 @@
         const cont = document.getElementById("subtema-archivos-cont");
 
         let htmlArchivos = "";
-        if (m) {
-            htmlArchivos += _bloque(m.b, "apunte", plan) + _bloque(m.b, "problemas", plan) + _bloque(m.b, "soluciones", plan);
-        }
 
         const archivosPublicos = archivos.filter(a => a.tema_id === temaId && a.seccion !== "premium");
         if (archivosPublicos.length > 0) {
