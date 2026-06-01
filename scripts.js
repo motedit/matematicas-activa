@@ -95,15 +95,21 @@ async function cargarTodosLosTemas() {
     if (!MA()?.sb) return;
     try { todosLosTemas = await MA().sbListarTemas(); } catch(e) { todosLosTemas = []; }
 }
-function buscarContenido() {
-    const input = sanitizar(document.getElementById("buscador").value).toLowerCase().trim();
-    const cont = document.getElementById("lista-contenidos");
-    if (cont) [...cont.getElementsByTagName("a")].forEach(a => {
-        const visible = !input || a.innerText.toLowerCase().includes(input);
-        const t = a.parentElement?.tagName === "LI" ? a.parentElement : a;
-        t.style.display = visible ? "" : "none";
-    });
-    const caja = document.getElementById("buscador-resultados");
+function buscarContenido(src) {
+    const inpId = src === "nav" ? "buscador-nav" : "buscador";
+    const cajaId = src === "nav" ? "buscador-resultados-nav" : "buscador-resultados";
+    const inp = document.getElementById(inpId);
+    if (!inp) return;
+    const input = sanitizar(inp.value).toLowerCase().trim();
+    if (src !== "nav") {
+        const cont = document.getElementById("lista-contenidos");
+        if (cont) [...cont.getElementsByTagName("a")].forEach(a => {
+            const visible = !input || a.innerText.toLowerCase().includes(input);
+            const t = a.parentElement?.tagName === "LI" ? a.parentElement : a;
+            t.style.display = visible ? "" : "none";
+        });
+    }
+    const caja = document.getElementById(cajaId);
     if (!caja) return;
     if (input.length < 2) { caja.classList.remove("activo"); caja.innerHTML = ""; return; }
     const matches = todosLosTemas.filter(t =>
@@ -125,9 +131,10 @@ function buscarContenido() {
     caja.classList.add("activo");
 }
 document.addEventListener("click", function(e){
-    const wrap = document.querySelector(".buscador-wrap");
-    const caja = document.getElementById("buscador-resultados");
-    if (caja && wrap && !wrap.contains(e.target)) caja.classList.remove("activo");
+    document.querySelectorAll(".buscador-resultados").forEach(caja => {
+        const wrap = caja.closest(".buscador-wrap, .navbar-search");
+        if (wrap && !wrap.contains(e.target)) caja.classList.remove("activo");
+    });
 });
 
 // ============ PREMIUM helpers ============
@@ -258,6 +265,10 @@ function actualizarNavbar() {
     if (navSalir)  navSalir.style.display  = p ? "inline" : "none";
     if (navPerfil) navPerfil.style.display = p ? "inline" : "none";
     if (navMisArchivos) navMisArchivos.style.display = p ? "inline" : "none";
+    const navDiag = document.getElementById("nav-diagnostico-link");
+    if (navDiag) navDiag.style.display = p ? "inline" : "none";
+    const diagSection = document.getElementById("diagnostico");
+    if (diagSection) diagSection.style.display = p ? "block" : "none";
     if (navPuntos) {
         navPuntos.style.display = p ? "inline-flex" : "none";
         navPuntos.innerHTML = p ? `⭐ ${p.puntos || 0} · 🔥 ${p.racha || 0}` : "";
@@ -1097,6 +1108,146 @@ function accesoAdminPorHash() {
 }
 window.addEventListener("hashchange", accesoAdminPorHash);
 
+// ============ EXAMEN DE DIAGNÓSTICO ============
+let _diagState = { preguntas: [], actual: 0, respuestas: [], activo: false };
+
+async function iniciarDiagnostico(e) {
+    if (e) e.preventDefault();
+    if (!appState.perfilActual) { abrirAuth(); return; }
+    const section = document.getElementById("diagnostico");
+    const cont = document.getElementById("diagnostico-container");
+    if (!section || !cont) return;
+    section.style.display = "block";
+    section.scrollIntoView({ behavior: "smooth" });
+    cont.innerHTML = '<p style="text-align:center;padding:2rem;color:#64748b">⏳ Cargando preguntas...</p>';
+
+    // Cargar ejercicios de todas las materias
+    const todos = await MA().sbListarTodosEjercicios();
+    if (todos.length < 5) {
+        cont.innerHTML = '<p style="text-align:center;padding:2rem;color:#dc2626">No hay suficientes ejercicios para el diagnóstico. El admin debe cargar ejercicios primero.</p>';
+        return;
+    }
+    // Seleccionar 20 aleatorias (o todas si hay menos)
+    const shuffled = todos.sort(() => Math.random() - 0.5);
+    const preguntas = shuffled.slice(0, Math.min(20, shuffled.length));
+    _diagState = { preguntas, actual: 0, respuestas: [], activo: true };
+    renderDiagPregunta();
+}
+
+function renderDiagPregunta() {
+    const cont = document.getElementById("diagnostico-container");
+    const { preguntas, actual } = _diagState;
+    if (actual >= preguntas.length) { finalizarDiagnostico(); return; }
+    const ej = preguntas[actual];
+    const total = preguntas.length;
+    const progreso = Math.round((actual / total) * 100);
+    const matNombre = MATERIAS[ej.materia] || ej.materia;
+
+    cont.innerHTML = `
+        <div class="diag-progress-wrap">
+            <div class="diag-progress-bar" style="width:${progreso}%"></div>
+        </div>
+        <p class="diag-counter">${actual + 1} de ${total} · <span class="diag-materia-tag">${esc(matNombre)}</span></p>
+        <div class="diag-card">
+            <span class="diag-dificultad ${ej.dificultad}">${ej.dificultad}</span>
+            <h3 class="diag-titulo">${esc(ej.titulo)}</h3>
+            <p class="diag-enunciado">${esc(ej.enunciado)}</p>
+            <div class="diag-opciones" id="diag-opciones">
+                ${renderDiagOpciones(ej)}
+            </div>
+            <button type="button" class="diag-btn-siguiente" id="diag-btn-next" onclick="window.diagSiguiente()">Siguiente →</button>
+        </div>`;
+}
+
+function renderDiagOpciones(ej) {
+    if (ej.tipo === 'opcion_multiple') {
+        return (ej.opciones || []).map((op, i) =>
+            `<label class="diag-opcion"><input type="radio" name="diag-resp" value="${esc(op)}"><span>${esc(op)}</span></label>`
+        ).join("");
+    }
+    if (ej.tipo === 'verdadero_falso') {
+        return `<label class="diag-opcion"><input type="radio" name="diag-resp" value="Verdadero"><span>Verdadero</span></label>
+                <label class="diag-opcion"><input type="radio" name="diag-resp" value="Falso"><span>Falso</span></label>`;
+    }
+    return `<input type="text" class="diag-input" id="diag-input-completar" placeholder="Tu respuesta…">`;
+}
+
+function diagSiguiente() {
+    const ej = _diagState.preguntas[_diagState.actual];
+    let respuesta = '';
+    if (ej.tipo === 'completar') {
+        respuesta = (document.getElementById('diag-input-completar')?.value || '').trim();
+    } else {
+        const checked = document.querySelector('input[name="diag-resp"]:checked');
+        if (!checked) { mostrarToast("Seleccioná una respuesta", "warn"); return; }
+        respuesta = checked.value;
+    }
+    if (!respuesta) { mostrarToast("Escribí tu respuesta", "warn"); return; }
+    const correcto = respuesta.toLowerCase().trim() === (ej.respuesta_correcta || '').toLowerCase().trim();
+    _diagState.respuestas.push({ ejercicio_id: ej.id, materia: ej.materia, respuesta, correcto });
+    _diagState.actual++;
+    renderDiagPregunta();
+}
+
+async function finalizarDiagnostico() {
+    const cont = document.getElementById("diagnostico-container");
+    const { preguntas, respuestas } = _diagState;
+    _diagState.activo = false;
+
+    // Calcular resultados por materia
+    const porMateria = {};
+    respuestas.forEach(r => {
+        if (!porMateria[r.materia]) porMateria[r.materia] = { total: 0, correctas: 0 };
+        porMateria[r.materia].total++;
+        if (r.correcto) porMateria[r.materia].correctas++;
+    });
+    Object.keys(porMateria).forEach(m => {
+        const d = porMateria[m];
+        d.porcentaje = Math.round((d.correctas / d.total) * 100);
+        d.nivel = d.porcentaje >= 80 ? 'avanzado' : d.porcentaje >= 50 ? 'intermedio' : 'básico';
+    });
+    const totalCorrectas = respuestas.filter(r => r.correcto).length;
+    const porcentaje = Math.round((totalCorrectas / preguntas.length) * 100);
+    const nivelGeneral = porcentaje >= 80 ? 'avanzado' : porcentaje >= 50 ? 'intermedio' : 'básico';
+    const resultado = { materias: porMateria, nivel_general: nivelGeneral };
+
+    // Guardar en Supabase
+    await MA().sbGuardarDiagnostico(respuestas, resultado, preguntas.length, totalCorrectas, porcentaje);
+
+    // Render resultado
+    const nivelesEmoji = { avanzado: '🟢', intermedio: '🟡', 'básico': '🔴' };
+    const materiasHtml = Object.entries(porMateria).sort((a,b) => b[1].porcentaje - a[1].porcentaje).map(([m, d]) => {
+        const nombre = MATERIAS[m] || m;
+        return `<div class="diag-materia-row">
+            <span class="diag-materia-nombre">${nombre}</span>
+            <div class="diag-materia-bar-wrap"><div class="diag-materia-bar" style="width:${d.porcentaje}%;background:${d.porcentaje >= 80 ? '#16a34a' : d.porcentaje >= 50 ? '#f59e0b' : '#dc2626'}"></div></div>
+            <span class="diag-materia-pct">${d.porcentaje}%</span>
+            <span class="diag-materia-nivel">${nivelesEmoji[d.nivel]} ${d.nivel}</span>
+        </div>`;
+    }).join("");
+
+    const fuertes = Object.entries(porMateria).filter(([,d]) => d.nivel === 'avanzado').map(([m]) => MATERIAS[m] || m);
+    const reforzar = Object.entries(porMateria).filter(([,d]) => d.nivel === 'básico').map(([m]) => MATERIAS[m] || m);
+
+    cont.innerHTML = `
+        <div class="diag-resultado">
+            <div class="diag-resultado-header">
+                <div class="diag-resultado-score">${porcentaje}%</div>
+                <div>
+                    <h3>Nivel general: <span class="diag-nivel-tag ${nivelGeneral}">${nivelesEmoji[nivelGeneral]} ${nivelGeneral.charAt(0).toUpperCase() + nivelGeneral.slice(1)}</span></h3>
+                    <p>${totalCorrectas} de ${preguntas.length} correctas</p>
+                </div>
+            </div>
+            <h4 style="margin:20px 0 10px;font-size:15px;font-weight:700">Resultado por materia</h4>
+            <div class="diag-materias-grid">${materiasHtml}</div>
+            ${fuertes.length ? `<div class="diag-resumen fuertes"><strong>💪 Materias fuertes:</strong> ${fuertes.join(", ")}</div>` : ''}
+            ${reforzar.length ? `<div class="diag-resumen reforzar"><strong>📖 A reforzar:</strong> ${reforzar.join(", ")}</div>` : ''}
+            <button type="button" class="diag-btn-repetir" onclick="window.iniciarDiagnostico()">🔄 Repetir diagnóstico</button>
+        </div>`;
+}
+
+function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
 // Expose
 Object.assign(window, {
     buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
@@ -1105,7 +1256,10 @@ Object.assign(window, {
     adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
     verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
     activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
-    usuarioVerArchivo, abrirModalPago, cerrarOverlaySiClick, iniciarPagoMP, toggleFabContacto, mostrarBannerQuota, cargarTemasParaMateria,
+    usuarioVerArchivo, abrirModalPago,
     enviarComentario, borrarComentario,
-    adminResetPassword, adminAsignarPasswordTemp, adminCrearEjercicio,
+    adminResetPassword, adminAsignarPasswordTemp,
+    adminCrearEjercicio,
+    iniciarPagoMP, toggleFabContacto, cerrarOverlaySiClick,
+    iniciarDiagnostico, diagSiguiente
 });

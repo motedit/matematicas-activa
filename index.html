@@ -82,6 +82,7 @@
                 <li><a href="#suscripcion">Planes</a></li>
                 <li><a href="materias/Juegos/Juegos.html">🎮 Juegos</a></li>
                 <li><a href="#ranking">🏆 Ranking</a></li>
+                <li id="nav-diagnostico-link" style="display:none"><a href="#" onclick="window.iniciarDiagnostico(event)">🧠 Diagnóstico</a></li>
                 <li id="nav-mis-archivos-link" style="display:none"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
                 <li id="nav-perfil-link" style="display:none"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
                 <li id="nav-salir-link" style="display:none"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
@@ -239,6 +240,18 @@
                 <p class="section-sub">Top 10 por puntos · Ganás puntos viendo contenido, comentando y manteniendo tu racha diaria</p>
             </div>
             <div id="ranking-grid" style="max-width:560px;margin:0 auto"></div>
+        </div>
+    </section>
+
+    <!-- EXAMEN DE DIAGNÓSTICO -->
+    <section class="section" id="diagnostico" style="display:none">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🧠</div>
+                <h2 class="section-title">Examen de Diagnóstico</h2>
+                <p class="section-sub">Descubrí tu nivel en cada materia con 20 preguntas aleatorias</p>
+            </div>
+            <div id="diagnostico-container" style="max-width:700px;margin:0 auto"></div>
         </div>
     </section>
 

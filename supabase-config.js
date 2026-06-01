@@ -244,6 +244,26 @@ async function sbObtenerRespuestasEjercicios(ejercicioIds) {
     return data || [];
 }
 
+// ================ DIAGNÓSTICO ==================================
+async function sbListarTodosEjercicios() {
+    const { data, error } = await sb.from("ejercicios_interactivos").select("*").eq("activo", true);
+    if (error) { console.warn("Error ejercicios todos:", error); return []; }
+    return data || [];
+}
+async function sbGuardarDiagnostico(respuestas, resultado, totalPreguntas, totalCorrectas, porcentaje) {
+    const u = await sbUsuario(); if (!u) return { error: { message: "Sin sesión" } };
+    return await sb.from("diagnosticos").insert({
+        usuario_id: u.id, respuestas, resultado,
+        total_preguntas: totalPreguntas, total_correctas: totalCorrectas, porcentaje
+    }).select().single();
+}
+async function sbObtenerDiagnosticos() {
+    const u = await sbUsuario(); if (!u) return [];
+    const { data, error } = await sb.from("diagnosticos").select("*").eq("usuario_id", u.id).order("creado_en", { ascending: false });
+    if (error) { console.warn("Error diagnosticos:", error); return []; }
+    return data || [];
+}
+
 // ====================== EXPOSE ==================================
 
 // ===================== PLANES (v4) ==============================
@@ -323,4 +343,5 @@ window.MA_SUPABASE = {
     sbObtenerContenidoTema, sbGuardarContenidoTema, sbSubirImagenTema,
     sbListarEjercicios, sbCrearEjercicioInteractivo, sbActualizarEjercicioInteractivo,
     sbBorrarEjercicioInteractivo, sbResponderEjercicioInteractivo, sbObtenerRespuestasEjercicios,
+    sbListarTodosEjercicios, sbGuardarDiagnostico, sbObtenerDiagnosticos,
 };
