@@ -17,6 +17,7 @@
     // Estado en memoria
     let perfilActual = null;     // perfil del usuario logueado (o null)
     let archivos     = [];       // archivos de esta materia
+    let ejerciciosMateria = [];  // ejercicios interactivos de esta materia
     const MA = () => window.MA_SUPABASE;
 
     // ---- Timeout (mismo patrón que scripts.js) ----
@@ -100,6 +101,8 @@
             const todos = await _conTimeout(MA().sbListarArchivos(), 15000);
             archivos = todos.filter(a => (a.materia || "general") === MATERIA_ID);
         } catch(e) { archivos = []; }
+        // Ejercicios interactivos
+        try { ejerciciosMateria = await _conRetry(() => MA().sbListarEjercicios(MATERIA_ID), 15000, 2); } catch(e) { ejerciciosMateria = []; }
     }
 
     // ---- Premium helpers ----
@@ -427,6 +430,13 @@
                     <p class="mat-section-desc">Videos, PDFs, ejercicios e imágenes de ${esc(NOMBRE)}.</p>
                     <div id="mat-publicos-grid" class="mat-grid"></div>
                 </section>
+                <section class="mat-section" id="mat-ejercicios-section">
+                    <h2 class="mat-section-title">✏️ Ejercicios Interactivos</h2>
+                    <p class="mat-section-desc">Resolvé ejercicios y sumá puntos al ranking.</p>
+                    <div id="mat-ejercicios-filtros" class="mat-ejercicios-filtros"></div>
+                    <div id="mat-ejercicios-grid" class="mat-ejercicios-grid"></div>
+                    <div id="mat-ejercicios-admin" style="display:none"></div>
+                </section>
                 <section class="mat-section" id="mat-calc-section" style="display:none">
                     <h2 class="mat-section-title">🧮 Calculadora de Ejercicios</h2>
                     <p class="mat-section-desc">Ejercicios aleatorios con corrección automática y solución paso a paso.</p>
@@ -509,7 +519,7 @@
         document.getElementById("mat-visor-overlay").style.display = "none";
     }
 
-    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema, toggleEditor, insertarImagenQuill, guardarContenido };
+    window._materia = { ver: verContenido, verPremium, abrirLogin, salir, abrirPago, resetTimer, abrirSubtema, toggleEditor, insertarImagenQuill, guardarContenido, filtrarEjercicios, responderEjercicio, abrirFormEjercicio, editarEjercicio, eliminarEjercicio, _toggleOpcionesForm };
 
     // ============ MANIFIESTO DE PDF POR SUBTEMA ============
     // Mapeo nombre de subtema normalizado -> archivos disponibles
@@ -931,6 +941,257 @@
         });
     }
 
+    // ============ EJERCICIOS INTERACTIVOS ============
+    let _ejFiltroSubtema = null;
+    let _ejFiltroDificultad = null;
+    let _ejRespuestas = {}; // { ejercicioId: { respuesta, correcto } }
+
+    function renderEjerciciosFiltros() {
+        const cont = document.getElementById("mat-ejercicios-filtros");
+        if (!cont) return;
+        // Subtemas con ejercicios
+        const subtemasConEj = [...new Set(ejerciciosMateria.filter(e => e.subtema_id).map(e => e.subtema_id))];
+        const subtemasInfo = subtemasConEj.map(sid => temasMateria.find(t => t.id === sid)).filter(Boolean);
+        cont.innerHTML = `
+            <div class="ej-filtros-row">
+                <select id="ej-filtro-subtema" onchange="window._materia.filtrarEjercicios()">
+                    <option value="">Todos los subtemas</option>
+                    ${subtemasInfo.map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join("")}
+                </select>
+                <select id="ej-filtro-dificultad" onchange="window._materia.filtrarEjercicios()">
+                    <option value="">Toda dificultad</option>
+                    <option value="facil">Fácil</option>
+                    <option value="medio">Medio</option>
+                    <option value="dificil">Difícil</option>
+                </select>
+            </div>`;
+    }
+
+    function filtrarEjercicios() {
+        _ejFiltroSubtema = document.getElementById("ej-filtro-subtema")?.value || null;
+        _ejFiltroDificultad = document.getElementById("ej-filtro-dificultad")?.value || null;
+        renderEjerciciosGrid();
+    }
+
+    async function renderEjercicios() {
+        const section = document.getElementById("mat-ejercicios-section");
+        if (!section) return;
+        if (ejerciciosMateria.length === 0) { section.style.display = "none"; return; }
+        section.style.display = "block";
+        // Cargar respuestas previas del usuario
+        if (perfilActual) {
+            const ids = ejerciciosMateria.map(e => e.id);
+            const resps = await MA().sbObtenerRespuestasEjercicios(ids);
+            _ejRespuestas = {};
+            resps.forEach(r => { _ejRespuestas[r.ejercicio_id] = r; });
+        }
+        renderEjerciciosFiltros();
+        renderEjerciciosGrid();
+        // Admin: botón para agregar
+        if (perfilActual?.rol === 'admin') {
+            const adminCont = document.getElementById("mat-ejercicios-admin");
+            if (adminCont) {
+                adminCont.style.display = "block";
+                adminCont.innerHTML = `<button type="button" class="mat-btn" onclick="window._materia.abrirFormEjercicio()" style="margin-top:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border:none;padding:10px 20px;border-radius:10px;font-weight:700;cursor:pointer">➕ Nuevo Ejercicio</button>`;
+            }
+        }
+    }
+
+    function renderEjerciciosGrid() {
+        const grid = document.getElementById("mat-ejercicios-grid");
+        if (!grid) return;
+        let lista = ejerciciosMateria.filter(e => e.activo);
+        if (_ejFiltroSubtema) lista = lista.filter(e => e.subtema_id === _ejFiltroSubtema);
+        if (_ejFiltroDificultad) lista = lista.filter(e => e.dificultad === _ejFiltroDificultad);
+
+        if (!lista.length) {
+            grid.innerHTML = '<p class="mat-vacio">No hay ejercicios con estos filtros.</p>';
+            return;
+        }
+
+        // Check premium
+        const premiumActivo = perfilActual && esPremiumActivo(perfilActual);
+
+        grid.innerHTML = lista.map(ej => {
+            if (ej.es_premium && !premiumActivo) {
+                return `<div class="ej-card bloqueado">
+                    <div class="ej-card-header"><span class="ej-badge ${ej.dificultad}">${ej.dificultad}</span><span class="ej-badge premium">⭐ Premium</span></div>
+                    <h4 class="ej-titulo">${esc(ej.titulo)}</h4>
+                    <p class="ej-enunciado">${esc(ej.enunciado).substring(0,80)}…</p>
+                    <a href="../../index.html#suscripcion" class="ej-btn bloqueado">🔒 Desbloquear</a>
+                </div>`;
+            }
+            const resp = _ejRespuestas[ej.id];
+            const yaRespondio = !!resp;
+            const statusClass = yaRespondio ? (resp.correcto ? 'correcto' : 'incorrecto') : '';
+            const statusIcon = yaRespondio ? (resp.correcto ? '✅' : '❌') : '';
+            return `<div class="ej-card ${statusClass}" id="ej-card-${ej.id}">
+                <div class="ej-card-header">
+                    <span class="ej-badge ${ej.dificultad}">${ej.dificultad}</span>
+                    ${ej.es_premium ? '<span class="ej-badge premium">⭐</span>' : ''}
+                    ${yaRespondio ? `<span class="ej-status">${statusIcon}</span>` : ''}
+                </div>
+                <h4 class="ej-titulo">${esc(ej.titulo)}</h4>
+                <p class="ej-enunciado">${esc(ej.enunciado)}</p>
+                ${renderEjercicioOpciones(ej, resp)}
+                <div id="ej-feedback-${ej.id}" class="ej-feedback" style="display:${yaRespondio ? 'block' : 'none'}">
+                    ${yaRespondio ? (resp.correcto
+                        ? '<p class="ej-feedback-ok">✅ ¡Correcto! +5 puntos</p>'
+                        : `<p class="ej-feedback-mal">❌ Incorrecto. Respuesta: ${esc(ej.respuesta_correcta)}</p>`)
+                    : ''}
+                    ${yaRespondio && ej.explicacion ? `<p class="ej-explicacion">${esc(ej.explicacion)}</p>` : ''}
+                </div>
+                ${!yaRespondio ? `<button type="button" class="ej-btn responder" onclick="window._materia.responderEjercicio('${ej.id}')">Verificar</button>` : ''}
+                ${perfilActual?.rol === 'admin' ? `<div class="ej-admin-actions"><button type="button" onclick="window._materia.editarEjercicio('${ej.id}')" class="ej-btn-sm">✏️</button><button type="button" onclick="window._materia.eliminarEjercicio('${ej.id}')" class="ej-btn-sm del">🗑️</button></div>` : ''}
+            </div>`;
+        }).join("");
+    }
+
+    function renderEjercicioOpciones(ej, resp) {
+        const yaRespondio = !!resp;
+        if (ej.tipo === 'opcion_multiple') {
+            const opciones = ej.opciones || [];
+            return `<div class="ej-opciones" id="ej-opciones-${ej.id}">${opciones.map((op, i) => {
+                const sel = yaRespondio && resp.respuesta === op;
+                const esCorrecta = op === ej.respuesta_correcta;
+                let cls = 'ej-opcion';
+                if (yaRespondio) { if (esCorrecta) cls += ' correcta'; else if (sel) cls += ' incorrecta'; cls += ' disabled'; }
+                return `<label class="${cls}"><input type="radio" name="ej-${ej.id}" value="${esc(op)}" ${yaRespondio ? 'disabled' : ''} ${sel ? 'checked' : ''}><span>${esc(op)}</span></label>`;
+            }).join("")}</div>`;
+        }
+        if (ej.tipo === 'verdadero_falso') {
+            return `<div class="ej-opciones" id="ej-opciones-${ej.id}">
+                <label class="ej-opcion${yaRespondio ? ' disabled' : ''}${yaRespondio && ej.respuesta_correcta === 'Verdadero' ? ' correcta' : ''}${yaRespondio && resp?.respuesta === 'Verdadero' && !resp.correcto ? ' incorrecta' : ''}"><input type="radio" name="ej-${ej.id}" value="Verdadero" ${yaRespondio ? 'disabled' : ''} ${resp?.respuesta === 'Verdadero' ? 'checked' : ''}><span>Verdadero</span></label>
+                <label class="ej-opcion${yaRespondio ? ' disabled' : ''}${yaRespondio && ej.respuesta_correcta === 'Falso' ? ' correcta' : ''}${yaRespondio && resp?.respuesta === 'Falso' && !resp.correcto ? ' incorrecta' : ''}"><input type="radio" name="ej-${ej.id}" value="Falso" ${yaRespondio ? 'disabled' : ''} ${resp?.respuesta === 'Falso' ? 'checked' : ''}><span>Falso</span></label>
+            </div>`;
+        }
+        // completar
+        return `<div class="ej-opciones" id="ej-opciones-${ej.id}">
+            <input type="text" class="ej-input-completar" id="ej-input-${ej.id}" placeholder="Tu respuesta…" value="${yaRespondio ? esc(resp.respuesta) : ''}" ${yaRespondio ? 'disabled' : ''}>
+        </div>`;
+    }
+
+    async function responderEjercicio(ejId) {
+        if (!perfilActual) { window.location.href = "../../index.html#suscripcion"; return; }
+        const ej = ejerciciosMateria.find(e => e.id === ejId);
+        if (!ej) return;
+        let respuesta = '';
+        if (ej.tipo === 'completar') {
+            respuesta = (document.getElementById('ej-input-' + ejId)?.value || '').trim();
+        } else {
+            const checked = document.querySelector(`input[name="ej-${ejId}"]:checked`);
+            if (!checked) return;
+            respuesta = checked.value;
+        }
+        if (!respuesta) return;
+        const correcto = respuesta.toLowerCase().trim() === (ej.respuesta_correcta || '').toLowerCase().trim();
+        const result = await MA().sbResponderEjercicioInteractivo(ejId, respuesta, correcto);
+        if (result.error) { console.warn("Error respondiendo:", result.error); return; }
+        _ejRespuestas[ejId] = { ejercicio_id: ejId, respuesta, correcto };
+        // Actualizar puntos en navbar
+        if (correcto && perfilActual) { perfilActual.puntos = (perfilActual.puntos || 0) + 5; renderNavbar(); }
+        renderEjerciciosGrid();
+    }
+
+    // ---- Admin: formulario de ejercicio ----
+    function abrirFormEjercicio(editId) {
+        const ej = editId ? ejerciciosMateria.find(e => e.id === editId) : null;
+        const ov = _asegurarOverlay();
+        const subtemasOpts = temasMateria.map(t => `<option value="${t.id}" ${ej?.subtema_id === t.id ? 'selected' : ''}>${esc(t.nombre)} (${esc(t.categoria)})</option>`).join("");
+        ov.innerHTML = `<div class="subtema-panel" onclick="event.stopPropagation()" style="max-width:600px">
+            <button type="button" class="subtema-close" onclick="document.getElementById('subtema-overlay').classList.remove('activo')">✕</button>
+            <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">${ej ? 'Editar' : 'Nuevo'} Ejercicio</h2>
+            <form id="form-ejercicio" style="display:flex;flex-direction:column;gap:12px">
+                <input type="text" id="ej-f-titulo" placeholder="Título" value="${esc(ej?.titulo || '')}" required style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                <textarea id="ej-f-enunciado" placeholder="Enunciado del ejercicio" rows="3" required style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical">${esc(ej?.enunciado || '')}</textarea>
+                <select id="ej-f-tipo" onchange="window._materia._toggleOpcionesForm()" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                    <option value="opcion_multiple" ${ej?.tipo === 'opcion_multiple' ? 'selected' : ''}>Opción múltiple</option>
+                    <option value="verdadero_falso" ${ej?.tipo === 'verdadero_falso' ? 'selected' : ''}>Verdadero/Falso</option>
+                    <option value="completar" ${ej?.tipo === 'completar' ? 'selected' : ''}>Completar</option>
+                </select>
+                <div id="ej-f-opciones-wrap">
+                    <label style="font-size:13px;font-weight:600;color:#475569">Opciones (una por línea):</label>
+                    <textarea id="ej-f-opciones" rows="4" placeholder="Opción A&#10;Opción B&#10;Opción C&#10;Opción D" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">${(ej?.opciones || []).join('\n')}</textarea>
+                </div>
+                <input type="text" id="ej-f-respuesta" placeholder="Respuesta correcta (exacta)" value="${esc(ej?.respuesta_correcta || '')}" required style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                <textarea id="ej-f-explicacion" placeholder="Explicación (opcional)" rows="2" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical">${esc(ej?.explicacion || '')}</textarea>
+                <select id="ej-f-subtema" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                    <option value="">Sin subtema</option>
+                    ${subtemasOpts}
+                </select>
+                <select id="ej-f-dificultad" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+                    <option value="facil" ${ej?.dificultad === 'facil' ? 'selected' : ''}>Fácil</option>
+                    <option value="medio" ${!ej || ej?.dificultad === 'medio' ? 'selected' : ''}>Medio</option>
+                    <option value="dificil" ${ej?.dificultad === 'dificil' ? 'selected' : ''}>Difícil</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:8px;font-size:14px"><input type="checkbox" id="ej-f-premium" ${ej?.es_premium ? 'checked' : ''}> Es premium</label>
+                <div style="display:flex;gap:8px">
+                    <button type="submit" style="flex:1;padding:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px">${ej ? '💾 Guardar' : '➕ Crear'}</button>
+                    <button type="button" onclick="document.getElementById('subtema-overlay').classList.remove('activo')" style="padding:12px 20px;background:#f1f5f9;border:none;border-radius:10px;cursor:pointer;font-size:14px">Cancelar</button>
+                </div>
+                <p id="ej-f-status" style="font-size:13px;text-align:center;color:#94a3b8"></p>
+            </form>
+        </div>`;
+        ov.classList.add("activo");
+        _toggleOpcionesForm();
+        document.getElementById("form-ejercicio").onsubmit = async (e) => {
+            e.preventDefault();
+            await guardarEjercicioForm(editId);
+        };
+    }
+
+    function _toggleOpcionesForm() {
+        const tipo = document.getElementById("ej-f-tipo")?.value;
+        const wrap = document.getElementById("ej-f-opciones-wrap");
+        if (wrap) wrap.style.display = tipo === 'opcion_multiple' ? 'block' : 'none';
+        // Auto-fill respuesta for V/F
+        if (tipo === 'verdadero_falso') {
+            const resp = document.getElementById("ej-f-respuesta");
+            if (resp && !resp.value) resp.placeholder = "Verdadero o Falso";
+        }
+    }
+
+    async function guardarEjercicioForm(editId) {
+        const status = document.getElementById("ej-f-status");
+        if (status) status.textContent = "⏳ Guardando...";
+        const tipo = document.getElementById("ej-f-tipo").value;
+        const opcionesRaw = document.getElementById("ej-f-opciones").value.split('\n').map(s => s.trim()).filter(Boolean);
+        const obj = {
+            titulo: document.getElementById("ej-f-titulo").value.trim(),
+            enunciado: document.getElementById("ej-f-enunciado").value.trim(),
+            tipo,
+            opciones: tipo === 'opcion_multiple' ? opcionesRaw : null,
+            respuesta_correcta: document.getElementById("ej-f-respuesta").value.trim(),
+            explicacion: document.getElementById("ej-f-explicacion").value.trim() || null,
+            materia: MATERIA_ID,
+            subtema_id: document.getElementById("ej-f-subtema").value || null,
+            dificultad: document.getElementById("ej-f-dificultad").value,
+            es_premium: document.getElementById("ej-f-premium").checked,
+        };
+        let result;
+        if (editId) {
+            result = await MA().sbActualizarEjercicioInteractivo(editId, obj);
+        } else {
+            result = await MA().sbCrearEjercicioInteractivo(obj);
+        }
+        if (result.error) {
+            if (status) status.textContent = "❌ " + (result.error.message || result.error);
+            return;
+        }
+        document.getElementById('subtema-overlay').classList.remove('activo');
+        // Recargar ejercicios
+        try { ejerciciosMateria = await MA().sbListarEjercicios(MATERIA_ID); } catch(e) {}
+        renderEjercicios();
+    }
+
+    function editarEjercicio(id) { abrirFormEjercicio(id); }
+    async function eliminarEjercicio(id) {
+        if (!confirm("¿Eliminar este ejercicio?")) return;
+        await MA().sbBorrarEjercicioInteractivo(id);
+        ejerciciosMateria = ejerciciosMateria.filter(e => e.id !== id);
+        renderEjerciciosGrid();
+    }
+
     // ============ INIT ============
     (async function () {
         construirPagina();
@@ -938,6 +1199,7 @@
         renderNavbar();
         renderPublicos();
         renderPremium();
+        await renderEjercicios();
         initBuscador();
         if (perfilActual) iniciarTimer();
         MA()?.sb?.auth.onAuthStateChange(async (event) => {
@@ -946,6 +1208,7 @@
                 renderNavbar();
                 renderPublicos();
                 renderPremium();
+                await renderEjercicios();
             }
         });
     })();

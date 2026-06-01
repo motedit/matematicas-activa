@@ -209,6 +209,41 @@ async function sbCrearEjercicio(pregunta, respuesta, pista, dificultad) {
     }).select().single();
 }
 
+// ================ EJERCICIOS INTERACTIVOS ======================
+async function sbListarEjercicios(materia, subtemaId) {
+    let q = sb.from("ejercicios_interactivos").select("*").eq("activo", true).order("creado_en", { ascending: false });
+    if (materia) q = q.eq("materia", materia);
+    if (subtemaId) q = q.eq("subtema_id", subtemaId);
+    const { data, error } = await q;
+    if (error) { console.warn("Error ejercicios:", error); return []; }
+    return data || [];
+}
+async function sbCrearEjercicioInteractivo(ej) {
+    const u = await sbUsuario(); if (!u) return { error: { message: "Sin sesión" } };
+    return await sb.from("ejercicios_interactivos").insert({ ...ej, creado_por: u.id }).select().single();
+}
+async function sbActualizarEjercicioInteractivo(id, cambios) {
+    return await sb.from("ejercicios_interactivos").update(cambios).eq("id", id).select().single();
+}
+async function sbBorrarEjercicioInteractivo(id) {
+    return await sb.from("ejercicios_interactivos").delete().eq("id", id);
+}
+async function sbResponderEjercicioInteractivo(ejercicioId, respuesta, correcto) {
+    const u = await sbUsuario(); if (!u) return { error: { message: "Necesitás login" } };
+    const { data, error } = await sb.from("ejercicios_interactivos_respuestas")
+        .upsert({ usuario_id: u.id, ejercicio_id: ejercicioId, respuesta, correcto }, { onConflict: "usuario_id,ejercicio_id" })
+        .select().single();
+    if (!error && correcto) await sbSumarPuntos(5);
+    return { data, error };
+}
+async function sbObtenerRespuestasEjercicios(ejercicioIds) {
+    const u = await sbUsuario(); if (!u) return [];
+    const { data, error } = await sb.from("ejercicios_interactivos_respuestas")
+        .select("ejercicio_id, respuesta, correcto").eq("usuario_id", u.id).in("ejercicio_id", ejercicioIds);
+    if (error) { console.warn("Error respuestas:", error); return []; }
+    return data || [];
+}
+
 // ====================== EXPOSE ==================================
 
 // ===================== PLANES (v4) ==============================
@@ -286,4 +321,6 @@ window.MA_SUPABASE = {
     sbListarComentarios, sbCrearComentario, sbBorrarComentario,
     sbEjercicioDeHoy, sbResponderEjercicio, sbYaRespondioHoy, sbCrearEjercicio,
     sbObtenerContenidoTema, sbGuardarContenidoTema, sbSubirImagenTema,
+    sbListarEjercicios, sbCrearEjercicioInteractivo, sbActualizarEjercicioInteractivo,
+    sbBorrarEjercicioInteractivo, sbResponderEjercicioInteractivo, sbObtenerRespuestasEjercicios,
 };
