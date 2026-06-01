@@ -80,14 +80,21 @@
         resetTimer();
     }
 
-    // ---- Carga desde Supabase ----
+    // ---- Carga desde Supabase (con timeout) ----
     let temasMateria = [];
+    function _conTimeout(promise, ms) {
+        return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+    }
     async function cargar() {
         if (!MA()?.sb) { perfilActual = null; archivos = []; temasMateria = []; return; }
-        perfilActual = await MA().sbPerfil();
-        const todos = await MA().sbListarArchivos();
-        archivos = todos.filter(a => (a.materia || "general") === MATERIA_ID);
-        temasMateria = await MA().sbListarTemas(MATERIA_ID);
+        // Cargar temas primero (es lo más importante y no requiere auth)
+        try { temasMateria = await _conTimeout(MA().sbListarTemas(MATERIA_ID), 8000); } catch(e) { temasMateria = []; console.warn('Timeout cargando temas:', e); }
+        // Perfil y archivos pueden fallar sin bloquear
+        try { perfilActual = await _conTimeout(MA().sbPerfil(), 8000); } catch(e) { perfilActual = null; }
+        try {
+            const todos = await _conTimeout(MA().sbListarArchivos(), 8000);
+            archivos = todos.filter(a => (a.materia || "general") === MATERIA_ID);
+        } catch(e) { archivos = []; }
     }
 
     // ---- Premium helpers ----
