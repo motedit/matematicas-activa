@@ -80,19 +80,24 @@
         resetTimer();
     }
 
-    // ---- Carga desde Supabase (con timeout) ----
+    // ---- Carga desde Supabase (con timeout y retry) ----
     let temasMateria = [];
     function _conTimeout(promise, ms) {
         return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
     }
+    async function _conRetry(fn, ms, intentos) {
+        for (let i = 0; i < intentos; i++) {
+            try { return await _conTimeout(fn(), ms); } catch(e) { if (i === intentos - 1) throw e; }
+        }
+    }
     async function cargar() {
         if (!MA()?.sb) { perfilActual = null; archivos = []; temasMateria = []; return; }
-        // Cargar temas primero (es lo más importante y no requiere auth)
-        try { temasMateria = await _conTimeout(MA().sbListarTemas(MATERIA_ID), 8000); } catch(e) { temasMateria = []; console.warn('Timeout cargando temas:', e); }
-        // Perfil y archivos pueden fallar sin bloquear
-        try { perfilActual = await _conTimeout(MA().sbPerfil(), 8000); } catch(e) { perfilActual = null; }
+        // Cargar temas (retry 2 veces, 20s cada intento — cold start Supabase free)
+        try { temasMateria = await _conRetry(() => MA().sbListarTemas(MATERIA_ID), 20000, 2); } catch(e) { temasMateria = []; console.warn('Error cargando temas:', e); }
+        // Perfil y archivos
+        try { perfilActual = await _conTimeout(MA().sbPerfil(), 15000); } catch(e) { perfilActual = null; }
         try {
-            const todos = await _conTimeout(MA().sbListarArchivos(), 8000);
+            const todos = await _conTimeout(MA().sbListarArchivos(), 15000);
             archivos = todos.filter(a => (a.materia || "general") === MATERIA_ID);
         } catch(e) { archivos = []; }
     }
