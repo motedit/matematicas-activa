@@ -873,7 +873,8 @@ function renderSeccionPremium() {
             <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
             <h3>Plan Básico</h3>
             <p class="plan-precio">$ 7.000</p>
-            <p class="plan-sub">23 días de acceso</p>
+            <p class="plan-sub">15 días de acceso</p>
+            <p class="plan-contexto">Menos que una clase particular</p>
             <ul class="plan-features">
                 <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
                 <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
@@ -891,9 +892,10 @@ function renderSeccionPremium() {
             <h3>Plan Premium</h3>
             <p class="plan-precio">$ 12.000</p>
             <p class="plan-sub">30 días de acceso completo</p>
+            <p class="plan-contexto">Menos de $400 por día</p>
             <ul class="plan-features">
                 <li>✅ <strong>Todo lo del plan Básico</strong></li>
-                <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
+                <li>✅ <strong>30 días</strong> (vs 15 del básico)</li>
                 <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
                 <li>✅ Carpeta personal ilimitada</li>
                 <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
@@ -904,9 +906,16 @@ function renderSeccionPremium() {
             </div>
         </div>
     </div>
-    <div style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:14px 18px;margin-top:18px;text-align:center;color:#fde68a">
-        <p style="margin:0;font-size:13px"><strong>📋 ¿Cómo suscribirte?</strong> Apretá "Suscribirme por WhatsApp" del plan que quieras. Te pasamos los datos para pagar y, una vez hecho el pago, mandás el comprobante con tu nombre de usuario. La activación es en pocos minutos. <a href="guia-pago.html" target="_blank" style="color:#fde68a;text-decoration:underline">Ver guía completa →</a></p>
+    <div class="pago-timeline">
+        <div class="pago-step"><span class="pago-step-icon">💳</span><span class="pago-step-text">Pagás</span></div>
+        <div class="pago-step-arrow">→</div>
+        <div class="pago-step"><span class="pago-step-icon">📲</span><span class="pago-step-text">Enviás comprobante</span></div>
+        <div class="pago-step-arrow">→</div>
+        <div class="pago-step"><span class="pago-step-icon">✅</span><span class="pago-step-text">Verificamos (máx. 30 min)</span></div>
+        <div class="pago-step-arrow">→</div>
+        <div class="pago-step"><span class="pago-step-icon">🚀</span><span class="pago-step-text">Acceso activado</span></div>
     </div>
+    <p class="pago-horario">Atención de lunes a sábado de 8 a 22 hs. <a href="guia-pago.html" target="_blank" style="color:#93c5fd;text-decoration:underline">Ver guía completa →</a></p>
     `;
 
     info.innerHTML = banner + planesHtml;
@@ -1117,6 +1126,14 @@ function traducirError(msg) {
 document.addEventListener("DOMContentLoaded", function () {
     iniciarMonitoreoSesion();
     inicializarSistema();
+    // Contador dinámico de estudiantes
+    (async function(){
+        try {
+            const { count } = await MA().sb.from("perfiles").select("*", { count: "exact", head: true });
+            const el = document.getElementById("stat-estudiantes");
+            if (el && count) el.textContent = count + "+";
+        } catch(e){}
+    })();
 });
 
 

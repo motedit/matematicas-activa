@@ -632,3 +632,27 @@ ul{list-style:none;}
 .diag-btn-repetir{width:100%;padding:14px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:16px;transition:all .2s}
 .diag-btn-repetir:hover{background:#e2e8f0}
 @media(max-width:600px){.diag-materia-row{flex-wrap:wrap}.diag-materia-nombre{min-width:100%;font-size:14px}}
+
+/* ── Plan contexto de precio ── */
+.plan-contexto{font-size:12px;color:#94a3b8;margin:2px 0 8px;font-weight:500;letter-spacing:.02em}
+
+/* ── Timeline de pago ── */
+.pago-timeline{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:20px;padding:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px}
+.pago-step{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px}
+.pago-step-icon{font-size:24px}
+.pago-step-text{font-size:12px;font-weight:600;color:#e2e8f0;text-align:center;line-height:1.3}
+.pago-step-arrow{font-size:18px;color:#94a3b8;font-weight:700}
+.pago-horario{text-align:center;font-size:12px;color:#94a3b8;margin-top:10px}
+@media(max-width:600px){.pago-timeline{gap:6px}.pago-step{min-width:60px}.pago-step-text{font-size:10px}.pago-step-arrow{font-size:14px}}
+
+/* ── Testimonios ── */
+.testimonios-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:16px}
+.testimonio-card{background:var(--white,#fff);border:1px solid var(--gray200,#e2e8f0);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;transition:all .2s}
+.testimonio-card:hover{box-shadow:0 8px 32px rgba(0,0,0,.1);transform:translateY(-2px)}
+.testimonio-header{display:flex;align-items:center;gap:12px}
+.testimonio-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:16px;flex-shrink:0}
+.testimonio-info h4{font-size:14px;font-weight:700;color:var(--navy,#0f172a);margin:0}
+.testimonio-info p{font-size:12px;color:var(--gray400,#94a3b8);margin:0;font-weight:500}
+.testimonio-texto{font-size:14px;line-height:1.7;color:var(--gray600,#475569);font-style:italic}
+.testimonio-texto::before{content:'"';font-size:24px;font-weight:900;color:#2563eb;line-height:1;margin-right:2px}
+body.dark .testimonio-card{background:var(--gray100);border-color:var(--gray200)}
