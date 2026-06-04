@@ -327,6 +327,184 @@ async function sbSubirImagenTema(file, temaId) {
     return { url: urlData?.publicUrl, path };
 }
 
+// ================ RUTA DE APRENDIZAJE =========================
+async function sbObtenerRuta() {
+    const u = await sbUsuario(); if (!u) return [];
+    const { data } = await sb.from("rutas_aprendizaje").select("*, temas(nombre, materia, categoria, nivel, orden)")
+        .eq("usuario_id", u.id).order("orden");
+    return data || [];
+}
+async function sbGenerarRuta(diagnosticoResultado) {
+    const u = await sbUsuario(); if (!u) return;
+    // Borrar ruta anterior
+    await sb.from("rutas_aprendizaje").delete().eq("usuario_id", u.id);
+    // Obtener todos los temas
+    const { data: temas } = await sb.from("temas").select("*").order("nivel").order("orden");
+    if (!temas?.length) return;
+    // Ordenar por debilidad: materias con menor porcentaje primero
+    const materiaScore = diagnosticoResultado?.materias || {};
+    const temasOrdenados = temas.sort((a, b) => {
+        const scoreA = materiaScore[a.materia]?.porcentaje ?? 50;
+        const scoreB = materiaScore[b.materia]?.porcentaje ?? 50;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return a.nivel - b.nivel || a.orden - b.orden;
+    });
+    // Insertar ruta: primer tema disponible, resto bloqueado
+    const filas = temasOrdenados.map((t, i) => ({
+        usuario_id: u.id, tema_id: t.id, orden: i,
+        estado: i === 0 ? 'disponible' : 'bloqueado'
+    }));
+    await sb.from("rutas_aprendizaje").insert(filas);
+}
+async function sbActualizarEstadoRuta(temaId, estado) {
+    const u = await sbUsuario(); if (!u) return;
+    await sb.from("rutas_aprendizaje").update({ estado, actualizado_en: new Date().toISOString() })
+        .eq("usuario_id", u.id).eq("tema_id", temaId);
+    // Si se completó, desbloquear el siguiente
+    if (estado === 'completado') {
+        const ruta = await sbObtenerRuta();
+        const idx = ruta.findIndex(r => r.tema_id === temaId);
+        if (idx >= 0 && idx + 1 < ruta.length && ruta[idx + 1].estado === 'bloqueado') {
+            await sb.from("rutas_aprendizaje").update({ estado: 'disponible' })
+                .eq("usuario_id", u.id).eq("tema_id", ruta[idx + 1].tema_id);
+        }
+    }
+}
+
+// ================ FLASHCARDS ==================================
+async function sbListarFlashcards(materia) {
+    let q = sb.from("flashcards").select("*").eq("activo", true).order("creado_en", { ascending: false });
+    if (materia) q = q.eq("materia", materia);
+    const { data } = await q;
+    return data || [];
+}
+async function sbCrearFlashcard(obj) {
+    const u = await sbUsuario(); if (!u) return { error: "Sin sesión" };
+    return await sb.from("flashcards").insert({ ...obj, creado_por: u.id }).select().single();
+}
+async function sbActualizarFlashcard(id, cambios) {
+    return await sb.from("flashcards").update(cambios).eq("id", id).select().single();
+}
+async function sbBorrarFlashcard(id) {
+    return await sb.from("flashcards").delete().eq("id", id);
+}
+async function sbObtenerProgresoFlashcards(flashcardIds) {
+    const u = await sbUsuario(); if (!u) return [];
+    const { data } = await sb.from("flashcards_progreso").select("*")
+        .eq("usuario_id", u.id).in("flashcard_id", flashcardIds);
+    return data || [];
+}
+async function sbRegistrarProgresoFlashcard(flashcardId, conoce) {
+    const u = await sbUsuario(); if (!u) return;
+    await sb.from("flashcards_progreso").upsert({
+        usuario_id: u.id, flashcard_id: flashcardId, conoce,
+        veces_visto: 1, ultima_vez: new Date().toISOString()
+    }, { onConflict: "usuario_id,flashcard_id" });
+}
+
+// ================ ACTIVIDAD DIARIA ============================
+async function sbRegistrarActividad(campo, incremento) {
+    const u = await sbUsuario(); if (!u) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    // Upsert: crear o incrementar
+    const { data: existe } = await sb.from("actividad_diaria")
+        .select("id," + campo).eq("usuario_id", u.id).eq("fecha", hoy).maybeSingle();
+    if (existe) {
+        await sb.from("actividad_diaria").update({ [campo]: (existe[campo] || 0) + incremento })
+            .eq("id", existe.id);
+    } else {
+        await sb.from("actividad_diaria").insert({
+            usuario_id: u.id, fecha: hoy, [campo]: incremento
+        });
+    }
+}
+async function sbObtenerActividad(dias) {
+    const u = await sbUsuario(); if (!u) return [];
+    const desde = new Date(); desde.setDate(desde.getDate() - (dias || 30));
+    const { data } = await sb.from("actividad_diaria").select("*")
+        .eq("usuario_id", u.id).gte("fecha", desde.toISOString().slice(0, 10))
+        .order("fecha", { ascending: false });
+    return data || [];
+}
+async function sbObtenerRachaDias() {
+    const u = await sbUsuario(); if (!u) return 0;
+    const { data } = await sb.from("actividad_diaria").select("fecha")
+        .eq("usuario_id", u.id).order("fecha", { ascending: false }).limit(60);
+    if (!data?.length) return 0;
+    let racha = 0;
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    for (let i = 0; i < data.length; i++) {
+        const esperada = new Date(hoy); esperada.setDate(esperada.getDate() - i);
+        const actual = new Date(data[i].fecha + 'T00:00:00');
+        if (actual.getTime() === esperada.getTime()) { racha++; } else break;
+    }
+    return racha;
+}
+
+// ================ FORO / COMUNIDAD ============================
+async function sbListarPreguntas(filtros) {
+    let q = sb.from("foro_preguntas").select("*, perfiles:usuario_id(username, rol)")
+        .order("creado_en", { ascending: false });
+    if (filtros?.materia) q = q.eq("materia", filtros.materia);
+    if (filtros?.estado) q = q.eq("estado", filtros.estado);
+    const { data } = await q;
+    return data || [];
+}
+async function sbCrearPregunta(obj) {
+    const u = await sbUsuario(); if (!u) return { error: "Sin sesión" };
+    return await sb.from("foro_preguntas").insert({ ...obj, usuario_id: u.id }).select().single();
+}
+async function sbBorrarPregunta(id) {
+    return await sb.from("foro_preguntas").delete().eq("id", id);
+}
+async function sbActualizarPregunta(id, cambios) {
+    return await sb.from("foro_preguntas").update(cambios).eq("id", id);
+}
+async function sbListarRespuestas(preguntaId) {
+    const { data } = await sb.from("foro_respuestas")
+        .select("*, perfiles:usuario_id(username, rol)")
+        .eq("pregunta_id", preguntaId).order("es_correcta", { ascending: false }).order("votos_positivos", { ascending: false });
+    return data || [];
+}
+async function sbCrearRespuesta(preguntaId, texto) {
+    const u = await sbUsuario(); if (!u) return { error: "Sin sesión" };
+    const result = await sb.from("foro_respuestas").insert({
+        pregunta_id: preguntaId, usuario_id: u.id, texto
+    }).select().single();
+    // Marcar pregunta como respondida
+    await sb.from("foro_preguntas").update({ estado: 'respondida' }).eq("id", preguntaId).eq("estado", "abierta");
+    return result;
+}
+async function sbMarcarCorrectaRespuesta(respuestaId, preguntaId) {
+    await sb.from("foro_respuestas").update({ es_correcta: true }).eq("id", respuestaId);
+    await sb.from("foro_preguntas").update({ estado: 'resuelta' }).eq("id", preguntaId);
+    // Sumar puntos al autor de la respuesta
+    const { data: resp } = await sb.from("foro_respuestas").select("usuario_id").eq("id", respuestaId).single();
+    if (resp) await sbSumarPuntos(10);
+}
+async function sbVotarRespuesta(respuestaId, positivo) {
+    const campo = positivo ? 'votos_positivos' : 'votos_negativos';
+    const { data: resp } = await sb.from("foro_respuestas").select(campo).eq("id", respuestaId).single();
+    if (resp) await sb.from("foro_respuestas").update({ [campo]: (resp[campo] || 0) + 1 }).eq("id", respuestaId);
+}
+async function sbBorrarRespuesta(id) {
+    return await sb.from("foro_respuestas").delete().eq("id", id);
+}
+
+// ================ PROGRESO POR MATERIA ========================
+async function sbObtenerProgresoMateria(materia) {
+    const u = await sbUsuario(); if (!u) return { total: 0, completados: 0, porcentaje: 0 };
+    // Total de ejercicios de esa materia
+    const { count: total } = await sb.from("ejercicios_interactivos")
+        .select("*", { count: "exact", head: true }).eq("materia", materia).eq("activo", true);
+    // Ejercicios respondidos correctamente por el usuario
+    const { data: respuestas } = await sb.from("ejercicios_interactivos_respuestas")
+        .select("ejercicio_id, correcto, ejercicios_interactivos!inner(materia)")
+        .eq("usuario_id", u.id).eq("correcto", true);
+    const completados = (respuestas || []).filter(r => r.ejercicios_interactivos?.materia === materia).length;
+    return { total: total || 0, completados, porcentaje: total ? Math.round((completados / total) * 100) : 0 };
+}
+
 window.MA_SUPABASE = {
     sb,
     sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
@@ -344,4 +522,16 @@ window.MA_SUPABASE = {
     sbListarEjercicios, sbCrearEjercicioInteractivo, sbActualizarEjercicioInteractivo,
     sbBorrarEjercicioInteractivo, sbResponderEjercicioInteractivo, sbObtenerRespuestasEjercicios,
     sbListarTodosEjercicios, sbGuardarDiagnostico, sbObtenerDiagnosticos,
+    // --- nuevas funciones abajo ---
+    sbObtenerRuta, sbGenerarRuta, sbActualizarEstadoRuta,
+    // Flashcards
+    sbListarFlashcards, sbCrearFlashcard, sbActualizarFlashcard, sbBorrarFlashcard,
+    sbObtenerProgresoFlashcards, sbRegistrarProgresoFlashcard,
+    // Actividad diaria
+    sbRegistrarActividad, sbObtenerActividad, sbObtenerRachaDias,
+    // Foro
+    sbListarPreguntas, sbCrearPregunta, sbBorrarPregunta, sbActualizarPregunta,
+    sbListarRespuestas, sbCrearRespuesta, sbMarcarCorrectaRespuesta, sbVotarRespuesta, sbBorrarRespuesta,
+    // Progreso
+    sbObtenerProgresoMateria,
 };
