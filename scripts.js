@@ -5,12 +5,9 @@
 const PRECIO_SUSCRIPCION = "$ 10.000";
 const MONEDA             = "ARS / mes";
 const DURACION_DIAS      = 30;
-// ⚠️ ACTUALIZAR: crear 4 links distintos en MercadoPago Dashboard
 const LINKS_PAGO = {
-    "basico-mp":  "https://mpago.la/BASICO_MP",    // Reemplazar con link Plan Básico $7.000
-    "premium-mp": "https://mpago.la/PREMIUM_MP",   // Reemplazar con link Plan Premium $12.000
-    "basico-nx":  "https://mpago.la/BASICO_NX",    // Reemplazar con link Naranja X Básico
-    "premium-nx": "https://mpago.la/PREMIUM_NX",   // Reemplazar con link Naranja X Premium
+    "basico-mp":  "https://mpago.li/2VeUpTC",     // Plan Básico $7.000
+    "premium-mp": "https://mpago.li/1dLanPi",     // Plan Premium $12.000
 };
 
 const SEG = { SESION_TIMEOUT_MIN: 30, PASS_MIN_LENGTH: 6 };
