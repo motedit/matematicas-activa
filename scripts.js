@@ -277,6 +277,7 @@ async function inicializarSistema() {
     accesoAdminPorHash();
     initSelectoresTemas();
     cargarTestimoniosDinamicos(); // carga desde Supabase si hay datos
+    verificarRetornoPago(); // feedback al volver de MercadoPago
 
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
         if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
@@ -1311,38 +1312,101 @@ document.addEventListener("contextmenu", function(e){
 }, true);
 
 
-function iniciarPagoMP(plan, btn) {
-    const key = plan + "-mp"; // "basico-mp" o "premium-mp"
-    const link = LINKS_PAGO[key];
-    if (!link || link.includes("BASICO_MP") || link.includes("PREMIUM_MP")) {
-        // Links aún no configurados — caer en flujo manual por WhatsApp
-        mostrarToast("El pago online estará disponible pronto. Por ahora escribinos por WhatsApp 📲", "warn");
-        const card = btn.closest(".plan-card");
-        if (card) {
-            const wa = card.querySelector(".plan-btn-whatsapp");
-            if (wa) { wa.classList.remove("disabled"); wa.removeAttribute("aria-disabled"); }
-        }
+async function iniciarPagoMP(plan, btn) {
+    // Verificar que el usuario está logueado
+    if (!appState.perfilActual) {
+        mostrarToast("Iniciá sesión primero para poder pagar", "warn");
+        document.getElementById("overlay-auth").style.display = "flex";
         return;
     }
-    window.open(link, "_blank", "noopener");
-    const card = btn.closest(".plan-card");
-    if (card) {
-        const wa = card.querySelector(".plan-btn-whatsapp");
-        if (wa) {
-            wa.classList.remove("disabled");
-            wa.removeAttribute("aria-disabled");
-            // Agregar username al mensaje de WhatsApp si el usuario está logueado
-            if (appState.perfilActual?.username) {
-                const href = wa.getAttribute("href");
-                if (href && !href.includes(appState.perfilActual.username)) {
-                    wa.setAttribute("href", href + encodeURIComponent(appState.perfilActual.username));
-                }
+
+    // Deshabilitar botón mientras se genera el link
+    if (btn) { btn.disabled = true; btn.textContent = "⏳ Generando link de pago..."; }
+
+    try {
+        // Intentar generar link dinámico (asocia pago → usuario automáticamente)
+        const res = await window.MA_SUPABASE.sbCrearPreferencia(plan);
+
+        if (res.init_point) {
+            // Link dinámico generado — abrir MercadoPago
+            window.open(res.init_point, "_blank", "noopener");
+            mostrarToast("Tu plan se activará automáticamente cuando se confirme el pago ✅", "ok");
+            habilitarWhatsApp(btn);
+        } else {
+            // Fallback a link estático si la Edge Function falla
+            console.warn("Preferencia fallida, usando link estático:", res.error);
+            const key = plan + "-mp";
+            const link = LINKS_PAGO[key];
+            if (link) {
+                window.open(link, "_blank", "noopener");
+                mostrarToast("Cuando termines el pago, usá el botón verde para enviar el comprobante 📲", "info");
+                habilitarWhatsApp(btn);
+            } else {
+                mostrarToast("Error generando el link de pago. Probá de nuevo o escribinos por WhatsApp 📲", "warn");
+                habilitarWhatsApp(btn);
+            }
+        }
+    } catch (err) {
+        console.error("Error en pago:", err);
+        // Fallback a link estático
+        const key = plan + "-mp";
+        const link = LINKS_PAGO[key];
+        if (link) {
+            window.open(link, "_blank", "noopener");
+            mostrarToast("Cuando termines el pago, enviá el comprobante por WhatsApp 📲", "info");
+        } else {
+            mostrarToast("Error al procesar el pago. Escribinos por WhatsApp 📲", "warn");
+        }
+        habilitarWhatsApp(btn);
+    } finally {
+        // Restaurar botón
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = plan === "premium"
+                ? "💳 Paso 1: Pagar con MercadoPago"
+                : "💳 Paso 1: Pagar con MercadoPago";
+        }
+    }
+}
+
+function habilitarWhatsApp(btn) {
+    const card = btn?.closest(".plan-card");
+    if (!card) return;
+    const wa = card.querySelector(".plan-btn-whatsapp");
+    if (wa) {
+        wa.classList.remove("disabled");
+        wa.removeAttribute("aria-disabled");
+        if (appState.perfilActual?.username) {
+            const href = wa.getAttribute("href");
+            if (href && !href.includes(appState.perfilActual.username)) {
+                wa.setAttribute("href", href + encodeURIComponent(appState.perfilActual.username));
             }
         }
     }
-    mostrarToast("Cuando termines el pago, usá el botón verde para enviar el comprobante 📲", "info");
 }
 
+
+function verificarRetornoPago() {
+    const params = new URLSearchParams(window.location.search);
+    const pago = params.get("pago");
+    if (!pago) return;
+    // Limpiar URL sin recargar
+    history.replaceState({}, "", window.location.pathname + window.location.hash);
+    if (pago === "ok") {
+        mostrarToast("¡Pago recibido! Tu plan se activará en unos segundos ✅", "ok");
+        // Refrescar estado tras unos segundos para que el webhook haya procesado
+        setTimeout(async () => {
+            await refrescarEstado();
+            actualizarNavbar();
+            renderSeccionPremium();
+            mostrarToast("Plan activado. ¡Disfrutá de Matemáticas Activa! 🎉", "ok");
+        }, 5000);
+    } else if (pago === "error") {
+        mostrarToast("Hubo un problema con el pago. Intentá de nuevo o contactanos por WhatsApp 📲", "warn");
+    } else if (pago === "pendiente") {
+        mostrarToast("Tu pago está pendiente de acreditación. Te activamos el plan cuando se confirme ⏳", "info");
+    }
+}
 
 function accesoAdminPorHash() {
     const h = (location.hash||"").toLowerCase();

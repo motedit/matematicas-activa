@@ -607,6 +607,29 @@ async function sbObtenerProgresoMateria(materia) {
     return { total: total || 0, completados, porcentaje: total ? Math.round((completados / total) * 100) : 0 };
 }
 
+// ===================== PAGOS MERCADOPAGO =========================
+async function sbCrearPreferencia(plan) {
+    const session = await sbSesion();
+    if (!session?.access_token) return { error: "No autenticado" };
+    try {
+        const res = await fetch(SUPABASE_URL + "/functions/v1/crear-preferencia", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + session.access_token,
+                "apikey": SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ plan }),
+        });
+        const data = await res.json();
+        if (!res.ok) return { error: data.error || "Error creando preferencia" };
+        return data;
+    } catch (e) {
+        console.error("Error crear preferencia:", e);
+        return { error: "Error de red" };
+    }
+}
+
 window.MA_SUPABASE = {
     sb,
     sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
@@ -640,4 +663,6 @@ window.MA_SUPABASE = {
     sbListarLogros, sbObtenerLogrosUsuario, sbDesbloquearLogro, sbVerificarLogros,
     // Notificaciones
     sbObtenerNotifConfig, sbGuardarNotifConfig,
+    // Pagos MercadoPago
+    sbCrearPreferencia,
 };
