@@ -656,3 +656,37 @@ ul{list-style:none;}
 .testimonio-texto{font-size:14px;line-height:1.7;color:var(--gray600,#475569);font-style:italic}
 .testimonio-texto::before{content:'"';font-size:24px;font-weight:900;color:#2563eb;line-height:1;margin-right:2px}
 body.dark .testimonio-card{background:var(--gray100);border-color:var(--gray200)}
+
+/* ── LOGROS / INSIGNIAS ── */
+.logros-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.logro-card{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:16px 10px;border-radius:14px;border:1px solid var(--gray200,#e2e8f0);background:var(--white,#fff);transition:all .2s}
+.logro-card.desbloqueado{border-color:#7c3aed;background:linear-gradient(135deg,#faf5ff,#f3e8ff)}
+.logro-card.bloqueado{opacity:.5;filter:grayscale(.8)}
+.logro-card.desbloqueado:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,58,237,.15)}
+.logro-icono{font-size:32px;line-height:1}
+.logro-nombre{font-size:12px;font-weight:700;color:var(--navy,#0f172a);line-height:1.3}
+.logro-desc{font-size:10px;color:var(--gray400,#94a3b8);line-height:1.3}
+.logro-fecha{font-size:9px;color:#7c3aed;font-weight:600;margin-top:2px}
+.logro-lock{font-size:16px;margin-top:2px}
+.logro-bonus{font-size:9px;font-weight:700;color:#f59e0b;background:#fffbeb;padding:1px 6px;border-radius:99px;margin-top:2px}
+body.dark .logro-card{background:var(--gray100);border-color:var(--gray200)}
+body.dark .logro-card.desbloqueado{border-color:#7c3aed;background:linear-gradient(135deg,#1e1b3a,#2d1f5e)}
+
+/* Logro popup (notificación flotante) */
+.logro-popup{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;display:none;animation:logroSlideIn .5s ease-out}
+.logro-popup.logro-animando{display:flex}
+.logro-popup-inner{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;padding:16px 24px;border-radius:16px;box-shadow:0 12px 40px rgba(124,58,237,.4);min-width:300px;max-width:420px}
+.logro-popup-icon{font-size:40px;line-height:1;animation:logroBounce .6s ease-out .3s both}
+.logro-popup-text{display:flex;flex-direction:column;gap:2px}
+.logro-popup-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.8}
+.logro-popup-text strong{font-size:16px;font-weight:800}
+.logro-popup-text small{font-size:12px;opacity:.85}
+@keyframes logroSlideIn{from{opacity:0;transform:translateX(-50%) translateY(-30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes logroBounce{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* Notificaciones config toggles */
+.notif-config{display:flex;flex-direction:column;gap:8px}
+.notif-toggle{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray600,#475569);cursor:pointer;padding:6px 0}
+.notif-toggle input[type="checkbox"]{accent-color:#7c3aed;width:16px;height:16px;flex-shrink:0}
+
+@media(max-width:600px){.logros-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.logro-popup-inner{min-width:280px;max-width:calc(100vw - 32px)}}

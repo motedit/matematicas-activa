@@ -451,8 +451,35 @@
                 <div class="form-group"><label for="perfil-pass-nueva2">Confirmar nueva</label><input type="password" id="perfil-pass-nueva2" autocomplete="new-password"></div>
                 <button type="button" class="btn-auth btn-primary" onclick="cambiarMiPassword()" style="margin-top:6px">🔒 Cambiar contraseña</button>
             </div>
+            <div class="perfil-section">
+                <h4>🏆 Mis Logros</h4>
+                <div id="perfil-logros-grid" class="logros-grid">
+                    <p style="font-size:13px;color:#94a3b8;text-align:center">Cargando logros...</p>
+                </div>
+            </div>
+            <div class="perfil-section">
+                <h4>🔔 Notificaciones por email</h4>
+                <div id="perfil-notif-config" class="notif-config">
+                    <label class="notif-toggle"><input type="checkbox" id="notif-inactividad" checked><span>Recordatorio si no entrás en 3 días</span></label>
+                    <label class="notif-toggle"><input type="checkbox" id="notif-logros" checked><span>Aviso al desbloquear logros</span></label>
+                    <label class="notif-toggle"><input type="checkbox" id="notif-novedades"><span>Novedades de la plataforma</span></label>
+                    <button type="button" class="btn-auth btn-secondary" onclick="guardarNotifConfig()" style="margin-top:8px;font-size:12px">Guardar preferencias</button>
+                </div>
+            </div>
             <div id="pf-error" class="form-error" role="alert"></div>
             <div id="pf-success" class="form-success" role="status"></div>
+        </div>
+    </div>
+
+    <!-- Popup de logro desbloqueado -->
+    <div id="logro-popup" class="logro-popup" style="display:none">
+        <div class="logro-popup-inner">
+            <div class="logro-popup-icon" id="logro-popup-icon">🏆</div>
+            <div class="logro-popup-text">
+                <span class="logro-popup-label">¡Logro desbloqueado!</span>
+                <strong id="logro-popup-nombre"></strong>
+                <small id="logro-popup-desc"></small>
+            </div>
         </div>
     </div>
 

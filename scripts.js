@@ -211,7 +211,11 @@ async function inicializarSistema() {
     renderSeccionPremium();
     renderSeccionMisArchivos();
     renderRankingPublico();
-    if (appState.perfilActual) resetSesionTimer();
+    if (appState.perfilActual) {
+        resetSesionTimer();
+        // Verificar logros al iniciar sesión (en background)
+        setTimeout(() => verificarYNotificarLogros(), 2000);
+    }
     accesoAdminPorHash();
     initSelectoresTemas();
 
@@ -297,6 +301,9 @@ function abrirPerfil(e) {
     document.getElementById("pf-error").textContent = "";
     document.getElementById("pf-success").textContent = "";
     document.getElementById("modal-perfil").style.display = "flex";
+    // Cargar logros y config de notificaciones
+    renderLogrosEnPerfil();
+    cargarNotifConfig();
 }
 function abrirMisArchivos(e) {
     if (e) e.preventDefault();
@@ -1326,6 +1333,8 @@ async function finalizarDiagnostico() {
 
     // Guardar en Supabase
     await MA().sbGuardarDiagnostico(respuestas, resultado, preguntas.length, totalCorrectas, porcentaje);
+    // Verificar logros post-diagnóstico
+    setTimeout(() => verificarYNotificarLogros(), 500);
 
     // Render resultado
     const nivelesEmoji = { avanzado: '🟢', intermedio: '🟡', 'básico': '🔴' };
@@ -1359,6 +1368,92 @@ async function finalizarDiagnostico() {
         </div>`;
 }
 
+// ============ LOGROS / INSIGNIAS ============
+async function renderLogrosEnPerfil() {
+    const grid = document.getElementById("perfil-logros-grid");
+    if (!grid) return;
+    grid.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center">Cargando...</p>';
+
+    const [todosLogros, misLogros] = await Promise.all([
+        MA().sbListarLogros(),
+        MA().sbObtenerLogrosUsuario()
+    ]);
+    const desbloqueadosSet = new Set(misLogros.map(l => l.logro_id));
+
+    if (!todosLogros.length) {
+        grid.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center">No hay logros disponibles aún.</p>';
+        return;
+    }
+
+    grid.innerHTML = todosLogros.map(logro => {
+        const desbloqueado = desbloqueadosSet.has(logro.id);
+        const fecha = misLogros.find(l => l.logro_id === logro.id)?.desbloqueado_en;
+        return `<div class="logro-card ${desbloqueado ? 'desbloqueado' : 'bloqueado'}">
+            <span class="logro-icono">${logro.icono}</span>
+            <strong class="logro-nombre">${esc(logro.nombre)}</strong>
+            <small class="logro-desc">${esc(logro.descripcion)}</small>
+            ${desbloqueado ? `<span class="logro-fecha">${formatearFecha(fecha)}</span>` : '<span class="logro-lock">🔒</span>'}
+            ${logro.puntos_bonus > 0 ? `<span class="logro-bonus">+${logro.puntos_bonus} pts</span>` : ''}
+        </div>`;
+    }).join("");
+}
+
+async function cargarNotifConfig() {
+    const config = await MA().sbObtenerNotifConfig();
+    if (config) {
+        document.getElementById("notif-inactividad").checked = config.email_inactividad;
+        document.getElementById("notif-logros").checked = config.email_logros;
+        document.getElementById("notif-novedades").checked = config.email_novedades;
+    }
+}
+
+async function guardarNotifConfig() {
+    const config = {
+        email_inactividad: document.getElementById("notif-inactividad").checked,
+        email_logros: document.getElementById("notif-logros").checked,
+        email_novedades: document.getElementById("notif-novedades").checked
+    };
+    const { error } = await MA().sbGuardarNotifConfig(config);
+    if (error) { mostrarToast("Error guardando preferencias", "error"); return; }
+    mostrarToast("Preferencias guardadas ✓", "ok");
+}
+
+function mostrarLogroPopup(logroUsuario) {
+    const logro = logroUsuario.logros;
+    if (!logro) return;
+    const popup = document.getElementById("logro-popup");
+    if (!popup) return;
+    document.getElementById("logro-popup-icon").textContent = logro.icono;
+    document.getElementById("logro-popup-nombre").textContent = logro.nombre;
+    document.getElementById("logro-popup-desc").textContent = logro.descripcion;
+    popup.style.display = "flex";
+    popup.classList.add("logro-animando");
+    // Auto-cerrar en 5 segundos
+    clearTimeout(popup._timer);
+    popup._timer = setTimeout(() => {
+        popup.classList.remove("logro-animando");
+        popup.style.display = "none";
+    }, 5000);
+}
+
+async function verificarYNotificarLogros() {
+    if (!appState.perfilActual) return;
+    try {
+        const nuevos = await MA().sbVerificarLogros();
+        if (nuevos?.length) {
+            // Mostrar popup para el primer logro nuevo
+            mostrarLogroPopup(nuevos[0]);
+            // Actualizar puntos en perfil
+            await refrescarEstado();
+            actualizarNavbar();
+        }
+    } catch (e) { console.warn("Error verificando logros:", e); }
+}
+
+// ============ HOOK: verificar logros después de acciones clave ============
+const _origResponderEj = window.MA_SUPABASE?.sbResponderEjercicioInteractivo;
+// Se hookea después del login y tras cada acción relevante
+
 // Expose
 Object.assign(window, {
     buscarContenido, resetSesionTimer, cerrarSesion, abrirAuth, abrirAdmin, abrirPerfil, abrirMisArchivos,
@@ -1372,5 +1467,6 @@ Object.assign(window, {
     adminResetPassword, adminAsignarPasswordTemp,
     adminGuardarEjercicio, adminEditarEjercicio, adminEliminarEjercicio, adminCancelarEdicion,
     iniciarPagoMP, toggleFabContacto, cerrarOverlaySiClick,
-    iniciarDiagnostico, diagSiguiente
+    iniciarDiagnostico, diagSiguiente,
+    renderLogrosEnPerfil, guardarNotifConfig, verificarYNotificarLogros
 });

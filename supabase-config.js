@@ -491,6 +491,108 @@ async function sbBorrarRespuesta(id) {
     return await sb.from("foro_respuestas").delete().eq("id", id);
 }
 
+// ================ LOGROS / INSIGNIAS ==========================
+async function sbListarLogros() {
+    const { data } = await sb.from("logros").select("*").eq("activo", true).order("orden");
+    return data || [];
+}
+async function sbObtenerLogrosUsuario() {
+    const u = await sbUsuario(); if (!u) return [];
+    const { data } = await sb.from("logros_usuarios").select("*, logros(*)")
+        .eq("usuario_id", u.id).order("desbloqueado_en", { ascending: false });
+    return data || [];
+}
+async function sbDesbloquearLogro(logroClave) {
+    const u = await sbUsuario(); if (!u) return null;
+    // Buscar el logro por clave
+    const { data: logro } = await sb.from("logros").select("*").eq("clave", logroClave).single();
+    if (!logro) return null;
+    // Verificar que no lo tenga ya
+    const { data: existe } = await sb.from("logros_usuarios")
+        .select("id").eq("usuario_id", u.id).eq("logro_id", logro.id).maybeSingle();
+    if (existe) return null; // ya lo tiene
+    // Desbloquear
+    const { data: nuevo, error } = await sb.from("logros_usuarios")
+        .insert({ usuario_id: u.id, logro_id: logro.id }).select("*, logros(*)").single();
+    if (error) { console.warn("Error desbloqueando logro:", error); return null; }
+    // Sumar puntos bonus
+    if (logro.puntos_bonus > 0) await sbSumarPuntos(logro.puntos_bonus);
+    return nuevo;
+}
+async function sbVerificarLogros() {
+    // Verifica todas las condiciones y desbloquea los que correspondan
+    const u = await sbUsuario(); if (!u) return [];
+    const desbloqueados = [];
+
+    // Obtener logros que NO tiene el usuario
+    const { data: todos } = await sb.from("logros").select("*").eq("activo", true);
+    const { data: tiene } = await sb.from("logros_usuarios").select("logro_id").eq("usuario_id", u.id);
+    const tieneSet = new Set((tiene || []).map(t => t.logro_id));
+    const pendientes = (todos || []).filter(l => !tieneSet.has(l.id));
+    if (!pendientes.length) return [];
+
+    // Obtener datos del usuario para evaluar condiciones
+    const perfil = await sbPerfil();
+    const racha = await sbObtenerRachaDias();
+    const { count: totalEjCorrectos } = await sb.from("ejercicios_interactivos_respuestas")
+        .select("*", { count: "exact", head: true }).eq("usuario_id", u.id).eq("correcto", true);
+    const { count: totalDiags } = await sb.from("diagnosticos")
+        .select("*", { count: "exact", head: true }).eq("usuario_id", u.id);
+    const { data: mejorDiag } = await sb.from("diagnosticos").select("porcentaje")
+        .eq("usuario_id", u.id).order("porcentaje", { ascending: false }).limit(1);
+    const { count: totalPreguntas } = await sb.from("foro_preguntas")
+        .select("*", { count: "exact", head: true }).eq("usuario_id", u.id);
+    const { count: totalRespuestas } = await sb.from("foro_respuestas")
+        .select("*", { count: "exact", head: true }).eq("usuario_id", u.id);
+    const puntos = perfil?.puntos || 0;
+
+    for (const logro of pendientes) {
+        const cond = logro.condicion || {};
+        let cumple = false;
+
+        switch (cond.tipo) {
+            case 'racha':        cumple = racha >= cond.valor; break;
+            case 'ejercicios':   cumple = (totalEjCorrectos || 0) >= cond.valor; break;
+            case 'diagnostico':  cumple = (totalDiags || 0) >= cond.valor; break;
+            case 'diag_porcentaje': cumple = (mejorDiag?.[0]?.porcentaje || 0) >= cond.valor; break;
+            case 'preguntas':    cumple = (totalPreguntas || 0) >= cond.valor; break;
+            case 'respuestas':   cumple = (totalRespuestas || 0) >= cond.valor; break;
+            case 'puntos':       cumple = puntos >= cond.valor; break;
+            case 'login':        cumple = true; break; // si está logueado, cumple
+            case 'materia_completa':
+                // Verificar si alguna materia tiene 100%
+                for (const m of Object.keys(window.MATERIAS || {})) {
+                    if (m === 'general' || m === 'juegos') continue;
+                    const prog = await sbObtenerProgresoMateria(m);
+                    if (prog.total > 0 && prog.porcentaje >= cond.valor) { cumple = true; break; }
+                }
+                break;
+        }
+
+        if (cumple) {
+            const result = await sbDesbloquearLogro(logro.clave);
+            if (result) desbloqueados.push(result);
+        }
+    }
+    return desbloqueados;
+}
+
+// ================ NOTIFICACIONES CONFIG =======================
+async function sbObtenerNotifConfig() {
+    const u = await sbUsuario(); if (!u) return null;
+    const { data } = await sb.from("notificaciones_config")
+        .select("*").eq("usuario_id", u.id).maybeSingle();
+    return data;
+}
+async function sbGuardarNotifConfig(config) {
+    const u = await sbUsuario(); if (!u) return { error: "Sin sesión" };
+    const { data, error } = await sb.from("notificaciones_config")
+        .upsert({ usuario_id: u.id, ...config, actualizado_en: new Date().toISOString() },
+            { onConflict: "usuario_id" })
+        .select().single();
+    return { data, error };
+}
+
 // ================ PROGRESO POR MATERIA ========================
 async function sbObtenerProgresoMateria(materia) {
     const u = await sbUsuario(); if (!u) return { total: 0, completados: 0, porcentaje: 0 };
@@ -534,4 +636,8 @@ window.MA_SUPABASE = {
     sbListarRespuestas, sbCrearRespuesta, sbMarcarCorrectaRespuesta, sbVotarRespuesta, sbBorrarRespuesta,
     // Progreso
     sbObtenerProgresoMateria,
+    // Logros
+    sbListarLogros, sbObtenerLogrosUsuario, sbDesbloquearLogro, sbVerificarLogros,
+    // Notificaciones
+    sbObtenerNotifConfig, sbGuardarNotifConfig,
 };
