@@ -1302,6 +1302,8 @@
 
     async function responderEjercicio(ejId) {
         if (!perfilActual) { window.location.href = "../../index.html#suscripcion"; return; }
+        // Verificar vidas disponibles
+        if (window.MA_GAME && !window.MA_GAME.puedeResponder()) return;
         const ej = ejerciciosMateria.find(e => e.id === ejId);
         if (!ej) return;
         let respuesta = '';
@@ -1319,6 +1321,8 @@
         _ejRespuestas[ejId] = { ejercicio_id: ejId, respuesta, correcto };
         // Actualizar puntos en navbar
         if (correcto && perfilActual) { perfilActual.puntos = (perfilActual.puntos || 0) + 5; renderNavbar(); }
+        // Gamificación: celebraciones, vidas, XP
+        if (window.MA_GAME) window.MA_GAME.onRespuestaEjercicio(correcto, 5);
         renderEjerciciosGrid();
     }
 

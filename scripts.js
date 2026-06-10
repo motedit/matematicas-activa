@@ -1499,6 +1499,8 @@ function diagSiguiente() {
     if (!respuesta) { mostrarToast("Escribí tu respuesta", "warn"); return; }
     const correcto = respuesta.toLowerCase().trim() === (ej.respuesta_correcta || '').toLowerCase().trim();
     _diagState.respuestas.push({ ejercicio_id: ej.id, materia: ej.materia, respuesta, correcto });
+    // Gamificación: celebraciones, vidas, XP
+    if (window.MA_GAME) window.MA_GAME.onRespuestaEjercicio(correcto, 10);
     _diagState.actual++;
     renderDiagPregunta();
 }

@@ -221,6 +221,16 @@
         </div>
     </section>
 
+    <!-- HISTORIAS MATEMÁTICAS -->
+    <section class="section" id="historias" style="max-width:1100px;margin:40px auto;padding:0 24px">
+        <div class="section-header" style="text-align:center;margin-bottom:20px">
+            <h2 class="section-title" style="font-family:'Poppins',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:800">📖 Historias Matemáticas</h2>
+            <p class="section-sub">Aprendé resolviendo problemas dentro de historias reales</p>
+        </div>
+        <div id="historias-grid"></div>
+        <script>document.addEventListener('DOMContentLoaded', function(){ if(window.MA_HISTORIAS) window.MA_HISTORIAS.renderHistoriasLista('historias-grid'); });</script>
+    </section>
+
     <div class="banner-juegos">
         <div class="bj-emoji" aria-hidden="true">🎮</div>
         <h2>¡Aprendé matemáticas jugando!</h2>
@@ -495,6 +505,14 @@
                 <button type="button" class="btn-auth btn-primary" onclick="cambiarMiPassword()" style="margin-top:6px">🔒 Cambiar contraseña</button>
             </div>
             <div class="perfil-section">
+                <h4>🎯 Meta diaria</h4>
+                <div id="meta-diaria-widget"></div>
+            </div>
+            <div class="perfil-section">
+                <h4>🏅 Liga semanal</h4>
+                <div id="liga-widget"></div>
+            </div>
+            <div class="perfil-section">
                 <h4>🏆 Mis Logros</h4>
                 <div id="perfil-logros-grid" class="logros-grid">
                     <p style="font-size:13px;color:#94a3b8;text-align:center">Cargando logros...</p>
@@ -752,5 +770,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=13"></script>
     <script src="scripts.js?v=13"></script>
+    <script src="gamification.js?v=1"></script>
+    <script src="historias.js?v=1"></script>
 </body>
 </html>
