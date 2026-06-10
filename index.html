@@ -6,6 +6,22 @@
     <title>Matemáticas Activa — Plataforma educativa de matemáticas</title>
     <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios, juegos y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos.">
     <meta name="theme-color" content="#2563eb">
+    <!-- Open Graph / WhatsApp / Instagram preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://motedit.github.io/matematicas-activa/">
+    <meta property="og:title" content="Matemáticas Activa — Plataforma educativa argentina">
+    <meta property="og:description" content="Videos, PDFs, ejercicios y juegos de matemáticas para secundaria y universidad. Calculadora, graficadora y ranking de estudiantes.">
+    <meta property="og:image" content="https://motedit.github.io/matematicas-activa/img/og-preview.jpg">
+    <meta property="og:locale" content="es_AR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Matemáticas Activa">
+    <meta name="twitter:description" content="Plataforma educativa de matemáticas para secundaria y universidad.">
+    <meta name="twitter:image" content="https://motedit.github.io/matematicas-activa/img/og-preview.jpg">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MAtiva">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="no-referrer">
     <link rel="icon" href="img/descarga.png" type="image/png">
@@ -59,10 +75,23 @@
       .plan-btn-whatsapp{background:linear-gradient(135deg,#25d366,#128c7e)!important;color:white!important}
       .plan-btn-whatsapp.disabled{background:#cbd5e1!important;color:#94a3b8!important;pointer-events:none;cursor:not-allowed;opacity:.7}
       .plan-features li.feature-destacada{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(220,38,38,.1));border-radius:8px;padding:8px 10px;margin-top:4px;border:1px solid rgba(245,158,11,.35);font-weight:600;color:#92400e}
+      /* Skeleton loaders */
+      @keyframes skeleton-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+      .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-shimmer 1.5s infinite;border-radius:8px;}
+      body.dark .skeleton{background:linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);background-size:200% 100%;}
+      .sk-card{height:180px;margin-bottom:16px;border-radius:12px;}
+      .sk-line{height:14px;margin-bottom:8px;border-radius:4px;}
+      .sk-line.w60{width:60%;} .sk-line.w80{width:80%;} .sk-line.w40{width:40%;}
+      /* Dark mode toggle fuera del menú hamburguesa */
+      .dark-toggle-fixed{position:fixed;top:14px;right:64px;z-index:9999;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:50%;transition:background .2s;}
+      .dark-toggle-fixed:hover{background:rgba(128,128,128,.15);}
+      @media(min-width:768px){.dark-toggle-fixed{display:none;}}
     </style>
 </head>
 <body>
 
+    <!-- Dark mode toggle fijo en mobile -->
+    <button type="button" class="dark-toggle-fixed" id="dark-mode-toggle-mobile" onclick="window.toggleDarkMode()" title="Modo oscuro" aria-label="Cambiar modo oscuro">🌙</button>
     <header>
     <nav class="navbar" aria-label="Navegación principal">
         <div class="navbar-inner">
@@ -82,10 +111,10 @@
                 <li><a href="#suscripcion">Planes</a></li>
                 <li><a href="materias/Juegos/Juegos.html">🎮 Juegos</a></li>
                 <li><a href="#ranking">🏆 Ranking</a></li>
-                <li id="nav-diagnostico-link" style="display:none"><a href="#" onclick="window.iniciarDiagnostico(event)">🧠 Diagnóstico</a></li>
-                <li id="nav-mis-archivos-link" style="display:none"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
-                <li id="nav-perfil-link" style="display:none"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
-                <li id="nav-salir-link" style="display:none"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
+                <li id="nav-diagnostico-link"><a href="#" onclick="window.iniciarDiagnostico(event)">🧠 Diagnóstico</a></li>
+                <li id="nav-mis-archivos-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
+                <li id="nav-perfil-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
+                <li id="nav-salir-link" style="display:none" class="nav-user-item"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
                 <li><a href="#" onclick="abrirAuth(event)" class="nav-cta-btn"><span id="nav-cuenta-label">Ingresar</span></a></li>
                 <li><span id="nav-puntos" class="nav-puntos" style="display:none" title="Puntos del Ranking"></span></li>
                 <li><button type="button" id="dark-mode-toggle" class="dark-toggle" onclick="window.toggleDarkMode()" title="Modo oscuro">🌙</button></li>
@@ -147,6 +176,7 @@
                 <li><a href="materias/Razonamiento/Razonamiento.html">Razonamiento Matemático</a></li>
                 <li><a href="materias/Juegos/Juegos.html">Juegos Matemáticos</a></li>
             </ul>
+            <div id="materias-skeleton" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-bottom:20px"><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div></div>
             <div class="materias-grid" id="areas-matematicas">
                 <a href="materias/Algebra/Algebra.html" class="materia-card" data-color="purple">
                     <div class="materia-img-wrap"><img src="img/Algebra.jpg" alt="Álgebra" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">𝑥²</span></div>
@@ -216,7 +246,8 @@
                 <h2 class="section-title">Lo que dicen nuestros estudiantes</h2>
                 <p class="section-sub">Historias reales de alumnos que mejoraron sus notas</p>
             </div>
-            <div class="testimonios-grid">
+            <div class="testimonios-grid" id="testimonios-grid">
+                <!-- Testimonios dinámicos cargados desde Supabase -->
                 <div class="testimonio-card">
                     <div class="testimonio-header">
                         <div class="testimonio-avatar">VR</div>
@@ -276,12 +307,12 @@
                 <h2 class="section-title">Ranking de Estudiantes</h2>
                 <p class="section-sub">Top 10 por puntos · Ganás puntos viendo contenido, comentando y manteniendo tu racha diaria</p>
             </div>
-            <div id="ranking-grid" style="max-width:560px;margin:0 auto"></div>
+            <div id="ranking-grid" style="max-width:560px;margin:0 auto"><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div></div>
         </div>
     </section>
 
     <!-- EXAMEN DE DIAGNÓSTICO -->
-    <section class="section" id="diagnostico" style="display:none">
+    <section class="section" id="diagnostico">
         <div class="section-inner">
             <div class="section-header">
                 <div class="section-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🧠</div>
@@ -309,7 +340,11 @@
     <section class="sobre-mi" id="sobre-mi">
         <div class="sobre-mi-inner">
             <h2>¿Quién está detrás de Matemáticas Activa?</h2>
-            <div class="foto-profe" aria-label="Foto de Marcos Diaz">MD</div>
+            <div class="foto-profe" aria-label="Foto de Marcos Diaz" style="position:relative;overflow:hidden">
+                <!-- Reemplazar con: <img src="img/marcos-diaz.jpg" alt="Marcos Diaz" style="width:100%;height:100%;object-fit:cover;border-radius:50%"> -->
+                <span style="font-size:44px;font-weight:800">MD</span>
+            </div>
+            <!-- PENDIENTE: reemplazar las iniciales MD con una foto real en img/marcos-diaz.jpg -->
             <h3>Marcos Diaz</h3>
             <p class="bio">Soy profesor de Matemática con formación docente de nivel secundario y una vocación genuina por hacer que las matemáticas tengan sentido. Me especializo en la enseñanza con un enfoque práctico: que entiendas el porqué, no solo el cómo.<br><br>
             Complementé mi carrera con formación en neurociencias aplicadas a la educación, tecnología educativa y oratoria — porque enseñar bien requiere más que saber matemáticas.<br><br>
@@ -331,7 +366,7 @@
                 <span class="brand-icon">∑</span>
                 <span>Matemáticas<strong>Activa</strong></span>
             </div>
-            <p class="footer-copy">Copyright © 2025 Matemáticas Activa · Todos los derechos reservados</p>
+            <p class="footer-copy">Copyright © 2026 Matemáticas Activa · Todos los derechos reservados</p>
             <div class="footer-contacto">
                 <a class="footer-contacto-link wa" href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activa.%20" target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp">
                     <span aria-hidden="true">💚</span> WhatsApp · +54 9 3827 65-4154
@@ -681,15 +716,30 @@
         window.toggleDarkMode = function() {
             const isDark = document.body.classList.toggle('dark');
             localStorage.setItem('ma_dark_mode', isDark);
-            const btn = document.getElementById('dark-mode-toggle');
-            if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+            const icon = isDark ? '☀️' : '🌙';
+            ['dark-mode-toggle','dark-mode-toggle-mobile'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.textContent = icon;
+            });
         };
         // Sync button icon on load
         window.addEventListener('DOMContentLoaded', function() {
-            const btn = document.getElementById('dark-mode-toggle');
-            if (btn) btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            const isDark = document.body.classList.contains('dark');
+            const icon = isDark ? '☀️' : '🌙';
+            ['dark-mode-toggle','dark-mode-toggle-mobile'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.textContent = icon;
+            });
         });
     })();
+    </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function(){
+        setTimeout(function(){
+            var sk = document.getElementById("materias-skeleton");
+            if (sk) sk.remove();
+        }, 2000);
+    });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=13"></script>

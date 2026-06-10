@@ -1,0 +1,39 @@
+{
+  "name": "Matemáticas Activa",
+  "short_name": "MAtiva",
+  "description": "Plataforma educativa de matemáticas para secundaria y universidad",
+  "start_url": "/matematicas-activa/",
+  "scope": "/matematicas-activa/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "img/descarga.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/descarga.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education"],
+  "shortcuts": [
+    {
+      "name": "Álgebra",
+      "url": "/matematicas-activa/materias/Algebra/Algebra.html",
+      "description": "Ir a Álgebra"
+    },
+    {
+      "name": "Diagnóstico",
+      "url": "/matematicas-activa/#diagnostico",
+      "description": "Hacer diagnóstico"
+    }
+  ]
+}

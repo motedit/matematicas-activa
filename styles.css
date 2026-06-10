@@ -690,3 +690,23 @@ body.dark .logro-card.desbloqueado{border-color:#7c3aed;background:linear-gradie
 .notif-toggle input[type="checkbox"]{accent-color:#7c3aed;width:16px;height:16px;flex-shrink:0}
 
 @media(max-width:600px){.logros-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.logro-popup-inner{min-width:280px;max-width:calc(100vw - 32px)}}
+
+/* ── Navbar mobile: agrupar items de usuario ── */
+@media (max-width: 767px) {
+  .nav-user-item a {
+    padding-left: 1.5rem;
+    font-size: 13px;
+    color: var(--color-muted, #64748b) !important;
+  }
+  .nav-user-item + .nav-user-item a::before {
+    content: "";
+    display: block;
+    border-top: 1px solid rgba(255,255,255,.08);
+    margin-bottom: 4px;
+  }
+}
+/* ── Skeleton loaders ya están en index.html inline, complemento aquí ── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

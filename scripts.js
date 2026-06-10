@@ -5,12 +5,17 @@
 const PRECIO_SUSCRIPCION = "$ 10.000";
 const MONEDA             = "ARS / mes";
 const DURACION_DIAS      = 30;
-const LINK_MERCADOPAGO   = "https://mpago.la/29qTXgw";
-const LINK_NARANJAX      = "https://mpago.la/29qTXgw";
-window.PRECIO_SUSCRIPCION = PRECIO_SUSCRIPCION;
+// ⚠️ ACTUALIZAR: crear 4 links distintos en MercadoPago Dashboard
+const LINKS_PAGO = {
+    "basico-mp":  "https://mpago.la/BASICO_MP",    // Reemplazar con link Plan Básico $7.000
+    "premium-mp": "https://mpago.la/PREMIUM_MP",   // Reemplazar con link Plan Premium $12.000
+    "basico-nx":  "https://mpago.la/BASICO_NX",    // Reemplazar con link Naranja X Básico
+    "premium-nx": "https://mpago.la/PREMIUM_NX",   // Reemplazar con link Naranja X Premium
+};
 
 const SEG = { SESION_TIMEOUT_MIN: 30, PASS_MIN_LENGTH: 6 };
-const MAX_ARCHIVOS_GRATIS = 3;
+const MAX_ARCHIVOS_GRATIS  = 3;  // Por semana (7 días), se reinicia cada lunes
+const PERIODO_GRATIS_DIAS   = 7;   // días antes de reiniciar la cuota
 const MAX_FILE_SIZE       = 2 * 1024 * 1024 * 1024; // 2 GB (requiere Supabase Pro)
 const MATERIAS = {
     general:"General", algebra:"Álgebra", aritmetica:"Aritmética",
@@ -95,12 +100,21 @@ async function cargarTodosLosTemas() {
     if (!MA()?.sb) return;
     try { todosLosTemas = await MA().sbListarTemas(); } catch(e) { todosLosTemas = []; }
 }
+// Debounce para búsqueda
+let _busquedaTimer = null;
 function buscarContenido(src) {
+    clearTimeout(_busquedaTimer);
+    _busquedaTimer = setTimeout(() => _ejecutarBusqueda(src), 300);
+}
+
+function _ejecutarBusqueda(src) {
     const inpId = src === "nav" ? "buscador-nav" : "buscador";
     const cajaId = src === "nav" ? "buscador-resultados-nav" : "buscador-resultados";
     const inp = document.getElementById(inpId);
     if (!inp) return;
     const input = sanitizar(inp.value).toLowerCase().trim();
+
+    // Filtrar lista rápida de materias (solo buscador principal)
     if (src !== "nav") {
         const cont = document.getElementById("lista-contenidos");
         if (cont) [...cont.getElementsByTagName("a")].forEach(a => {
@@ -112,22 +126,52 @@ function buscarContenido(src) {
     const caja = document.getElementById(cajaId);
     if (!caja) return;
     if (input.length < 2) { caja.classList.remove("activo"); caja.innerHTML = ""; return; }
-    const matches = todosLosTemas.filter(t =>
+
+    // ── Resultados de TEMAS (tabla temas) ──
+    const matchesTemas = todosLosTemas.filter(t =>
         (t.nombre||"").toLowerCase().includes(input) ||
         (t.categoria||"").toLowerCase().includes(input) ||
         (MATERIAS[t.materia]||"").toLowerCase().includes(input)
-    ).slice(0, 14);
-    if (!matches.length) {
-        caja.innerHTML = `<div style="padding:14px 16px;color:#94a3b8;font-size:13px;text-align:center">No se encontraron temas para "${esc(input)}". Probá con otra palabra.</div>`;
+    ).slice(0, 7);
+
+    // ── Resultados de ARCHIVOS (videos, PDFs, premium) ──
+    const matchesArchivos = (appState.archivosPublicos || []).filter(a =>
+        (a.titulo||"").toLowerCase().includes(input) ||
+        (a.descripcion||"").toLowerCase().includes(input) ||
+        (MATERIAS[a.materia]||"").toLowerCase().includes(input)
+    ).slice(0, 7);
+
+    if (!matchesTemas.length && !matchesArchivos.length) {
+        caja.innerHTML = `<div style="padding:14px 16px;color:#94a3b8;font-size:13px;text-align:center">Sin resultados para "${esc(input)}". Probá con otra palabra.</div>`;
         caja.classList.add("activo");
         return;
     }
-    caja.innerHTML = matches.map(t => `
-        <a class="buscador-res-item" href="${MATERIA_RUTA[t.materia] || '#'}">
-            <span class="buscador-res-mat">${esc(MATERIAS[t.materia] || t.materia)}</span>
-            <span style="flex:1;min-width:0">${esc(t.nombre)}</span>
-            <span class="buscador-res-nivel">Nivel ${t.nivel} · ${esc(t.categoria)}</span>
-        </a>`).join("");
+
+    const iconos = {video:"🎬", pdf:"📄", premium:"⭐", imagen:"🖼", texto:"📝"};
+    let html = "";
+
+    if (matchesTemas.length) {
+        html += `<div style="padding:6px 14px 4px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Temas</div>`;
+        html += matchesTemas.map(t => `
+            <a class="buscador-res-item" href="${MATERIA_RUTA[t.materia] || "#"}">
+                <span class="buscador-res-mat">${esc(MATERIAS[t.materia] || t.materia)}</span>
+                <span style="flex:1;min-width:0">${esc(t.nombre)}</span>
+                <span class="buscador-res-nivel">Nivel ${t.nivel}</span>
+            </a>`).join("");
+    }
+
+    if (matchesArchivos.length) {
+        html += `<div style="padding:6px 14px 4px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;border-top:${matchesTemas.length?'1px solid #f1f5f9':'none'};margin-top:${matchesTemas.length?'4px':'0'}">Contenido</div>`;
+        html += matchesArchivos.map(a => `
+            <a class="buscador-res-item" href="#" onclick="event.preventDefault();document.querySelector('.buscador-resultados.activo')?.classList.remove('activo');verContenido('${a.id}')">
+                <span style="font-size:18px">${iconos[a.seccion]||"📦"}</span>
+                <span class="buscador-res-mat">${esc(MATERIAS[a.materia]||a.materia)}</span>
+                <span style="flex:1;min-width:0">${esc(a.titulo)}</span>
+                <span class="buscador-res-nivel">${esc(a.seccion)}</span>
+            </a>`).join("");
+    }
+
+    caja.innerHTML = html;
     caja.classList.add("activo");
 }
 document.addEventListener("click", function(e){
@@ -138,7 +182,24 @@ document.addEventListener("click", function(e){
 });
 
 // ============ PREMIUM helpers ============
+// ⚠️ SEGURIDAD: Esta verificación es solo visual (UX).
+// Para protección real de archivos, implementar RLS en Supabase Storage
+// o una Edge Function que verifique premium_hasta antes de entregar la URL firmada.
+// Ver: supabase/functions/mp-webhook/index.ts
 function esPremiumActivo(p) { return p?.premium_hasta && new Date(p.premium_hasta).getTime() > Date.now(); }
+
+// Verificación server-side del plan (cuando Edge Functions estén activas)
+async function verificarPremiumServer() {
+    if (!MA()?.sb) return false;
+    try {
+        const { data: perfil } = await MA().sb
+            .from("perfiles")
+            .select("premium_hasta")
+            .eq("id", (await MA().sbUsuario())?.id)
+            .single();
+        return perfil?.premium_hasta && new Date(perfil.premium_hasta) > new Date();
+    } catch(e) { return false; }
+}
 function diasRestantes(p) {
     if (!p?.premium_hasta) return 0;
     const ms = new Date(p.premium_hasta).getTime() - Date.now();
@@ -218,6 +279,7 @@ async function inicializarSistema() {
     }
     accesoAdminPorHash();
     initSelectoresTemas();
+    cargarTestimoniosDinamicos(); // carga desde Supabase si hay datos
 
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
         if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
@@ -270,9 +332,9 @@ function actualizarNavbar() {
     if (navPerfil) navPerfil.style.display = p ? "inline" : "none";
     if (navMisArchivos) navMisArchivos.style.display = p ? "inline" : "none";
     const navDiag = document.getElementById("nav-diagnostico-link");
-    if (navDiag) navDiag.style.display = p ? "inline" : "none";
+    if (navDiag) navDiag.style.display = "inline"; // siempre visible
     const diagSection = document.getElementById("diagnostico");
-    if (diagSection) diagSection.style.display = p ? "block" : "none";
+    if (diagSection) diagSection.style.display = "block"; // siempre visible
     if (navPuntos) {
         navPuntos.style.display = p ? "inline-flex" : "none";
         navPuntos.innerHTML = p ? `⭐ ${p.puntos || 0} · 🔥 ${p.racha || 0}` : "";
@@ -974,6 +1036,8 @@ function renderSeccionMisArchivos() {
 // ============ RANKING ============
 async function renderRankingPublico() {
     const cont = document.getElementById("ranking-grid"); if (!cont) return;
+    // Mostrar skeletons mientras carga
+    cont.innerHTML = Array(5).fill('<div class="skeleton" style="height:64px;margin-bottom:8px;border-radius:12px"></div>').join("");
     const lista = await MA().sbRanking();
     if (!lista.length) { cont.innerHTML = `<p style="text-align:center;color:#64748b">Aún no hay usuarios en el ranking.</p>`; return; }
     cont.innerHTML = lista.map((u, i) => {
@@ -1129,6 +1193,34 @@ function traducirError(msg) {
     return msg;
 }
 
+
+// ============ TESTIMONIOS DINÁMICOS ============
+async function cargarTestimoniosDinamicos() {
+    if (!MA()?.sb) return;
+    const grid = document.getElementById("testimonios-grid");
+    if (!grid) return;
+    try {
+        const { data, error } = await MA().sb
+            .from("testimonios")
+            .select("*")
+            .eq("activo", true)
+            .order("orden", { ascending: true })
+            .limit(3);
+        if (error || !data?.length) return; // mantener los hardcodeados si no hay en DB
+        const html = data.map(t => {
+            const iniciales = (t.nombre || "U").split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
+            return `<div class="testimonio-card">
+                <div class="testimonio-header">
+                    <div class="testimonio-avatar">${iniciales}</div>
+                    <div class="testimonio-info"><h4>${esc(t.nombre)}</h4><p>${esc(t.descripcion||"")}</p></div>
+                </div>
+                <p class="testimonio-texto">${esc(t.texto)}</p>
+            </div>`;
+        }).join("");
+        grid.innerHTML = html;
+    } catch(e) { /* mantener hardcodeados en caso de error */ }
+}
+
 // ============ BOOT ============
 document.addEventListener("DOMContentLoaded", function () {
     iniciarMonitoreoSesion();
@@ -1141,6 +1233,25 @@ document.addEventListener("DOMContentLoaded", function () {
             if (el && count) el.textContent = count + "+";
         } catch(e){}
     })();
+
+    // ── Detectar retorno desde MercadoPago ──
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _estadoPago = _urlParams.get("pago");
+    const _planPago   = _urlParams.get("plan");
+    if (_estadoPago === "ok") {
+        history.replaceState({}, "", window.location.pathname);
+        setTimeout(async () => {
+            await inicializarSistema();
+            mostrarToast(
+                `🎉 ¡Plan ${_planPago === "premium" ? "Premium" : "Básico"} activado! Ya tenés acceso completo.`,
+                "ok"
+            );
+        }, 2500);
+    } else if (_estadoPago === "pendiente") {
+        mostrarToast("⏳ Tu pago está pendiente. Te avisamos por WhatsApp cuando se acredite.", "warn");
+    } else if (_estadoPago === "error") {
+        mostrarToast("❌ El pago no se completó. Podés intentarlo de nuevo.", "error");
+    }
 });
 
 
@@ -1204,11 +1315,33 @@ document.addEventListener("contextmenu", function(e){
 
 
 function iniciarPagoMP(plan, btn) {
-    window.open(LINK_MERCADOPAGO, "_blank", "noopener");
+    const key = plan + "-mp"; // "basico-mp" o "premium-mp"
+    const link = LINKS_PAGO[key];
+    if (!link || link.includes("BASICO_MP") || link.includes("PREMIUM_MP")) {
+        // Links aún no configurados — caer en flujo manual por WhatsApp
+        mostrarToast("El pago online estará disponible pronto. Por ahora escribinos por WhatsApp 📲", "warn");
+        const card = btn.closest(".plan-card");
+        if (card) {
+            const wa = card.querySelector(".plan-btn-whatsapp");
+            if (wa) { wa.classList.remove("disabled"); wa.removeAttribute("aria-disabled"); }
+        }
+        return;
+    }
+    window.open(link, "_blank", "noopener");
     const card = btn.closest(".plan-card");
     if (card) {
         const wa = card.querySelector(".plan-btn-whatsapp");
-        if (wa) { wa.classList.remove("disabled"); wa.removeAttribute("aria-disabled"); }
+        if (wa) {
+            wa.classList.remove("disabled");
+            wa.removeAttribute("aria-disabled");
+            // Agregar username al mensaje de WhatsApp si el usuario está logueado
+            if (appState.perfilActual?.username) {
+                const href = wa.getAttribute("href");
+                if (href && !href.includes(appState.perfilActual.username)) {
+                    wa.setAttribute("href", href + encodeURIComponent(appState.perfilActual.username));
+                }
+            }
+        }
     }
     mostrarToast("Cuando termines el pago, usá el botón verde para enviar el comprobante 📲", "info");
 }
