@@ -674,15 +674,26 @@
         },
     };
 
-    // ---- Quill editor (carga lazy) ----
+    // ---- Quill editor (carga lazy) con KaTeX para fórmulas ----
     let _quillLoaded = false;
     function cargarQuill() {
         if (_quillLoaded) return Promise.resolve();
         return new Promise(resolve => {
+            // KaTeX CSS (para fórmulas matemáticas)
+            const katexCss = document.createElement('link');
+            katexCss.rel = 'stylesheet';
+            katexCss.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css';
+            document.head.appendChild(katexCss);
+            // KaTeX JS
+            const katexJs = document.createElement('script');
+            katexJs.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js';
+            document.head.appendChild(katexJs);
+            // Quill CSS
             const css = document.createElement('link');
             css.rel = 'stylesheet';
             css.href = 'https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css';
             document.head.appendChild(css);
+            // Quill JS
             const js = document.createElement('script');
             js.src = 'https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js';
             js.onload = () => { _quillLoaded = true; resolve(); };
@@ -731,31 +742,135 @@
         btnSave.style.display = 'inline-block';
 
         if (!_quillInstance) {
+            // Registrar tamaños de fuente personalizados
+            const SizeStyle = Quill.import('attributors/style/size');
+            SizeStyle.whitelist = ['10px','12px','14px','16px','18px','20px','24px','28px','32px','36px','48px'];
+            Quill.register(SizeStyle, true);
+
+            // Registrar familias tipográficas
+            const FontStyle = Quill.import('attributors/style/font');
+            FontStyle.whitelist = ['serif','monospace','Arial','Georgia','Times New Roman','Courier New','Verdana','Poppins'];
+            Quill.register(FontStyle, true);
+
+            // Colores predefinidos para matemáticas
+            const mathColors = [
+                '#000000','#434343','#666666','#999999','#b7b7b7','#cccccc','#efefef','#f3f3f3','#ffffff',
+                '#980000','#ff0000','#ff9900','#ffff00','#00ff00','#00ffff','#4a86e8','#0000ff','#9900ff',
+                '#e6b8af','#f4cccc','#fce5cd','#fff2cc','#d9ead3','#d0e0e3','#c9daf8','#cfe2f3','#d9d2e9',
+                '#dd7e6b','#ea9999','#f9cb9c','#ffe599','#b6d7a8','#a2c4c9','#a4c2f4','#9fc5e8','#b4a7d6',
+                '#cc4125','#e06666','#f6b26b','#ffd966','#93c47d','#76a5af','#6d9eeb','#6fa8dc','#8e7cc3',
+                '#a61c00','#cc0000','#e69138','#f1c232','#6aa84f','#45818e','#3c78d8','#3d85c6','#674ea7',
+                '#85200c','#990000','#b45f06','#bf9000','#38761d','#134f5c','#1155cc','#0b5394','#351c75',
+                '#5b0f00','#660000','#783f04','#7f6000','#274e13','#0c343d','#1c4587','#073763','#20124d'
+            ];
+
             _quillInstance = new Quill('#subtema-quill-editor', {
                 theme: 'snow',
                 placeholder: 'Escribí el contenido del tema acá...',
                 modules: {
                     toolbar: {
                         container: [
-                            [{ header: [2, 3, false] }],
+                            // Fila 1: Estructura
+                            [{ header: [1, 2, 3, 4, false] }],
+                            [{ font: FontStyle.whitelist }, { size: SizeStyle.whitelist }],
+                            // Fila 2: Formato texto
                             ['bold', 'italic', 'underline', 'strike'],
-                            [{ color: [] }, { background: [] }],
+                            [{ script: 'sub' }, { script: 'super' }],
+                            // Fila 3: Colores
+                            [{ color: mathColors }, { background: mathColors }],
+                            // Fila 4: Párrafo
                             [{ list: 'ordered' }, { list: 'bullet' }],
-                            ['blockquote', 'code-block'],
-                            ['link', 'image'],
+                            [{ indent: '-1' }, { indent: '+1' }],
                             [{ align: [] }],
+                            [{ direction: 'rtl' }],
+                            // Fila 5: Bloques e inserciones
+                            ['blockquote', 'code-block'],
+                            ['link', 'image', 'video', 'formula'],
+                            // Fila 6: Utilidades
+                            ['table-insert', 'divider'],
                             ['clean']
                         ],
                         handlers: {
-                            image: function() { window._materia.insertarImagenQuill(); }
+                            image: function() { window._materia.insertarImagenQuill(); },
+                            'table-insert': function() { _insertarTabla(); },
+                            'divider': function() { _insertarDivider(); },
+                            'formula': function() { _insertarFormula(); }
                         }
                     }
                 }
             });
+
+            // Personalizar botones custom en la toolbar
+            const toolbar = document.querySelector('#subtema-quill-container .ql-toolbar');
+            if (toolbar) {
+                const tableBtn = toolbar.querySelector('.ql-table-insert');
+                if (tableBtn) { tableBtn.innerHTML = '<svg viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="1"/><line x1="1" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1"/><line x1="7" y1="1" x2="7" y2="17" stroke="currentColor" stroke-width="1"/><line x1="12" y1="1" x2="12" y2="17" stroke="currentColor" stroke-width="1"/></svg>'; tableBtn.title = 'Insertar tabla'; }
+                const divBtn = toolbar.querySelector('.ql-divider');
+                if (divBtn) { divBtn.innerHTML = '<svg viewBox="0 0 18 18"><line x1="1" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="2"/></svg>'; divBtn.title = 'Línea separadora'; }
+                const formulaBtn = toolbar.querySelector('.ql-formula');
+                if (formulaBtn) { formulaBtn.title = 'Insertar fórmula matemática (LaTeX)'; }
+            }
+
             const wrap = document.getElementById('subtema-editor-wrap');
             if (wrap?._contenido) {
                 _quillInstance.root.innerHTML = wrap._contenido;
             }
+        }
+    }
+
+    // -- Insertar tabla en el editor --
+    function _insertarTabla() {
+        if (!_quillInstance) return;
+        const rows = prompt('¿Cuántas filas?', '3');
+        const cols = prompt('¿Cuántas columnas?', '3');
+        if (!rows || !cols) return;
+        const r = Math.min(parseInt(rows) || 3, 20);
+        const c = Math.min(parseInt(cols) || 3, 10);
+        let html = '<table style="width:100%;border-collapse:collapse;margin:12px 0"><thead><tr>';
+        for (let j = 0; j < c; j++) html += '<th style="border:1.5px solid #cbd5e1;padding:8px 12px;background:#f1f5f9;font-weight:700;text-align:left">Encabezado</th>';
+        html += '</tr></thead><tbody>';
+        for (let i = 0; i < r - 1; i++) {
+            html += '<tr>';
+            for (let j = 0; j < c; j++) html += '<td style="border:1px solid #e2e8f0;padding:8px 12px">&nbsp;</td>';
+            html += '</tr>';
+        }
+        html += '</tbody></table><p><br></p>';
+        const range = _quillInstance.getSelection(true);
+        _quillInstance.clipboard.dangerouslyPasteHTML(range.index, html);
+    }
+
+    // -- Insertar línea separadora --
+    function _insertarDivider() {
+        if (!_quillInstance) return;
+        const range = _quillInstance.getSelection(true);
+        _quillInstance.clipboard.dangerouslyPasteHTML(range.index, '<hr style="border:none;border-top:2px solid #e2e8f0;margin:20px 0"><p><br></p>');
+    }
+
+    // -- Insertar fórmula matemática (KaTeX) --
+    function _insertarFormula() {
+        if (!_quillInstance) return;
+        const latex = prompt(
+            'Escribí tu fórmula en LaTeX:\n\nEjemplos:\n  x^2 + y^2 = z^2\n  \\frac{a}{b}\n  \\sqrt{x}\n  \\int_0^1 f(x)dx\n  \\sum_{i=1}^{n} i',
+            'x^2 + y^2 = z^2'
+        );
+        if (!latex) return;
+        try {
+            if (typeof katex !== 'undefined') {
+                const html = katex.renderToString(latex, { throwOnError: false, displayMode: true });
+                const range = _quillInstance.getSelection(true);
+                _quillInstance.clipboard.dangerouslyPasteHTML(range.index,
+                    `<div class="math-formula" style="text-align:center;margin:16px 0;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">${html}</div><p><br></p>`
+                );
+            } else {
+                // Fallback si KaTeX no cargó: insertar como código
+                const range = _quillInstance.getSelection(true);
+                _quillInstance.clipboard.dangerouslyPasteHTML(range.index,
+                    `<pre class="math-formula-code" style="text-align:center;margin:16px 0;padding:12px;background:#f8fafc;border-radius:8px;font-family:monospace;font-size:18px">${latex}</pre><p><br></p>`
+                );
+            }
+        } catch (e) {
+            console.error('Error renderizando fórmula:', e);
+            alert('Error en la fórmula LaTeX. Revisá la sintaxis.');
         }
     }
 

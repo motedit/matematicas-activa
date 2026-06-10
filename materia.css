@@ -311,10 +311,77 @@ a{text-decoration:none;color:inherit;}
 .subtema-editor-save{background:linear-gradient(135deg,#16a34a,#15803d);border:none;color:white;font-size:13px;font-weight:700;padding:7px 16px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .subtema-editor-save:hover{opacity:.9;}
 #subtema-quill-container{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-top:6px;}
-#subtema-quill-editor{min-height:300px;font-size:15px;font-family:'Inter',system-ui,sans-serif;}
-#subtema-quill-editor .ql-editor{min-height:300px;}
-#subtema-quill-container .ql-toolbar{background:#f8fafc;border-bottom:1px solid #e2e8f0;border-top:none;border-left:none;border-right:none;}
+#subtema-quill-editor{min-height:400px;font-size:15px;font-family:'Inter',system-ui,sans-serif;}
+#subtema-quill-editor .ql-editor{min-height:400px;padding:20px 24px;line-height:1.8;}
+#subtema-quill-editor .ql-editor h1{font-size:28px;font-weight:800;margin:24px 0 12px;color:#0f172a;font-family:'Poppins',sans-serif;}
+#subtema-quill-editor .ql-editor h2{font-size:22px;font-weight:700;margin:20px 0 10px;color:#1e293b;font-family:'Poppins',sans-serif;}
+#subtema-quill-editor .ql-editor h3{font-size:18px;font-weight:700;margin:16px 0 8px;color:#334155;font-family:'Poppins',sans-serif;}
+#subtema-quill-editor .ql-editor h4{font-size:16px;font-weight:600;margin:14px 0 6px;color:#475569;font-family:'Poppins',sans-serif;}
+#subtema-quill-editor .ql-editor blockquote{border-left:4px solid #2563eb;background:#eff6ff;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;color:#1e40af;font-style:normal;}
+#subtema-quill-editor .ql-editor pre.ql-syntax{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:16px;font-size:14px;overflow-x:auto;}
+#subtema-quill-editor .ql-editor table{width:100%;border-collapse:collapse;margin:16px 0;border-radius:8px;overflow:hidden;}
+#subtema-quill-editor .ql-editor table th,#subtema-quill-editor .ql-editor table td{border:1px solid #e2e8f0;padding:10px 14px;text-align:left;}
+#subtema-quill-editor .ql-editor table th{background:#f1f5f9;font-weight:700;color:#0f172a;}
+#subtema-quill-editor .ql-editor table tr:nth-child(even){background:#f8fafc;}
+#subtema-quill-editor .ql-editor hr{border:none;border-top:2px solid #e2e8f0;margin:24px 0;}
+#subtema-quill-editor .ql-editor img{max-width:100%;border-radius:8px;margin:12px 0;}
+#subtema-quill-editor .ql-editor .math-formula{text-align:center;margin:16px 0;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;}
+#subtema-quill-container .ql-toolbar{background:linear-gradient(180deg,#f8fafc,#f1f5f9);border-bottom:1px solid #e2e8f0;border-top:none;border-left:none;border-right:none;padding:8px 12px;display:flex;flex-wrap:wrap;gap:2px;}
+#subtema-quill-container .ql-toolbar .ql-formats{margin-right:8px;}
+#subtema-quill-container .ql-toolbar button{width:32px;height:32px;border-radius:6px;transition:all .15s;}
+#subtema-quill-container .ql-toolbar button:hover{background:#e2e8f0;}
+#subtema-quill-container .ql-toolbar button.ql-active{background:#2563eb;color:white;}
+#subtema-quill-container .ql-toolbar button.ql-active .ql-stroke{stroke:white;}
+#subtema-quill-container .ql-toolbar button.ql-active .ql-fill{fill:white;}
+#subtema-quill-container .ql-toolbar .ql-picker{height:32px;}
+#subtema-quill-container .ql-toolbar .ql-picker-label{border-radius:6px;padding:4px 8px;border-color:#e2e8f0;}
+#subtema-quill-container .ql-toolbar .ql-picker-label:hover{background:#e2e8f0;}
+#subtema-quill-container .ql-toolbar .ql-picker-options{border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);border:1px solid #e2e8f0;padding:6px;max-height:300px;overflow-y:auto;}
 #subtema-quill-container .ql-container{border:none;}
+/* Font size labels en el picker */
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item::before{content:'Normal';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before{content:'10px - Pequeño';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before{content:'12px';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before{content:'14px';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before{content:'16px - Normal';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before{content:'18px';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before{content:'20px - Grande';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before{content:'24px';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before{content:'28px';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before{content:'32px - Muy grande';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before{content:'36px';}
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="48px"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before{content:'48px - Título';}
+/* Font family labels */
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item::before{content:'Sans-serif';}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before{content:'Serif';font-family:serif;}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before{content:'Monospace';font-family:monospace;}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Arial"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Arial"]::before{content:'Arial';font-family:Arial;}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Georgia"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Georgia"]::before{content:'Georgia';font-family:Georgia;}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Times New Roman"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Times New Roman"]::before{content:'Times New Roman';font-family:'Times New Roman';}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Courier New"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Courier New"]::before{content:'Courier New';font-family:'Courier New';}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Verdana"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Verdana"]::before{content:'Verdana';font-family:Verdana;}
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Poppins"]::before,
+#subtema-quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Poppins"]::before{content:'Poppins';font-family:'Poppins';}
 
 /* ── EJERCICIOS INTERACTIVOS ── */
 .mat-ejercicios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:12px;}
