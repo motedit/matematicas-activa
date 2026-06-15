@@ -158,14 +158,22 @@
         </div>
     </section>
 
-    <div class="buscador-wrap">
-        <div class="buscador-inner">
-            <span class="buscador-icon" aria-hidden="true">🔍</span>
-            <label for="buscador" class="sr-only">Buscar materia o tema</label>
-            <input type="search" id="buscador" placeholder="Buscar materia o tema (ej: ecuaciones, derivadas, fracciones)..." aria-label="Buscar materia o tema" autocomplete="off" onkeyup="buscarContenido()">
+    <section class="section" id="que-podes">
+        <div class="section-inner que-podes">
+            <div class="section-header">
+                <h2 class="section-title">¿Qué podés hacer en Matemáticas Activa?</h2>
+                <p class="section-sub">Todo lo que la plataforma te ofrece para aprender mejor</p>
+            </div>
+            <div class="qp-grid">
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📚</div><h3>Estudiá por materias</h3><p>8 áreas de matemática organizadas por niveles, desde aritmética hasta matemática universitaria.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎬</div><h3>Videos y PDFs</h3><p>Explicaciones paso a paso en video y guías descargables para repasar cuando quieras.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🧮</div><h3>Calculadora y graficadora</h3><p>Herramientas interactivas para resolver ejercicios y visualizar funciones al instante.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎮</div><h3>Juegos matemáticos</h3><p>Sudoku, cálculo mental, wordle matemático y más — aprendé mientras te divertís.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🏆</div><h3>Puntos y ranking</h3><p>Ganá puntos viendo contenido y comentando. Competí en el ranking semanal de estudiantes.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📁</div><h3>Tu carpeta personal</h3><p>Subí tus propios apuntes, PDFs y videos a un espacio privado solo para vos.</p></div>
+            </div>
         </div>
-        <div id="buscador-resultados" class="buscador-resultados"></div>
-    </div>
+    </section>
 
     <section class="section" id="materias">
         <div class="section-inner">
@@ -211,7 +219,7 @@
                 </a>
                 <a href="materias/Razonamiento/Razonamiento.html" class="materia-card" data-color="green">
                     <div class="materia-img-wrap"><img src="img/Razonamiento.jpg" alt="Razonamiento" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">🧠</span></div>
-                    <div class="materia-info"><h3>Razonamiento</h3><p>Lógica y resolución de problemas</p><span class="materia-arrow">→</span></div>
+                    <div class="materia-info"><h3>Razonamiento</h3><p>Curiosidades e historia de las matemáticas</p><span class="materia-arrow">→</span></div>
                 </a>
                 <a href="materias/Juegos/Juegos.html" class="materia-card" data-color="pink">
                     <div class="materia-img-wrap"><img src="img/Juegos.jpg" alt="Juegos" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">🎮</span></div>
@@ -238,20 +246,15 @@
         <a href="materias/Juegos/Juegos.html">Jugar ahora →</a>
     </div>
 
-    <section class="section" id="que-podes">
-        <div class="section-inner que-podes">
+    <!-- EXAMEN DE DIAGNÓSTICO -->
+    <section class="section" id="diagnostico">
+        <div class="section-inner">
             <div class="section-header">
-                <h2 class="section-title">¿Qué podés hacer en Matemáticas Activa?</h2>
-                <p class="section-sub">Todo lo que la plataforma te ofrece para aprender mejor</p>
+                <div class="section-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🧠</div>
+                <h2 class="section-title">Examen de Diagnóstico</h2>
+                <p class="section-sub">Descubrí tu nivel en cada materia con 20 preguntas aleatorias</p>
             </div>
-            <div class="qp-grid">
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📚</div><h3>Estudiá por materias</h3><p>8 áreas de matemática organizadas por niveles, desde aritmética hasta matemática universitaria.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎬</div><h3>Videos y PDFs</h3><p>Explicaciones paso a paso en video y guías descargables para repasar cuando quieras.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🧮</div><h3>Calculadora y graficadora</h3><p>Herramientas interactivas para resolver ejercicios y visualizar funciones al instante.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎮</div><h3>Juegos matemáticos</h3><p>Sudoku, cálculo mental, wordle matemático y más — aprendé mientras te divertís.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🏆</div><h3>Puntos y ranking</h3><p>Ganá puntos viendo contenido y comentando. Competí en el ranking semanal de estudiantes.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📁</div><h3>Tu carpeta personal</h3><p>Subí tus propios apuntes, PDFs y videos a un espacio privado solo para vos.</p></div>
-            </div>
+            <div id="diagnostico-container" style="max-width:700px;margin:0 auto"></div>
         </div>
     </section>
 
@@ -325,18 +328,6 @@
                 <p class="section-sub">Top 10 por puntos · Ganás puntos viendo contenido, comentando y manteniendo tu racha diaria</p>
             </div>
             <div id="ranking-grid" style="max-width:560px;margin:0 auto"><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div></div>
-        </div>
-    </section>
-
-    <!-- EXAMEN DE DIAGNÓSTICO -->
-    <section class="section" id="diagnostico">
-        <div class="section-inner">
-            <div class="section-header">
-                <div class="section-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🧠</div>
-                <h2 class="section-title">Examen de Diagnóstico</h2>
-                <p class="section-sub">Descubrí tu nivel en cada materia con 20 preguntas aleatorias</p>
-            </div>
-            <div id="diagnostico-container" style="max-width:700px;margin:0 auto"></div>
         </div>
     </section>
 

@@ -554,6 +554,22 @@
         "regresion y correlacion avanzada":"Regresión lineal múltiple, R², análisis residual.",
         "variable aleatoria y esperanza":"Valor esperado, varianza, momentos.",
         "estadistica bayesiana introductoria":"Teorema de Bayes, probabilidades a priori y a posteriori.",
+        "permutaciones y combinatoria":"Variaciones, permutaciones y combinaciones con y sin repetición.",
+        "criptografia y ciencia de datos":"Cifrado, hashing, análisis de datos, modelos predictivos.",
+        "logica proposicional":"Proposiciones, conectivos, tablas de verdad, razonamiento deductivo.",
+        "teoria de conjuntos":"Operaciones, diagramas de Venn, cardinalidad, conjuntos numéricos.",
+        "sucesiones numericas":"Patrones, sucesiones aritméticas y geométricas, Fibonacci.",
+        "problemas de ingenio":"Acertijos lógicos, puzzles matemáticos y desafíos de pensamiento lateral.",
+        "paradojas matematicas":"Paradoja de Zenón, del barbero, de Banach-Tarski y más.",
+        "trucos y patrones numericos":"Trucos de cálculo rápido, curiosidades numéricas y patrones ocultos.",
+        "matematicas en la vida cotidiana":"Aplicaciones reales: finanzas, deportes, cocina, arquitectura.",
+        "acertijos y desafios logicos":"Problemas de pensamiento lateral y razonamiento lógico.",
+        "historia de los numeros":"Del sistema babilónico al binario: cómo evolucionó contar.",
+        "grandes matematicos de la historia":"Euclides, Arquímedes, Euler, Gauss, Ramanujan y más.",
+        "problemas famosos sin resolver":"Hipótesis de Riemann, P vs NP, conjetura de Goldbach.",
+        "ilusiones geometricas y fractales":"Figuras imposibles, fractales, dimensión fraccionaria.",
+        "matematicas en el arte y la musica":"Proporción áurea, simetría, escalas musicales, Escher.",
+        "evolucion del algebra y el calculo":"De Al-Juarismi a Newton y Leibniz: la historia del cálculo.",
     };
     const PDF_MANIFEST = {}; // Sin PDFs por ahora
     const PDF_RUTA = "../../";
