@@ -846,11 +846,86 @@
             const wrap = document.getElementById('subtema-editor-wrap');
             if (wrap?._contenido) {
                 _quillInstance.root.innerHTML = wrap._contenido;
-            }
+
+
+            // Fix: reposicionar dropdowns del color picker
+            _fixQuillPickerOverflow(document.getElementById('subtema-quill-container'));            }
         }
     }
 
-    // -- Insertar tabla en el editor --
+        function _fixQuillPickerOverflow(container) {
+        if (!container) return;
+
+        if (!document.getElementById('quill-color-fix-css')) {
+            const style = document.createElement('style');
+            style.id = 'quill-color-fix-css';
+            style.textContent = `
+                .ql-picker.ql-color .ql-picker-options,
+                .ql-picker.ql-background .ql-picker-options {
+                    width: 216px !important;
+                    min-width: 216px !important;
+                    padding: 4px 6px 4px 6px !important;
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                    gap: 0px !important;
+                }
+                .ql-picker.ql-color .ql-picker-options .ql-picker-item,
+                .ql-picker.ql-background .ql-picker-options .ql-picker-item {
+                    width: 20px !important;
+                    height: 20px !important;
+                    margin: 1px !important;
+                    padding: 0 !important;
+                    border-radius: 3px !important;
+                }
+                .ql-picker.ql-color .ql-picker-options .ql-picker-item:hover,
+                .ql-picker.ql-background .ql-picker-options .ql-picker-item:hover {
+                    transform: scale(1.25);
+                    box-shadow: 0 0 3px rgba(0,0,0,.4);
+                    z-index: 1;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const obs = new MutationObserver(mutations => {
+            mutations.forEach(m => {
+                if (m.type !== 'attributes' || m.attributeName !== 'class') return;
+                const picker = m.target;
+                if (!picker.classList.contains('ql-picker')) return;
+                const opts = picker.querySelector('.ql-picker-options');
+                if (!opts) return;
+                if (picker.classList.contains('ql-expanded')) {
+                    const rect = picker.getBoundingClientRect();
+                    opts.style.position   = 'fixed';
+                    opts.style.top        = (rect.bottom + 4) + 'px';
+                    opts.style.left       = rect.left + 'px';
+                    opts.style.zIndex     = '99999';
+                    opts.style.maxHeight  = 'none';
+                    opts.style.overflow   = 'visible';
+                    requestAnimationFrame(() => {
+                        const or = opts.getBoundingClientRect();
+                        if (or.right > window.innerWidth - 8) {
+                            opts.style.left = Math.max(8, window.innerWidth - or.width - 8) + 'px';
+                        }
+                        if (or.left < 8) opts.style.left = '8px';
+                        if (or.bottom > window.innerHeight - 8) {
+                            opts.style.top = (rect.top - or.height - 4) + 'px';
+                        }
+                    });
+                } else {
+                    opts.style.position  = '';
+                    opts.style.top       = '';
+                    opts.style.left      = '';
+                    opts.style.zIndex    = '';
+                    opts.style.maxHeight = '';
+                    opts.style.overflow  = '';
+                }
+            });
+        });
+        container.querySelectorAll('.ql-picker').forEach(p => obs.observe(p, { attributes: true }));
+    }
+
+// -- Insertar tabla en el editor --
     function _insertarTabla() {
         if (!_quillInstance) return;
         const rows = prompt('¿Cuántas filas?', '3');
