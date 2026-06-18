@@ -768,7 +768,7 @@
             FontStyle.whitelist = ['serif','monospace','Arial','Georgia','Times New Roman','Courier New','Verdana','Poppins'];
             Quill.register(FontStyle, true);
 
-            // Colores predefinidos para matemáticas
+            // Colores predefinidos para matemáticas (incluye purples del contenido)
             const mathColors = [
                 '#000000','#434343','#666666','#999999','#b7b7b7','#cccccc','#efefef','#f3f3f3','#ffffff',
                 '#980000','#ff0000','#ff9900','#ffff00','#00ff00','#00ffff','#4a86e8','#0000ff','#9900ff',
@@ -777,7 +777,11 @@
                 '#cc4125','#e06666','#f6b26b','#ffd966','#93c47d','#76a5af','#6d9eeb','#6fa8dc','#8e7cc3',
                 '#a61c00','#cc0000','#e69138','#f1c232','#6aa84f','#45818e','#3c78d8','#3d85c6','#674ea7',
                 '#85200c','#990000','#b45f06','#bf9000','#38761d','#134f5c','#1155cc','#0b5394','#351c75',
-                '#5b0f00','#660000','#783f04','#7f6000','#274e13','#0c343d','#1c4587','#073763','#20124d'
+                '#5b0f00','#660000','#783f04','#7f6000','#274e13','#0c343d','#1c4587','#073763','#20124d',
+                // Purples del contenido de la plataforma
+                '#6b24b2','#c285ff','#7c3aed','#a855f7','#d8b4fe','#ede9fe',
+                // Extras útiles para educación
+                '#f472b6','#fb923c','#facc15','#4ade80','#22d3ee','#60a5fa','#a78bfa','#e879f9'
             ];
 
             _quillInstance = new Quill('#subtema-quill-editor', {
@@ -803,12 +807,15 @@
                             ['blockquote', 'code-block'],
                             ['link', 'image', 'video', 'formula'],
                             // Fila 6: Utilidades
-                            ['table-insert', 'divider'],
+                            ['table-insert', 'table-delete-row', 'table-delete-col', 'table-delete', 'divider'],
                             ['clean']
                         ],
                         handlers: {
                             image: function() { window._materia.insertarImagenQuill(); },
                             'table-insert': function() { _insertarTabla(); },
+                            'table-delete-row': function() { _tablaEliminarFila(); },
+                            'table-delete-col': function() { _tablaEliminarColumna(); },
+                            'table-delete': function() { _tablaEliminar(); },
                             'divider': function() { _insertarDivider(); },
                             'formula': function() { _insertarFormula(); }
                         }
@@ -821,6 +828,15 @@
             if (toolbar) {
                 const tableBtn = toolbar.querySelector('.ql-table-insert');
                 if (tableBtn) { tableBtn.innerHTML = '<svg viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="1"/><line x1="1" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1"/><line x1="7" y1="1" x2="7" y2="17" stroke="currentColor" stroke-width="1"/><line x1="12" y1="1" x2="12" y2="17" stroke="currentColor" stroke-width="1"/></svg>'; tableBtn.title = 'Insertar tabla'; }
+
+                const delRowBtn = toolbar.querySelector('.ql-table-delete-row');
+                if (delRowBtn) { delRowBtn.innerHTML = '<svg viewBox="0 0 18 18"><rect x="1" y="5" width="16" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="4" y1="7" x2="14" y2="11" stroke="#e53e3e" stroke-width="1.8"/><line x1="14" y1="7" x2="4" y2="11" stroke="#e53e3e" stroke-width="1.8"/></svg>'; delRowBtn.title = 'Eliminar fila'; }
+
+                const delColBtn = toolbar.querySelector('.ql-table-delete-col');
+                if (delColBtn) { delColBtn.innerHTML = '<svg viewBox="0 0 18 18"><rect x="5" y="1" width="8" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="7" y1="4" x2="11" y2="14" stroke="#e53e3e" stroke-width="1.8"/><line x1="11" y1="4" x2="7" y2="14" stroke="#e53e3e" stroke-width="1.8"/></svg>'; delColBtn.title = 'Eliminar columna'; }
+
+                const delTableBtn = toolbar.querySelector('.ql-table-delete');
+                if (delTableBtn) { delTableBtn.innerHTML = '<svg viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="1" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="0.8"/><line x1="7" y1="1" x2="7" y2="17" stroke="currentColor" stroke-width="0.8"/><line x1="3" y1="3" x2="15" y2="15" stroke="#e53e3e" stroke-width="2"/><line x1="15" y1="3" x2="3" y2="15" stroke="#e53e3e" stroke-width="2"/></svg>'; delTableBtn.title = 'Eliminar tabla completa'; }
                 const divBtn = toolbar.querySelector('.ql-divider');
                 if (divBtn) { divBtn.innerHTML = '<svg viewBox="0 0 18 18"><line x1="1" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="2"/></svg>'; divBtn.title = 'Línea separadora'; }
                 const formulaBtn = toolbar.querySelector('.ql-formula');
@@ -853,6 +869,66 @@
         html += '</tbody></table><p><br></p>';
         const range = _quillInstance.getSelection(true);
         _quillInstance.clipboard.dangerouslyPasteHTML(range.index, html);
+    }
+
+    // -- Helpers: encontrar tabla/celda en la selección actual --
+    function _encontrarTablaDesdeSeleccion() {
+        if (!_quillInstance) return null;
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return null;
+        let node = sel.anchorNode;
+        while (node && node !== _quillInstance.root) {
+            if (node.nodeName === 'TD' || node.nodeName === 'TH') return node;
+            node = node.parentNode;
+        }
+        return null;
+    }
+
+    // -- Eliminar fila --
+    function _tablaEliminarFila() {
+        const cell = _encontrarTablaDesdeSeleccion();
+        if (!cell) { alert('Coloc\u00e1 el cursor dentro de una tabla primero.'); return; }
+        const row = cell.closest('tr');
+        const table = cell.closest('table');
+        if (!row || !table) return;
+        const rows = table.querySelectorAll('tr');
+        if (rows.length <= 1) {
+            table.remove();
+        } else {
+            row.remove();
+        }
+        _quillInstance.update();
+    }
+
+    // -- Eliminar columna --
+    function _tablaEliminarColumna() {
+        const cell = _encontrarTablaDesdeSeleccion();
+        if (!cell) { alert('Coloc\u00e1 el cursor dentro de una tabla primero.'); return; }
+        const table = cell.closest('table');
+        if (!table) return;
+        const colIndex = Array.from(cell.parentNode.children).indexOf(cell);
+        const allRows = table.querySelectorAll('tr');
+        const totalCols = allRows[0] ? allRows[0].children.length : 0;
+        if (totalCols <= 1) {
+            table.remove();
+        } else {
+            allRows.forEach(row => {
+                if (row.children[colIndex]) row.children[colIndex].remove();
+            });
+        }
+        _quillInstance.update();
+    }
+
+    // -- Eliminar tabla completa --
+    function _tablaEliminar() {
+        const cell = _encontrarTablaDesdeSeleccion();
+        if (!cell) { alert('Coloc\u00e1 el cursor dentro de una tabla primero.'); return; }
+        const table = cell.closest('table');
+        if (!table) return;
+        if (confirm('\u00bfEliminar la tabla completa?')) {
+            table.remove();
+            _quillInstance.update();
+        }
     }
 
     // -- Insertar línea separadora --
