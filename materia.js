@@ -865,9 +865,12 @@
                     width: 216px !important;
                     min-width: 216px !important;
                     padding: 4px 6px 4px 6px !important;
-                    display: flex !important;
                     flex-wrap: wrap !important;
                     gap: 0px !important;
+                }
+                .ql-picker.ql-expanded.ql-color .ql-picker-options,
+                .ql-picker.ql-expanded.ql-background .ql-picker-options {
+                    display: flex !important;
                 }
                 .ql-picker.ql-color .ql-picker-options .ql-picker-item,
                 .ql-picker.ql-background .ql-picker-options .ql-picker-item {
