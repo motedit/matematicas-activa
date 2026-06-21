@@ -276,7 +276,7 @@ async function inicializarSistema() {
     }
     accesoAdminPorHash();
     initSelectoresTemas();
-    cargarTestimoniosDinamicos(); // carga desde Supabase si hay datos
+    // cargarTestimoniosDinamicos(); // seccion de testimonios eliminada // carga desde Supabase si hay datos
     verificarRetornoPago(); // feedback al volver de MercadoPago
 
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
@@ -1193,31 +1193,7 @@ function traducirError(msg) {
 
 
 // ============ TESTIMONIOS DINÁMICOS ============
-async function cargarTestimoniosDinamicos() {
-    if (!MA()?.sb) return;
-    const grid = document.getElementById("testimonios-grid");
-    if (!grid) return;
-    try {
-        const { data, error } = await MA().sb
-            .from("testimonios")
-            .select("*")
-            .eq("activo", true)
-            .order("orden", { ascending: true })
-            .limit(3);
-        if (error || !data?.length) return; // mantener los hardcodeados si no hay en DB
-        const html = data.map(t => {
-            const iniciales = (t.nombre || "U").split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
-            return `<div class="testimonio-card">
-                <div class="testimonio-header">
-                    <div class="testimonio-avatar">${iniciales}</div>
-                    <div class="testimonio-info"><h4>${esc(t.nombre)}</h4><p>${esc(t.descripcion||"")}</p></div>
-                </div>
-                <p class="testimonio-texto">${esc(t.texto)}</p>
-            </div>`;
-        }).join("");
-        grid.innerHTML = html;
-    } catch(e) { /* mantener hardcodeados en caso de error */ }
-}
+// ============ TESTIMONIOS (ELIMINADO) ============
 
 // ============ BOOT ============
 document.addEventListener("DOMContentLoaded", function () {
