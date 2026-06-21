@@ -1617,18 +1617,9 @@
     })();
 
     // ---- Modulos interactivos por materia ----
-    if (MATERIA_ID === 'calculo') {
-        const sf = document.createElement('script');
-        sf.src = '../../funciones.js';
-        sf.onload = () => { if (window.initFunciones) window.initFunciones(); };
-        document.head.appendChild(sf);
-    } else if (['geometria', 'estadistica'].includes(MATERIA_ID)) {
-        const sg = document.createElement('script');
-        sg.src = '../../graficadora.js';
-        sg.onload = () => { if (window.initGraficadora) window.initGraficadora(MATERIA_ID); };
-        document.head.appendChild(sg);
-    } else if (['algebra', 'aritmetica', 'trigonometria'].includes(MATERIA_ID)) {
-        const sc = document.createElement('script');
+        // GeoGebra esta embebido en el contenido de cada tema, no se necesita graficador/funciones aparte
+        if (['algebra', 'aritmetica'].includes(MATERIA_ID)) {
+            const sc = document.createElement('script');
         sc.src = '../../calculadora.js';
         sc.onload = () => { if (window.initCalculadora) window.initCalculadora(MATERIA_ID); };
         document.head.appendChild(sc);
