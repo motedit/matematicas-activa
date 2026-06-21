@@ -946,7 +946,6 @@ function renderSeccionPremium() {
                 <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
                 <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
                 <li>✅ Sistema de puntos y ranking</li>
-                <li>✅ Comentarios en todo el contenido</li>
                 <li>❌ No podés subir archivos personales</li>
             </ul>
             <div class="plan-pago-pasos">
