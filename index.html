@@ -105,6 +105,51 @@
       .pwa-install-banner .pwa-close{background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;padding:0 0 0 4px;line-height:1}
       @keyframes slideUpBanner{from{opacity:0;transform:translateX(-50%) translateY(30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
       @media(max-width:480px){.pwa-install-banner{bottom:12px;padding:12px 14px;gap:10px}.pwa-install-banner .pwa-icon{width:40px;height:40px}}
+
+      /* AI Chat Widget */
+      #ai-chat-fab{position:fixed;bottom:90px;right:24px;z-index:10000;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#2563eb);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 6px 24px rgba(124,58,237,.4);transition:all .3s;display:flex;align-items:center;justify-content:center}
+      #ai-chat-fab:hover{transform:scale(1.1);box-shadow:0 8px 32px rgba(124,58,237,.55)}
+      #ai-chat-fab.active{background:linear-gradient(135deg,#dc2626,#f59e0b)}
+      #ai-chat-panel{position:fixed;bottom:160px;right:24px;z-index:10001;width:380px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 200px);background:white;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(20px) scale(.95);pointer-events:none;transition:all .3s ease}
+      #ai-chat-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+      body.dark #ai-chat-panel{background:#1e293b;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+      .ai-chat-header{background:linear-gradient(135deg,#7c3aed,#2563eb);color:white;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+      .ai-chat-header h4{margin:0;font-size:15px;font-family:'Poppins',sans-serif;flex:1}
+      .ai-chat-header button{background:none;border:none;color:white;font-size:18px;cursor:pointer;padding:4px;opacity:.8;transition:opacity .2s}
+      .ai-chat-header button:hover{opacity:1}
+      #ai-topic-badge{display:none;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;font-size:11px;margin-top:4px}
+      #ai-photo-counter{display:none;font-size:11px;color:rgba(255,255,255,.85);margin-top:2px}
+      #ai-chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+      .ai-msg{display:flex;gap:8px;align-items:flex-start;max-width:92%}
+      .ai-msg-user{flex-direction:row-reverse;align-self:flex-end}
+      .ai-msg-bot{align-self:flex-start}
+      .ai-msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:#f1f5f9}
+      body.dark .ai-msg-avatar{background:#334155}
+      .ai-msg-content{background:#f1f5f9;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.6;color:#1e293b;word-break:break-word}
+      .ai-msg-content p{margin:0 0 6px}.ai-msg-content p:last-child{margin:0}
+      .ai-msg-content strong{color:#7c3aed}
+      body.dark .ai-msg-content{background:#334155;color:#e2e8f0}
+      body.dark .ai-msg-content strong{color:#a78bfa}
+      .ai-msg-user .ai-msg-content{background:linear-gradient(135deg,#7c3aed,#2563eb);color:white}
+      .ai-msg-user .ai-msg-content strong{color:#fde68a}
+      .ai-action-btn{display:inline-block;background:linear-gradient(135deg,#7c3aed,#2563eb);color:white;border:none;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:6px}
+      .ai-action-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,.3)}
+      #ai-typing{display:none;align-items:center;gap:8px;padding:8px 12px;font-size:12px;color:#94a3b8}
+      #ai-typing .ai-typing-dots{display:flex;gap:4px}
+      #ai-typing .ai-typing-dots span{width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:ai-bounce .6s infinite alternate}
+      #ai-typing .ai-typing-dots span:nth-child(2){animation-delay:.15s}
+      #ai-typing .ai-typing-dots span:nth-child(3){animation-delay:.3s}
+      @keyframes ai-bounce{to{transform:translateY(-4px);opacity:.5}}
+      .ai-chat-input-area{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid #e2e8f0;flex-shrink:0}
+      body.dark .ai-chat-input-area{border-color:#334155}
+      #ai-chat-input{flex:1;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:13px;outline:none;font-family:'Inter',sans-serif;resize:none;background:white;color:#1e293b}
+      #ai-chat-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+      body.dark #ai-chat-input{background:#0f172a;border-color:#334155;color:#e2e8f0}
+      .ai-btn-photo,.ai-btn-send{width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;flex-shrink:0}
+      .ai-btn-photo{background:#f1f5f9;color:#64748b}.ai-btn-photo:hover{background:#e2e8f0;color:#7c3aed}
+      body.dark .ai-btn-photo{background:#334155;color:#94a3b8}
+      .ai-btn-send{background:linear-gradient(135deg,#7c3aed,#2563eb);color:white}.ai-btn-send:hover{transform:scale(1.08)}
+      @media(max-width:480px){#ai-chat-panel{bottom:80px;right:8px;left:8px;width:auto;height:calc(100vh - 160px);max-height:none;border-radius:16px}#ai-chat-fab{bottom:80px;right:16px;width:54px;height:54px;font-size:24px}}
     </style>
 </head>
 <body>
@@ -683,6 +728,33 @@
         </div>
     </div>
 
+
+    <!-- AI Chat Widget -->
+    <button type="button" id="ai-chat-fab" onclick="toggleAIChat()" aria-label="Asistente de IA">🧠</button>
+    <div id="ai-chat-panel">
+        <div class="ai-chat-header">
+            <span style="font-size:24px">🤖</span>
+            <div style="flex:1">
+                <h4>Tutor de Matemáticas IA</h4>
+                <div id="ai-topic-badge"></div>
+                <div id="ai-photo-counter"></div>
+            </div>
+            <button onclick="clearAIChat()" title="Nueva conversación">🗑️</button>
+            <button onclick="closeAIChat()" title="Cerrar">✕</button>
+        </div>
+        <div id="ai-chat-messages"></div>
+        <div id="ai-typing">
+            <div class="ai-typing-dots"><span></span><span></span><span></span></div>
+            <span class="ai-typing-text">Pensando...</span>
+        </div>
+        <div class="ai-chat-input-area">
+            <button type="button" class="ai-btn-photo" onclick="triggerPhotoUpload()" title="Subir foto de ejercicio">📷</button>
+            <input type="file" id="ai-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)">
+            <input type="text" id="ai-chat-input" placeholder="Escribí tu duda de matemáticas..." autocomplete="off">
+            <button type="button" class="ai-btn-send" onclick="sendAIMessage()" title="Enviar">➤</button>
+        </div>
+    </div>
+
     <button type="button" class="fab-contacto" id="fab-contacto-btn" aria-label="Contactanos" onclick="toggleFabContacto()">💬</button>
     <div class="fab-menu" id="fab-menu-contacto" role="dialog" aria-label="Opciones de contacto">
         <h4>¿Necesitás ayuda?</h4>
@@ -737,6 +809,7 @@
     <script src="gamification.js?v=1"></script>
     <script src="historias.js?v=1"></script>
     <script src="visual-fx.js?v=1"></script>
+    <script src="ai-chat.js?v=1"></script>
 
     <!-- PWA Install Banner -->
     <div id="pwa-install-banner" class="pwa-install-banner" style="display:none">
