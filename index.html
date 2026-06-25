@@ -80,8 +80,6 @@
       .sobre-mi-cta{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:600;text-decoration:none;transition:all .3s;box-shadow:0 4px 16px rgba(37,99,235,.25)}
       .sobre-mi-cta:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(37,99,235,.35)}
       .plan-pago-pasos{display:flex;flex-direction:column;gap:8px;margin-top:auto}
-      .plan-btn-whatsapp{background:linear-gradient(135deg,#25d366,#128c7e)!important;color:white!important}
-      .plan-btn-whatsapp.disabled{background:#cbd5e1!important;color:#94a3b8!important;pointer-events:none;cursor:not-allowed;opacity:.7}
       .plan-features li.feature-destacada{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(220,38,38,.1));border-radius:8px;padding:8px 10px;margin-top:4px;border:1px solid rgba(245,158,11,.35);font-weight:600;color:#92400e}
       /* Skeleton loaders */
       @keyframes skeleton-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
@@ -647,10 +645,7 @@
                         <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
                         <li>✅ Sistema de puntos y ranking</li>                        <li>❌ No podés subir archivos personales</li>
                     </ul>
-                    <div class="plan-pago-pasos">
-                        <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Paso 1: Pagar con MercadoPago</button>
-                        <a class="plan-btn plan-btn-whatsapp disabled" data-plan="basico" aria-disabled="true" href="https://wa.me/5493827654154?text=Hola%21%20Pagu%C3%A9%20el%20PLAN%20B%C3%81SICO%20%28%247.000%29%20de%20Matem%C3%A1ticas%20Activa%20y%20te%20env%C3%ADo%20el%20comprobante.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📲 Paso 2: Enviar comprobante</a>
-                    </div>
+                    <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Pagar con MercadoPago</button>
                 </div>
                 <div class="plan-card plan-card-premium">
                     <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
@@ -664,22 +659,16 @@
                         <li>✅ Carpeta personal ilimitada</li>
                         <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
                     </ul>
-                    <div class="plan-pago-pasos">
-                        <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Paso 1: Pagar con MercadoPago</button>
-                        <a class="plan-btn plan-btn-whatsapp disabled" data-plan="premium" aria-disabled="true" href="https://wa.me/5493827654154?text=Hola%21%20Pagu%C3%A9%20el%20PLAN%20PREMIUM%20%28%2412.000%29%20de%20Matem%C3%A1ticas%20Activa%20y%20te%20env%C3%ADo%20el%20comprobante.%20Mi%20usuario%20es%3A%20" target="_blank" rel="noopener">📲 Paso 2: Enviar comprobante</a>
-                    </div>
+                    <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Pagar con MercadoPago</button>
                 </div>
             </div>
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-top:20px">
                 <h4 style="margin:0 0 8px;font-size:14px;color:#92400e">📋 Cómo funciona el pago:</h4>
                 <ol style="margin:0;padding-left:20px;font-size:13px;color:#78350f;line-height:1.7">
-                    <li>Apretá "Paso 1: Pagar con MercadoPago" del plan que quieras — se abre el link de pago.</li>
-                    <li>Una vez pagado, se habilita el botón verde "Paso 2: Enviar comprobante".</li>
-                    <li>Apretá ese botón: se abre WhatsApp con un mensaje predefinido. Solo agregá tu nombre de usuario.</li>
-                    <li>Adjuntá el comprobante de pago en ese chat de WhatsApp.</li>
-                    <li>Tu plan se activa en pocos minutos.</li>
+                    <li>Apretá "Pagar con MercadoPago" del plan que quieras.</li>
+                    <li>Pagá con tarjeta, transferencia o dinero en cuenta.</li>
+                    <li>Tu plan se activa automáticamente en segundos.</li>
                 </ol>
-                <p style="font-size:12px;color:#92400e;margin:10px 0 0"><a href="guia-pago.html" target="_blank" style="color:#92400e;font-weight:600">📖 Ver guía detallada de pago</a></p>
             </div>
         </div>
     </div>
@@ -688,10 +677,10 @@
     <button type="button" class="fab-contacto" id="fab-contacto-btn" aria-label="Contactanos" onclick="toggleFabContacto()">💬</button>
     <div class="fab-menu" id="fab-menu-contacto" role="dialog" aria-label="Opciones de contacto">
         <h4>¿Necesitás ayuda?</h4>
-        <p>Mandanos tu comprobante de pago o consulta:</p>
+        <p>Contactanos:</p>
         <a class="fab-opcion wa" href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activa.%20" target="_blank" rel="noopener">
             <span class="fab-opcion-icon">💚</span>
-            <div><div>WhatsApp</div><div style="font-size:11px;opacity:.9;font-weight:400">Comprobante o consultas</div></div>
+            <div><div>WhatsApp</div><div style="font-size:11px;opacity:.9;font-weight:400">Consultas y soporte</div></div>
         </a>
         <a class="fab-opcion ig" href="https://www.instagram.com/matematicas_activa" target="_blank" rel="noopener">
             <span class="fab-opcion-icon">📷</span>
