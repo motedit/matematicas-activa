@@ -5,7 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matemáticas Activa — Plataforma educativa de matemáticas</title>
     <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios, juegos y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos.">
+    <meta name="keywords" content="matemáticas, clases de matemáticas, matemáticas online, ejercicios de matemáticas, álgebra, geometría, trigonometría, cálculo, aritmética, estadística, educación argentina, secundaria, universidad, clases particulares, profesor de matemáticas, La Rioja, Argentina">
+    <meta name="author" content="Marcos Díaz">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://motedit.github.io/matematicas-activa/">
     <meta name="theme-color" content="#2563eb">
+    <!-- Structured Data - JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "Matemáticas Activa",
+      "url": "https://motedit.github.io/matematicas-activa/",
+      "logo": "https://motedit.github.io/matematicas-activa/img/descarga.png",
+      "description": "Plataforma educativa de matemáticas para secundaria y universidad con videos, ejercicios interactivos, juegos y PDFs.",
+      "founder": {
+        "@type": "Person",
+        "name": "Marcos Díaz",
+        "jobTitle": "Profesor de Matemáticas",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "La Rioja",
+          "addressCountry": "AR"
+        }
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "Argentina"
+      },
+      "sameAs": [],
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Plan Básico",
+          "price": "7000",
+          "priceCurrency": "ARS",
+          "description": "Acceso a contenido educativo por 23 días"
+        },
+        {
+          "@type": "Offer",
+          "name": "Plan Premium",
+          "price": "12000",
+          "priceCurrency": "ARS",
+          "description": "Acceso completo a todo el contenido por 30 días"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Matemáticas Activa",
+      "url": "https://motedit.github.io/matematicas-activa/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://motedit.github.io/matematicas-activa/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
     <!-- Open Graph / WhatsApp / Instagram preview -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://motedit.github.io/matematicas-activa/">
@@ -25,7 +84,6 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="no-referrer">
     <link rel="icon" href="img/descarga.png" type="image/png">
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -92,17 +150,6 @@
       .dark-toggle-fixed{position:fixed;top:14px;right:64px;z-index:9999;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:50%;transition:background .2s;}
       .dark-toggle-fixed:hover{background:rgba(128,128,128,.15);}
       @media(min-width:768px){.dark-toggle-fixed{display:none;}}
-    
-      /* PWA Install Banner */
-      .pwa-install-banner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border:1px solid rgba(99,102,241,.4);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:420px;width:calc(100% - 32px);animation:slideUpBanner .5s ease}
-      .pwa-install-banner .pwa-icon{width:48px;height:48px;border-radius:12px;flex-shrink:0}
-      .pwa-install-banner .pwa-text h4{color:#fff;margin:0 0 2px;font-size:14px;font-weight:600}
-      .pwa-install-banner .pwa-text p{color:#94a3b8;margin:0;font-size:12px}
-      .pwa-install-banner .pwa-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:transform .15s}
-      .pwa-install-banner .pwa-btn:hover{transform:scale(1.05)}
-      .pwa-install-banner .pwa-close{background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;padding:0 0 0 4px;line-height:1}
-      @keyframes slideUpBanner{from{opacity:0;transform:translateX(-50%) translateY(30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-      @media(max-width:480px){.pwa-install-banner{bottom:12px;padding:12px 14px;gap:10px}.pwa-install-banner .pwa-icon{width:40px;height:40px}}
 
     </style>
 </head>
@@ -268,6 +315,7 @@
             <div id="diagnostico-container" style="max-width:700px;margin:0 auto"></div>
         </div>
     </section>
+
 
     <section class="section section-alt" id="mis-archivos-section" style="display:none">
         <div class="section-inner">
@@ -613,7 +661,8 @@
                         <tr><td>Duración</td><td>Para siempre</td><td>23 días</td><td class="col-premium">30 días</td></tr>
                         <tr><td>Archivos descargables</td><td>3 por semana</td><td>✅ Ilimitado</td><td class="col-premium">✅ Ilimitado</td></tr>
                         <tr><td>Calculadora / Graficadora</td><td>3 usos por semana</td><td>✅ Sin límite</td><td class="col-premium">✅ Sin límite</td></tr>
-                        <tr><td>Ranking</td><td>✅</td><td>✅</td><td class="col-premium">✅</td></tr>                        <tr><td>Subir archivos personales</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
+                        <tr><td>Ranking</td><td>✅</td><td>✅</td><td class="col-premium">✅</td></tr>
+                        <tr><td>Subir archivos personales</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
                         <tr><td>Soporte personalizado con el profe</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
                         <tr><td>Canal WhatsApp exclusivo</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
                     </tbody>
@@ -643,7 +692,8 @@
                     <ul class="plan-features">
                         <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
                         <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
-                        <li>✅ Sistema de puntos y ranking</li>                        <li>❌ No podés subir archivos personales</li>
+                        <li>✅ Sistema de puntos y ranking</li>
+                        <li>❌ No podés subir archivos personales</li>
                     </ul>
                     <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Pagar con MercadoPago</button>
                 </div>
@@ -672,7 +722,6 @@
             </div>
         </div>
     </div>
-
 
     <button type="button" class="fab-contacto" id="fab-contacto-btn" aria-label="Contactanos" onclick="toggleFabContacto()">💬</button>
     <div class="fab-menu" id="fab-menu-contacto" role="dialog" aria-label="Opciones de contacto">
@@ -728,61 +777,5 @@
     <script src="gamification.js?v=1"></script>
     <script src="historias.js?v=1"></script>
     <script src="visual-fx.js?v=1"></script>
-
-    <!-- PWA Install Banner -->
-    <div id="pwa-install-banner" class="pwa-install-banner" style="display:none">
-        <img src="img/icon-192x192.png" alt="MAtiva" class="pwa-icon">
-        <div class="pwa-text">
-            <h4>Instalar Matemáticas Activa</h4>
-            <p>Accedé más rápido desde tu pantalla de inicio</p>
-        </div>
-        <button class="pwa-btn" id="pwa-install-btn">Instalar</button>
-        <button class="pwa-close" id="pwa-dismiss-btn" aria-label="Cerrar">&times;</button>
-    </div>
-    <script>
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-            .then(reg => console.log('SW registrado:', reg.scope))
-            .catch(err => console.warn('SW error:', err));
-    }
-
-    // PWA Install Prompt
-    let deferredPrompt;
-    const banner = document.getElementById('pwa-install-banner');
-    const installBtn = document.getElementById('pwa-install-btn');
-    const dismissBtn = document.getElementById('pwa-dismiss-btn');
-
-    window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const dismissed = localStorage.getItem('pwa-dismissed');
-        if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
-        if (window.matchMedia('(display-mode: standalone)').matches) return;
-        banner.style.display = 'flex';
-    });
-
-    if (installBtn) installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const result = await deferredPrompt.userChoice;
-        if (result.outcome === 'accepted') {
-            banner.style.display = 'none';
-            console.log('PWA instalada');
-        }
-        deferredPrompt = null;
-    });
-
-    if (dismissBtn) dismissBtn.addEventListener('click', () => {
-        banner.style.display = 'none';
-        localStorage.setItem('pwa-dismissed', Date.now().toString());
-    });
-
-    window.addEventListener('appinstalled', () => {
-        banner.style.display = 'none';
-        deferredPrompt = null;
-        console.log('PWA instalada exitosamente');
-    });
-    </script>
 </body>
 </html>
