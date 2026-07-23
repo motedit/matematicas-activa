@@ -590,8 +590,9 @@
                 <div class="tab-toolbar">
                     <span style="font-size:13px;color:#666">Contenido publicado</span>
                     <div style="display:flex;gap:6px;flex-wrap:wrap">
-                        <select id="filtro-seccion" onchange="renderAdminArchivos()"><option value="">Todas las secciones</option><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imágenes</option><option value="texto">Texto</option></select>
+                        <select id="filtro-seccion" onchange="renderAdminArchivos()"><option value="">Todas las secciones</option><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium (legado)</option><option value="imagen">Imágenes</option><option value="texto">Texto</option></select>
                         <select id="filtro-materia" onchange="renderAdminArchivos()"><option value="">Todas las materias</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option><option value="general">General</option></select>
+                        <select id="filtro-nivel" onchange="renderAdminArchivos()"><option value="">Todos los niveles</option><option value="gratis">🆓 Gratis</option><option value="basico">🔷 Básico</option><option value="premium">⭐ Premium</option></select>
                     </div>
                 </div>
                 <div id="admin-archivos-grid" class="admin-grid"></div>
@@ -602,7 +603,8 @@
                     <div class="form-group"><label for="su-titulo">Título *</label><input type="text" id="su-titulo" placeholder="Nombre del contenido"></div>
                     <div class="form-group"><label for="su-materia">📚 Materia *</label><select id="su-materia"><option value="general">General</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option></select></div>
                     <div class="form-group"><label for="su-tema">🎯 Tema (opcional, ruta de aprendizaje)</label><select id="su-tema"><option value="">— Sin tema específico —</option></select></div>
-                    <div class="form-group"><label for="su-seccion">📂 Sección *</label><select id="su-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
+                    <div class="form-group"><label for="su-seccion">📂 Tipo de contenido *</label><select id="su-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
+                    <div class="form-group"><label for="su-nivel">🔒 Nivel de acceso *</label><select id="su-nivel"><option value="gratis">🆓 Gratis — lo ve cualquier usuario logueado</option><option value="basico">🔷 Básico — Básico y Premium</option><option value="premium">⭐ Premium — solo Premium</option></select></div>
                     <div class="form-group"><label for="su-tipo">Tipo *</label><select id="su-tipo" onchange="actualizarCampoArchivo()"><option value="archivo">Archivo</option><option value="texto">Texto</option><option value="url-video">URL de video</option></select></div>
                     <div id="su-archivo-wrap" class="form-group"><label for="su-archivo">Archivo (máx. 2 GB)</label><input type="file" id="su-archivo" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"></div>
                     <div id="su-texto-wrap" class="form-group" style="display:none"><label for="su-texto">Contenido</label><textarea id="su-texto" rows="5" placeholder="Escribí el contenido..."></textarea></div>
@@ -636,7 +638,8 @@
             <div class="form-group"><label for="ed-titulo">Título</label><input type="text" id="ed-titulo"></div>
             <div class="form-group"><label for="ed-desc">Descripción</label><input type="text" id="ed-desc"></div>
             <div class="form-group"><label for="ed-materia">Materia</label><select id="ed-materia"><option value="general">General</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option></select></div>
-            <div class="form-group"><label for="ed-seccion">Sección</label><select id="ed-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="premium">Premium</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
+            <div class="form-group"><label for="ed-seccion">Tipo de contenido</label><select id="ed-seccion"><option value="video">Videos</option><option value="pdf">PDFs</option><option value="imagen">Imagen</option><option value="texto">Texto</option></select></div>
+            <div class="form-group"><label for="ed-nivel">🔒 Nivel de acceso</label><select id="ed-nivel"><option value="gratis">🆓 Gratis</option><option value="basico">🔷 Básico</option><option value="premium">⭐ Premium</option></select></div>
             <div id="ed-texto-wrap" class="form-group" style="display:none"><label for="ed-texto">Contenido</label><textarea id="ed-texto" rows="5"></textarea></div>
             <div id="ed-error" class="form-error" role="alert"></div>
             <div style="display:flex;gap:8px;margin-top:1rem">
@@ -775,7 +778,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=13"></script>
-    <script src="scripts.js?v=13"></script>
+    <script src="scripts.js?v=14"></script>
     <script src="gamification.js?v=1"></script>
     <script src="historias.js?v=1"></script>
     <script src="visual-fx.js?v=1"></script>
