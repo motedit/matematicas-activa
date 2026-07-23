@@ -1,5 +1,5 @@
 /* ============================================================
-   visual-fx.js  â  MatemÃ¡ticas Activa  â  Visual Effects Module
+   visual-fx.js  —  Matemáticas Activa  —  Visual Effects Module
    7 visual enhancements in a single IIFE
    ============================================================ */
 (function () {
@@ -105,7 +105,7 @@
     var hero = document.querySelector('.hero');
     if (!hero) return;
 
-    var symbols = ['Ï', 'â', 'â«', 'Î¸', 'Î', 'â', 'Â±', 'â', 'â', 'Î±'];
+    var symbols = ['π', '√', '∫', 'θ', 'Δ', '∞', '±', '∑', '∂', 'α'];
     var container = document.createElement('div');
     container.className = 'vfx-particles';
     container.setAttribute('aria-hidden', 'true');
@@ -185,9 +185,12 @@
 
     var style = document.createElement('style');
     style.textContent =
-      '#vfx-top{position:fixed;bottom:28px;right:28px;z-index:9998;width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;font-size:20px;font-weight:700;color:white;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 4px 16px rgba(37,99,235,.35);opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity .3s,visibility .3s,transform .3s,background .3s}' +
+      /* bottom:98px deja lugar arriba del boton verde de contacto (.fab-contacto: bottom 24px + alto 60px + separacion 14px) para que no se superpongan */
+      '#vfx-top{position:fixed;bottom:98px;right:28px;z-index:799;width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;font-size:20px;font-weight:700;color:white;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 4px 16px rgba(37,99,235,.35);opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity .3s,visibility .3s,transform .3s,background .3s}' +
       '#vfx-top.vfx-show{opacity:1;visibility:visible;transform:translateY(0)}' +
-      '#vfx-top:hover{background:linear-gradient(135deg,#1d4ed8,#6d28d9);transform:translateY(-2px);box-shadow:0 6px 24px rgba(37,99,235,.45)}';
+      '#vfx-top:hover{background:linear-gradient(135deg,#1d4ed8,#6d28d9);transform:translateY(-2px);box-shadow:0 6px 24px rgba(37,99,235,.45)}' +
+      /* mobile: .fab-contacto pasa a bottom 18px + alto 54px, se ajusta el mismo margen */
+      '@media (max-width:600px){#vfx-top{bottom:84px;right:20px;width:42px;height:42px;font-size:18px}}';
     document.head.appendChild(style);
     document.body.appendChild(btn);
 
@@ -343,7 +346,7 @@
   }
 
   /* -------------------------------------------------------
-     INIT â Run all effects on DOMContentLoaded
+     INIT — Run all effects on DOMContentLoaded
   ------------------------------------------------------- */
   function init() {
     initProgressBar();
