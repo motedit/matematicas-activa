@@ -276,7 +276,7 @@ async function inicializarSistema() {
     }
     accesoAdminPorHash();
     initSelectoresTemas();
-    // cargarTestimoniosDinamicos(); // seccion de testimonios eliminada // carga desde Supabase si hay datos
+    // cargarTestimoniosDinamicos(); // sección de testimonios eliminada
     verificarRetornoPago(); // feedback al volver de MercadoPago
 
     MA()?.sb?.auth.onAuthStateChange(async (event) => {
@@ -323,12 +323,14 @@ function actualizarNavbar() {
     const navPerfil = document.getElementById("nav-perfil-link");
     const navPuntos = document.getElementById("nav-puntos");
     const navMisArchivos = document.getElementById("nav-mis-archivos-link");
+    const navHistorias = document.getElementById("nav-historias-link");
 
     if (lbl) lbl.textContent = p ? (p.username || "Mi cuenta") : "Ingresar";
     if (navAdmin)  navAdmin.style.display  = (p?.rol === "admin") ? "inline" : "none";
     if (navSalir)  navSalir.style.display  = p ? "inline" : "none";
     if (navPerfil) navPerfil.style.display = p ? "inline" : "none";
     if (navMisArchivos) navMisArchivos.style.display = p ? "inline" : "none";
+    if (navHistorias) navHistorias.style.display = p ? "inline" : "none";
     const navDiag = document.getElementById("nav-diagnostico-link");
     if (navDiag) navDiag.style.display = "inline"; // siempre visible
     const diagSection = document.getElementById("diagnostico");
@@ -352,6 +354,17 @@ function abrirAdmin(e) {
     document.getElementById("overlay-admin").style.display = "flex";
     adminTab("archivos");
 }
+function abrirHistorias(e) {
+    // Sección "Historias Matemáticas": oculta del home por defecto (opcional, no invasiva).
+    // Solo se muestra bajo demanda para usuarios logueados, vía el botón chico del menú.
+    if (e) e.preventDefault();
+    if (!appState.perfilActual) return abrirAuth();
+    const sec = document.getElementById("historias");
+    if (!sec) return;
+    sec.style.display = "block";
+    sec.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function abrirPerfil(e) {
     if (e) e.preventDefault();
     if (!appState.perfilActual) return abrirAuth();
@@ -948,7 +961,8 @@ function renderSeccionPremium() {
                 <li>✅ Sistema de puntos y ranking</li>
                 <li>❌ No podés subir archivos personales</li>
             </ul>
-            <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Pagar con MercadoPago</button>        </div>
+            <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Pagar con MercadoPago</button>
+        </div>
         <div class="plan-card plan-card-premium">
             <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
             <h3>Plan Premium</h3>
@@ -962,7 +976,8 @@ function renderSeccionPremium() {
                 <li>✅ Carpeta personal ilimitada</li>
                 <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
             </ul>
-            <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Pagar con MercadoPago</button>        </div>
+            <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Pagar con MercadoPago</button>
+        </div>
     </div>
     <div class="pago-timeline">
         <div class="pago-step"><span class="pago-step-icon">💳</span><span class="pago-step-text">Pagás</span></div>
@@ -1180,7 +1195,6 @@ function traducirError(msg) {
 }
 
 
-// ============ TESTIMONIOS DINÁMICOS ============
 // ============ TESTIMONIOS (ELIMINADO) ============
 
 // ============ BOOT ============
@@ -1292,11 +1306,9 @@ async function iniciarPagoMP(plan, btn) {
         const res = await window.MA_SUPABASE.sbCrearPreferencia(plan);
 
         if (res.init_point) {
-            // Link dinámico generado — abrir MercadoPago
             window.open(res.init_point, "_blank", "noopener");
             mostrarToast("Tu plan se activará automáticamente cuando se confirme el pago ✅", "ok");
         } else {
-            // Fallback a link estático si la Edge Function falla
             console.warn("Preferencia fallida:", res.error);
             mostrarToast("Error generando el link de pago. Probá de nuevo.", "warn");
         }
@@ -1304,13 +1316,13 @@ async function iniciarPagoMP(plan, btn) {
         console.error("Error en pago:", err);
         mostrarToast("Error al procesar el pago. Probá de nuevo.", "warn");
     } finally {
-        // Restaurar botón
         if (btn) {
             btn.disabled = false;
             btn.textContent = "💳 Pagar con MercadoPago";
         }
     }
 }
+
 
 function verificarRetornoPago() {
     const params = new URLSearchParams(window.location.search);
@@ -1592,5 +1604,3 @@ Object.assign(window, {
     iniciarDiagnostico, diagSiguiente,
     renderLogrosEnPerfil, guardarNotifConfig, verificarYNotificarLogros
 });
-// ================================================================
-//  MATEMÁTICAS ACTIVA — scripts.js v3 (Supabase + features)
