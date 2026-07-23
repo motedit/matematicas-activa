@@ -105,14 +105,21 @@
         try { ejerciciosMateria = await _conRetry(() => MA().sbListarEjercicios(MATERIA_ID), 15000, 2); } catch(e) { ejerciciosMateria = []; }
     }
 
-    // ---- Premium helpers ----
-    function esPremiumActivo(p) {
-        if (!p?.premium_hasta) return false;
-        return new Date(p.premium_hasta).getTime() > Date.now();
+    // ---- Planes helpers (gratis / basico / premium) ----
+    // Misma fuente de verdad que scripts.js: perfiles.plan + perfiles.plan_hasta
+    const NIVEL_RANGO = { gratis: 0, basico: 1, premium: 2 };
+    function nivelDe(p) {
+        if (!p?.plan || p.plan === "gratis") return "gratis";
+        if (!p.plan_hasta || new Date(p.plan_hasta).getTime() <= Date.now()) return "gratis";
+        return p.plan;
     }
+    function nivelPermite(nivelUsuario, nivelRequerido) {
+        return (NIVEL_RANGO[nivelUsuario] ?? 0) >= (NIVEL_RANGO[nivelRequerido] ?? 0);
+    }
+    function esPremiumActivo(p) { return nivelDe(p) !== "gratis"; }
     function diasRestantes(p) {
-        if (!p?.premium_hasta) return 0;
-        const ms = new Date(p.premium_hasta).getTime() - Date.now();
+        if (nivelDe(p) === "gratis" || !p?.plan_hasta) return 0;
+        const ms = new Date(p.plan_hasta).getTime() - Date.now();
         return ms > 0 ? Math.ceil(ms / (1000 * 60 * 60 * 24)) : 0;
     }
     function formatearFecha(ts) {
@@ -285,7 +292,8 @@
     function renderPremium() {
         const premBlock  = document.getElementById("mat-premium-bloque");
         const loginBlock = document.getElementById("mat-premium-login");
-        const lista = archivos.filter(a => a.seccion === "premium");
+        // Contenido restringido: cualquier nivel que no sea gratis (basico o premium)
+        const lista = archivos.filter(a => (a.plan_minimo || "gratis") !== "gratis");
 
         if (!perfilActual) { premBlock.style.display = "none"; loginBlock.style.display = "block"; return; }
         premBlock.style.display = "block"; loginBlock.style.display = "none";
@@ -295,11 +303,12 @@
 
         let estadoHtml = "";
         if (premiumActivo) {
-            const dias = diasRestantes(perfilActual), vence = formatearFecha(perfilActual.premium_hasta);
-            estadoHtml = `<div class="mat-estado-activa"><span>⭐ Suscripción activa</span><span style="font-size:12px;opacity:.85">Vence el ${vence} · ${dias} día${dias !== 1 ? "s" : ""}</span></div>`;
+            const nivelActual = nivelDe(perfilActual);
+            const dias = diasRestantes(perfilActual), vence = formatearFecha(perfilActual.plan_hasta);
+            estadoHtml = `<div class="mat-estado-activa"><span>⭐ Suscripción ${nivelActual === "premium" ? "Premium" : "Básica"} activa</span><span style="font-size:12px;opacity:.85">Vence el ${vence} · ${dias} día${dias !== 1 ? "s" : ""}</span></div>`;
         } else {
             estadoHtml = `<div class="mat-estado-inactiva">
-                <div><p style="font-weight:bold;margin:0;font-size:14px">Plan gratuito — ${cuota}/${MAX_ARCHIVOS_GRATIS} archivos</p>${perfilActual.premium_hasta ? `<p style="font-size:12px;color:#b55b00;margin:3px 0 0">Suscripción vencida el ${formatearFecha(perfilActual.premium_hasta)}</p>` : ""}</div>
+                <div><p style="font-weight:bold;margin:0;font-size:14px">Plan gratuito — ${cuota}/${MAX_ARCHIVOS_GRATIS} archivos</p>${perfilActual.plan_hasta ? `<p style="font-size:12px;color:#b55b00;margin:3px 0 0">Suscripción vencida el ${formatearFecha(perfilActual.plan_hasta)}</p>` : ""}</div>
                 <button type="button" class="mat-btn mat-btn-premium" onclick="window._materia.abrirPago()">⭐ Suscribirse — ${PRECIO_SUSCRIPCION}/mes</button>
             </div>
             <div style="margin:8px 0 16px"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:7px;background:#e0e0e0;border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round((cuota / MAX_ARCHIVOS_GRATIS) * 100)}%;background:#197ce6;border-radius:4px"></div></div><span style="font-size:12px;color:#555">${cuota}/${MAX_ARCHIVOS_GRATIS}</span></div>${cuota >= MAX_ARCHIVOS_GRATIS ? `<p style="font-size:12px;color:#b55b00;margin-top:5px">⚠️ Límite gratuito alcanzado.</p>` : ""}</div>`;
@@ -309,8 +318,12 @@
         if (!lista.length) {
             gridHtml = `<p class="mat-vacio">No hay contenido premium de ${esc(NOMBRE)} aún.</p>`;
         } else {
+            const nivelUsuario = nivelDe(perfilActual);
             gridHtml = lista.map(a => {
-                if (premiumActivo) return tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`);
+                // Cada archivo pide su propio nivel (basico o premium) — no todo el
+                // contenido restringido pide lo mismo, y no todos los planes ven lo mismo.
+                const requerido = a.plan_minimo || "premium";
+                if (nivelPermite(nivelUsuario, requerido)) return tarjeta(a, `<button type="button" class="mat-btn" onclick="window._materia.ver('${a.id}')">Ver →</button>`);
                 const yaVisto = vistos.includes(a.id);
                 const bloqueado = !yaVisto && cuota >= MAX_ARCHIVOS_GRATIS;
                 const accion = yaVisto
@@ -806,7 +819,7 @@
                             // Fila 5: Bloques e inserciones
                             ['blockquote', 'code-block'],
                             ['link', 'image', 'video', 'formula'],
-                            // Fila 6: Utilidades
+                            // Fila 6: Tablas y utilidades
                             ['table-insert', 'table-delete-row', 'table-delete-col', 'table-delete', 'divider'],
                             ['clean']
                         ],
@@ -837,6 +850,7 @@
 
                 const delTableBtn = toolbar.querySelector('.ql-table-delete');
                 if (delTableBtn) { delTableBtn.innerHTML = '<svg viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="1" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="0.8"/><line x1="7" y1="1" x2="7" y2="17" stroke="currentColor" stroke-width="0.8"/><line x1="3" y1="3" x2="15" y2="15" stroke="#e53e3e" stroke-width="2"/><line x1="15" y1="3" x2="3" y2="15" stroke="#e53e3e" stroke-width="2"/></svg>'; delTableBtn.title = 'Eliminar tabla completa'; }
+
                 const divBtn = toolbar.querySelector('.ql-divider');
                 if (divBtn) { divBtn.innerHTML = '<svg viewBox="0 0 18 18"><line x1="1" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="2"/></svg>'; divBtn.title = 'Línea separadora'; }
                 const formulaBtn = toolbar.querySelector('.ql-formula');
@@ -846,16 +860,18 @@
             const wrap = document.getElementById('subtema-editor-wrap');
             if (wrap?._contenido) {
                 _quillInstance.root.innerHTML = wrap._contenido;
+            }
 
-
-            // Fix: reposicionar dropdowns del color picker
-            _fixQuillPickerOverflow(document.getElementById('subtema-quill-container'));            }
+            // Fix: reposicionar dropdowns del color picker usando position:fixed
+            // para que no queden clipados por el overflow-y:auto del overlay
+            _fixQuillPickerOverflow(document.getElementById('subtema-quill-container'));
         }
     }
 
-        function _fixQuillPickerOverflow(container) {
+    function _fixQuillPickerOverflow(container) {
         if (!container) return;
 
+        // Inyectar CSS para que la grilla de colores muestre todos los swatches
         if (!document.getElementById('quill-color-fix-css')) {
             const style = document.createElement('style');
             style.id = 'quill-color-fix-css';
@@ -905,6 +921,7 @@
                     opts.style.zIndex     = '99999';
                     opts.style.maxHeight  = 'none';
                     opts.style.overflow   = 'visible';
+                    // ajuste: si se sale por la derecha o abajo
                     requestAnimationFrame(() => {
                         const or = opts.getBoundingClientRect();
                         if (or.right > window.innerWidth - 8) {
@@ -928,7 +945,7 @@
         container.querySelectorAll('.ql-picker').forEach(p => obs.observe(p, { attributes: true }));
     }
 
-// -- Insertar tabla en el editor --
+    // -- Insertar tabla en el editor --
     function _insertarTabla() {
         if (!_quillInstance) return;
         const rows = prompt('¿Cuántas filas?', '3');
@@ -965,12 +982,13 @@
     // -- Eliminar fila --
     function _tablaEliminarFila() {
         const cell = _encontrarTablaDesdeSeleccion();
-        if (!cell) { alert('Coloc\u00e1 el cursor dentro de una tabla primero.'); return; }
+        if (!cell) { alert('Colocá el cursor dentro de una tabla primero.'); return; }
         const row = cell.closest('tr');
         const table = cell.closest('table');
         if (!row || !table) return;
         const rows = table.querySelectorAll('tr');
         if (rows.length <= 1) {
+            // Si es la última fila, eliminar toda la tabla
             table.remove();
         } else {
             row.remove();
@@ -981,13 +999,14 @@
     // -- Eliminar columna --
     function _tablaEliminarColumna() {
         const cell = _encontrarTablaDesdeSeleccion();
-        if (!cell) { alert('Coloc\u00e1 el cursor dentro de una tabla primero.'); return; }
+        if (!cell) { alert('Colocá el cursor dentro de una tabla primero.'); return; }
         const table = cell.closest('table');
         if (!table) return;
         const colIndex = Array.from(cell.parentNode.children).indexOf(cell);
         const allRows = table.querySelectorAll('tr');
         const totalCols = allRows[0] ? allRows[0].children.length : 0;
         if (totalCols <= 1) {
+            // Si es la última columna, eliminar toda la tabla
             table.remove();
         } else {
             allRows.forEach(row => {
@@ -1000,10 +1019,10 @@
     // -- Eliminar tabla completa --
     function _tablaEliminar() {
         const cell = _encontrarTablaDesdeSeleccion();
-        if (!cell) { alert('Coloc\u00e1 el cursor dentro de una tabla primero.'); return; }
+        if (!cell) { alert('Colocá el cursor dentro de una tabla primero.'); return; }
         const table = cell.closest('table');
         if (!table) return;
-        if (confirm('\u00bfEliminar la tabla completa?')) {
+        if (confirm('¿Eliminar la tabla completa?')) {
             table.remove();
             _quillInstance.update();
         }
@@ -1149,7 +1168,7 @@
 
         let htmlArchivos = "";
 
-        const archivosPublicos = archivos.filter(a => a.tema_id === temaId && a.seccion !== "premium");
+        const archivosPublicos = archivos.filter(a => a.tema_id === temaId && (a.plan_minimo || "gratis") === "gratis");
         if (archivosPublicos.length > 0) {
             htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#334155;margin:16px 0 8px;padding-top:12px;border-top:1px solid #e2e8f0">📂 Contenido cargado</p>`;
             htmlArchivos += archivosPublicos.map(a => `
@@ -1163,16 +1182,18 @@
                 </div>`).join("");
         }
 
-        const archivosPremium = archivos.filter(a => a.tema_id === temaId && a.seccion === "premium");
+        const archivosPremium = archivos.filter(a => a.tema_id === temaId && (a.plan_minimo || "gratis") !== "gratis");
         if (archivosPremium.length > 0) {
-            htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#92400e;margin:16px 0 8px;padding-top:12px;border-top:1px solid #fde68a">⭐ Contenido Premium</p>`;
-            const premiumActivo = perfilActual && esPremiumActivo(perfilActual);
+            htmlArchivos += `<p style="font-size:13px;font-weight:700;color:#92400e;margin:16px 0 8px;padding-top:12px;border-top:1px solid #fde68a">⭐ Contenido restringido</p>`;
+            const nivelUsuario = perfilActual ? nivelDe(perfilActual) : "gratis";
             htmlArchivos += archivosPremium.map(a => {
-                if (premiumActivo) {
+                const requerido = a.plan_minimo || "premium";
+                const etiqueta = requerido === "premium" ? "Premium" : "Básico";
+                if (nivelPermite(nivelUsuario, requerido)) {
                     return `<div class="subtema-archivo disponible" onclick="window._materia.ver('${a.id}')">
                         <div class="subtema-archivo-icon">⭐</div>
                         <div class="subtema-archivo-body">
-                            <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo premium')}</p>
+                            <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo')}</p>
                             <p class="subtema-archivo-sub">${esc(a.descripcion || 'Contenido exclusivo.')}</p>
                         </div>
                         <button type="button" class="subtema-archivo-cta abrir" onclick="event.stopPropagation();window._materia.ver('${a.id}')">Ver →</button>
@@ -1181,8 +1202,8 @@
                 return `<div class="subtema-archivo bloqueado">
                     <div class="subtema-archivo-icon">🔒</div>
                     <div class="subtema-archivo-body">
-                        <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo premium')}</p>
-                        <p class="subtema-archivo-sub">Requiere suscripción Premium. ${esc(a.descripcion || '')}</p>
+                        <p class="subtema-archivo-titulo">${esc(a.titulo || 'Archivo')}</p>
+                        <p class="subtema-archivo-sub">Requiere suscripción ${etiqueta}. ${esc(a.descripcion || '')}</p>
                     </div>
                     <a class="subtema-archivo-cta bloqueado" href="../../index.html#suscripcion" onclick="event.stopPropagation()">Desbloquear</a>
                 </div>`;
@@ -1617,9 +1638,9 @@
     })();
 
     // ---- Modulos interactivos por materia ----
-        // GeoGebra esta embebido en el contenido de cada tema, no se necesita graficador/funciones aparte
-        if (['algebra', 'aritmetica'].includes(MATERIA_ID)) {
-            const sc = document.createElement('script');
+    // GeoGebra está embebido en el contenido de cada tema, no se necesita graficador/funciones aparte
+    if (['algebra', 'aritmetica'].includes(MATERIA_ID)) {
+        const sc = document.createElement('script');
         sc.src = '../../calculadora.js';
         sc.onload = () => { if (window.initCalculadora) window.initCalculadora(MATERIA_ID); };
         document.head.appendChild(sc);

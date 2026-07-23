@@ -178,28 +178,39 @@ document.addEventListener("click", function(e){
     });
 });
 
-// ============ PREMIUM helpers ============
-// ⚠️ SEGURIDAD: Esta verificación es solo visual (UX).
-// Para protección real de archivos, implementar RLS en Supabase Storage
-// o una Edge Function que verifique premium_hasta antes de entregar la URL firmada.
-// Ver: supabase/functions/mp-webhook/index.ts
-function esPremiumActivo(p) { return p?.premium_hasta && new Date(p.premium_hasta).getTime() > Date.now(); }
+// ============ PLANES helpers (gratis / basico / premium) ============
+// Fuente de verdad: perfiles.plan + perfiles.plan_hasta (mismos campos que usa
+// el RPC plan_vigente() en la base). premium_hasta queda deprecado — no se lee más acá.
+// Nivel real: seguridad reforzada en RLS de "archivos" y Storage (nivel_permite() +
+// puede_ver_archivo_storage() en Supabase). Esto de acá es la copia en pantalla.
+const NIVEL_RANGO = { gratis: 0, basico: 1, premium: 2 };
 
-// Verificación server-side del plan (cuando Edge Functions estén activas)
+function nivelDe(p) {
+    if (!p?.plan || p.plan === "gratis") return "gratis";
+    if (!p.plan_hasta || new Date(p.plan_hasta).getTime() <= Date.now()) return "gratis";
+    return p.plan; // "basico" | "premium"
+}
+function nivelPermite(nivelUsuario, nivelRequerido) {
+    return (NIVEL_RANGO[nivelUsuario] ?? 0) >= (NIVEL_RANGO[nivelRequerido] ?? 0);
+}
+// "¿tiene algún plan pago activo?" (básico o premium) — se usa para mensajes generales
+function esPremiumActivo(p) { return nivelDe(p) !== "gratis"; }
+
+// Verificación server-side del plan
 async function verificarPremiumServer() {
     if (!MA()?.sb) return false;
     try {
         const { data: perfil } = await MA().sb
             .from("perfiles")
-            .select("premium_hasta")
+            .select("plan, plan_hasta")
             .eq("id", (await MA().sbUsuario())?.id)
             .single();
-        return perfil?.premium_hasta && new Date(perfil.premium_hasta) > new Date();
+        return nivelDe(perfil) !== "gratis";
     } catch(e) { return false; }
 }
 function diasRestantes(p) {
-    if (!p?.premium_hasta) return 0;
-    const ms = new Date(p.premium_hasta).getTime() - Date.now();
+    if (nivelDe(p) === "gratis" || !p?.plan_hasta) return 0;
+    const ms = new Date(p.plan_hasta).getTime() - Date.now();
     return ms > 0 ? Math.ceil(ms / 86400000) : 0;
 }
 
@@ -514,13 +525,15 @@ async function renderAdminArchivos() {
     appState.archivos = await MA().sbListarArchivos();
     const fSec = document.getElementById("filtro-seccion")?.value || "";
     const fMat = document.getElementById("filtro-materia")?.value || "";
-    const lista = appState.archivos.filter(a => (!fSec || a.seccion===fSec) && (!fMat || a.materia===fMat));
+    const fNivel = document.getElementById("filtro-nivel")?.value || "";
+    const lista = appState.archivos.filter(a => (!fSec || a.seccion===fSec) && (!fMat || a.materia===fMat) && (!fNivel || (a.plan_minimo||"gratis")===fNivel));
     if (!lista.length) { grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px">No hay archivos.</p>`; return; }
     grid.innerHTML = lista.map(a => `
         <div class="admin-card">
             <div class="admin-card-mini">${miniPreview(a)}</div>
             <div class="admin-card-body">
                 <span class="seccion-tag seccion-${a.seccion}">${etiquetaSeccion(a.seccion)}</span>
+                <span class="nivel-tag nivel-${a.plan_minimo||"gratis"}">${etiquetaNivel(a.plan_minimo)}</span>
                 <span class="materia-tag">${esc(MATERIAS[a.materia]||a.materia)}</span>
                 ${a.es_personal ? '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">PERSONAL</span>' : ""}
                 <h4>${esc(a.titulo)}</h4>
@@ -536,6 +549,7 @@ async function renderAdminArchivos() {
 }
 
 function etiquetaSeccion(s){ return ({video:"🎬 Video",pdf:"📄 PDF",premium:"⭐ Premium",imagen:"🖼 Imagen",texto:"📝 Texto"})[s]||s; }
+function etiquetaNivel(n){ return ({gratis:"🆓 Gratis",basico:"🔷 Básico",premium:"⭐ Premium"})[n||"gratis"]; }
 function miniPreview(a) {
     if (a.miniatura) return `<img src="${a.miniatura}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px">`;
     const i = ({video:"🎬",pdf:"📄",premium:"⭐",imagen:"🖼",texto:"📝"})[a.seccion] || "📦";
@@ -548,19 +562,22 @@ async function renderAdminUsuarios() {
     appState.perfiles = await MA().sbListarPerfiles();
     if (!appState.perfiles.length) { cont.innerHTML = `<p style="text-align:center;color:#64748b;padding:40px">No hay usuarios.</p>`; return; }
     cont.innerHTML = appState.perfiles.map(p => {
-        const premium = esPremiumActivo(p);
+        const nivel = nivelDe(p);
         const dias = diasRestantes(p);
+        const etiquetaNivel = { basico: "🔷 Básico", premium: "⭐ Premium" }[nivel] || "🆓 Plan gratis";
         return `<div class="usuario-card">
             <div class="usuario-info">
                 <h4>👤 ${esc(p.username||"(sin username)")} ${p.rol==="admin"?'<span style="background:#7c3aed;color:white;padding:2px 8px;border-radius:99px;font-size:11px">ADMIN</span>':""}</h4>
                 <p style="font-size:12px;color:#64748b">Creado: ${formatearFecha(p.creado_en)} · ⭐ ${p.puntos||0} pts · 🔥 racha ${p.racha||0}</p>
-                <p style="font-size:13px">${premium ? `⭐ Premium · ${dias} días (hasta ${formatearFecha(p.premium_hasta)})` : "🆓 Plan gratis"}</p>
+                <p style="font-size:13px">${nivel !== "gratis" ? `${etiquetaNivel} · ${dias} días (hasta ${formatearFecha(p.plan_hasta)})` : etiquetaNivel}</p>
             </div>
             <div class="usuario-actions">
-                ${premium
-                    ? `<button type="button" onclick="renovarSuscripcion('${p.id}')">🔁 Renovar +30d</button>
-                       <button type="button" onclick="desactivarSuscripcion('${p.id}')" class="btn-rojo">❌ Desactivar</button>`
-                    : `<button type="button" onclick="activarSuscripcion('${p.id}')">⭐ Activar Premium</button>`}
+                ${nivel === "gratis"
+                    ? `<button type="button" onclick="activarPlan('${p.id}','basico')">🔷 Activar Básico</button>
+                       <button type="button" onclick="activarPlan('${p.id}','premium')">⭐ Activar Premium</button>`
+                    : `<button type="button" onclick="activarPlan('${p.id}','${nivel}')">🔁 Renovar +${nivel==='premium'?30:23}d</button>
+                       ${nivel === "basico" ? `<button type="button" onclick="activarPlan('${p.id}','premium')">⬆️ Pasar a Premium</button>` : ""}
+                       <button type="button" onclick="desactivarSuscripcion('${p.id}')" class="btn-rojo">❌ Desactivar</button>`}
                 <button type="button" onclick="adminResetPassword('${p.id}')">🔑 Reset password</button>
                 <button type="button" onclick="adminAsignarPasswordTemp('${p.id}', '${esc(p.username)}')">🎟️ Asignar temporal</button>
                 ${p.rol !== "admin" ? `<button type="button" onclick="eliminarUsuario('${p.id}', '${esc(p.username)}')" class="btn-rojo">🗑 Eliminar</button>` : ""}
@@ -600,7 +617,7 @@ async function subirContenido() {
     if (appState.perfilActual?.rol !== "admin") return mostrarError("su-error","Solo el admin.");
     await _subirArchivoComun({
         prefixIds: { titulo:"su-titulo", desc:"su-desc", tipo:"su-tipo", texto:"su-texto", url:"su-url", archivo:"su-archivo",
-                     materia:"su-materia", seccion:"su-seccion", tema:"su-tema", error:"su-error", success:"su-success", progress:"su-progress", progressFill:"su-progress-fill" },
+                     materia:"su-materia", seccion:"su-seccion", nivel:"su-nivel", tema:"su-tema", error:"su-error", success:"su-success", progress:"su-progress", progressFill:"su-progress-fill" },
         esPersonal: false,
     });
     renderSeccionVideos(); renderSeccionPDFs(); renderSeccionPremium(); renderAdminArchivos();
@@ -624,9 +641,12 @@ async function _subirArchivoComun({ prefixIds, esPersonal }) {
     const tipo   = get(prefixIds.tipo).value;
     const materia = get(prefixIds.materia)?.value || "general";
     const seccion = get(prefixIds.seccion)?.value || "pdf";
+    // Nivel de acceso: solo aplica a contenido público (admin). Los archivos personales
+    // no usan este campo — se filtran por dueño, no por plan.
+    const plan_minimo = esPersonal ? "gratis" : (get(prefixIds.nivel)?.value || "gratis");
     if (!titulo) return mostrarError(prefixIds.error, "Ingresá un título.");
     const tema_id = get(prefixIds.tema)?.value || null;
-    let meta = { titulo, descripcion:desc, materia, seccion, tipo, creado_por: appState.perfilActual.id, es_personal: esPersonal };
+    let meta = { titulo, descripcion:desc, materia, seccion, tipo, plan_minimo, creado_por: appState.perfilActual.id, es_personal: esPersonal };
     if (tema_id) meta.tema_id = tema_id;
     if (tipo === "texto") {
         const t = get(prefixIds.texto).value.trim();
@@ -686,7 +706,8 @@ function abrirEdicion(id) {
     document.getElementById("ed-titulo").value=a.titulo||"";
     document.getElementById("ed-desc").value=a.descripcion||"";
     document.getElementById("ed-materia").value=a.materia||"general";
-    document.getElementById("ed-seccion").value=a.seccion||"video";
+    document.getElementById("ed-seccion").value=(a.seccion==="premium" ? "pdf" : a.seccion) || "video";
+    document.getElementById("ed-nivel").value=a.plan_minimo || (a.seccion==="premium" ? "premium" : "gratis");
     const w = document.getElementById("ed-texto-wrap");
     if (a.tipo==="texto") { w.style.display="block"; document.getElementById("ed-texto").value=a.contenido_texto||""; }
     else w.style.display="none";
@@ -699,6 +720,7 @@ async function guardarEdicion() {
         descripcion: sanitizar(document.getElementById("ed-desc").value),
         materia: document.getElementById("ed-materia").value,
         seccion: document.getElementById("ed-seccion").value,
+        plan_minimo: document.getElementById("ed-nivel").value,
     };
     const a = appState.archivos.find(x => x.id===id);
     if (a?.tipo==="texto") cambios.contenido_texto = document.getElementById("ed-texto").value;
@@ -725,22 +747,22 @@ async function eliminarUsuario(usuarioId, nombre) {
     mostrarToast("🗑 Eliminado","ok"); renderAdminUsuarios();
 }
 
-// ============ PREMIUM (acciones) ============
-async function activarSuscripcion(uid) {
-    const { error } = await MA().sbActivarPremium(uid, DURACION_DIAS, "activacion");
+// ============ PLANES (acciones admin) ============
+// Duración estándar por nivel (misma que usa el webhook de MercadoPago)
+const DIAS_POR_PLAN = { basico: 23, premium: 30 };
+
+async function activarPlan(uid, plan) {
+    const dias = DIAS_POR_PLAN[plan] || DURACION_DIAS;
+    const { error } = await MA().sbAdminActivarPlan(uid, plan, dias);
     if (error) return mostrarToast("Error: "+(error.message||error),"error");
-    mostrarToast(`⭐ Premium +${DURACION_DIAS}d`,"ok"); renderAdminUsuarios();
-}
-async function renovarSuscripcion(uid) {
-    const { error } = await MA().sbActivarPremium(uid, DURACION_DIAS, "renovacion");
-    if (error) return mostrarToast("Error: "+(error.message||error),"error");
-    mostrarToast(`🔁 Renovado +${DURACION_DIAS}d`,"ok"); renderAdminUsuarios();
+    mostrarToast(`${plan === "premium" ? "⭐" : "🔷"} ${plan === "premium" ? "Premium" : "Básico"} +${dias}d`,"ok");
+    renderAdminUsuarios();
 }
 async function desactivarSuscripcion(uid) {
-    if (!confirm("¿Desactivar premium?")) return;
-    const { error } = await MA().sbDesactivarPremium(uid);
+    if (!confirm("¿Desactivar el plan pago? Vuelve a Gratis.")) return;
+    const { error } = await MA().sbAdminActivarPlan(uid, "gratis", 0);
     if (error) return mostrarToast("Error: "+(error.message||error),"error");
-    mostrarToast("❌ Desactivado","ok"); renderAdminUsuarios();
+    mostrarToast("❌ Desactivado — vuelve a Plan gratis","ok"); renderAdminUsuarios();
 }
 
 // ============ VISOR ============
@@ -868,8 +890,9 @@ async function borrarComentario(id, archivoId) {
 async function usuarioVerArchivo(id) {
     if (!appState.perfilActual) { abrirAuth(); return; }
     const a = appState.archivos.find(x => x.id===id); if (!a) return;
-    if (a.seccion === "premium") {
-        if (esPremiumActivo(appState.perfilActual)) return verContenido(id);
+    const requerido = a.plan_minimo || (a.seccion === "premium" ? "premium" : "gratis");
+    if (requerido !== "gratis") {
+        if (nivelPermite(nivelDe(appState.perfilActual), requerido)) return verContenido(id);
         const vistos = appState.perfilActual.vistos || [];
         if (vistos.includes(id)) return verContenido(id);
         if (vistos.length >= MAX_ARCHIVOS_GRATIS) return abrirModalPago();
@@ -919,9 +942,11 @@ function renderSeccionPremium() {
             <button type="button" class="btn-hero-main" onclick="abrirAuth(event)" style="margin:0">Registrarme gratis</button>
         </div>`;
     } else if (esPremiumActivo(p)) {
+        const nivel = nivelDe(p);
+        const nombreNivel = nivel === "premium" ? "PREMIUM" : "BÁSICO";
         banner = `<div class="premium-banner-estado banner-activo">
-            <h3 style="color:#fde68a;margin:0 0 6px">⭐ Sos usuario PREMIUM</h3>
-            <p style="color:rgba(255,255,255,.9);margin:0">Te quedan <strong>${diasRestantes(p)} días</strong> de acceso completo (hasta ${formatearFecha(p.premium_hasta)}).</p>
+            <h3 style="color:#fde68a;margin:0 0 6px">⭐ Sos usuario ${nombreNivel}</h3>
+            <p style="color:rgba(255,255,255,.9);margin:0">Te quedan <strong>${diasRestantes(p)} días</strong> de acceso ${nivel === "premium" ? "completo" : "Básico"} (hasta ${formatearFecha(p.plan_hasta)}).</p>
         </div>`;
     } else {
         const v = (p.vistos||[]).length;
@@ -991,7 +1016,7 @@ function renderSeccionPremium() {
     info.innerHTML = banner + planesHtml;
 
     // === Grid de contenido premium (solo si hay) ===
-    const premium = appState.archivosPublicos.filter(a => a.seccion==="premium");
+    const premium = appState.archivosPublicos.filter(a => (a.plan_minimo || "gratis") !== "gratis");
     if (premium.length > 0) {
         cont.style.display = "block";
         if (cuota && p && !esPremiumActivo(p)) {
