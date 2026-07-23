@@ -1620,7 +1620,7 @@ Object.assign(window, {
     guardarUsername, cambiarMiPassword,
     adminTab, actualizarCampoArchivo, subirContenido, subirMiArchivo,
     verContenido, abrirEdicion, guardarEdicion, eliminarArchivo, eliminarUsuario,
-    activarSuscripcion, renovarSuscripcion, desactivarSuscripcion,
+    activarPlan, desactivarSuscripcion,
     usuarioVerArchivo, abrirModalPago,
     enviarComentario, borrarComentario,
     adminResetPassword, adminAsignarPasswordTemp,
