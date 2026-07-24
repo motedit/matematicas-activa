@@ -197,6 +197,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f1f5f9;c
 </div>
 <div class="jm-footer">Matemáticas Activa · Juegos educativos</div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../supabase-config.js"></script>
+<script>
+// Registra el juego jugado para el panel de estadísticas del admin, y
+// suma los puntos ganados al mismo sistema de puntos que usa el resto
+// del sitio (ejercicios, foro, etc). Si no hay sesión iniciada, ambas
+// llamadas se ignoran silenciosamente (no rompe el juego).
+function _maJuegoTerminado(juego, puntos){
+    try{
+        const api = window.MA_SUPABASE;
+        if(!api) return;
+        api.sbRegistrarEvento('juego_jugado', { juego, puntos });
+        if(puntos > 0) api.sbSumarPuntos(puntos);
+    }catch(e){ console.warn('Error registrando juego:', e); }
+}
+</script>
 <script>
     (function(){
         var s=localStorage.getItem('ma_dark_mode');
@@ -233,7 +249,7 @@ function volverHub(){
 // ============================================================
 //  1. SUDOKU
 // ============================================================
-let sdkSolucion=[], sdkTablero=[];
+let sdkSolucion=[], sdkTablero=[], sdkResuelto=false;
 function sdkBaseValida(){
     // Patrón base de un sudoku resuelto
     const p=(r)=> (3*(r%3)+Math.floor(r/3));
@@ -255,6 +271,7 @@ function sdkMezclar(g){
     return g;
 }
 function sdkNuevo(dif){
+    sdkResuelto=false;
     document.getElementById("sdk-dif").textContent = "Dificultad: "+(dif==="facil"?"Fácil":dif==="dificil"?"Difícil":"Media");
     document.getElementById("sdk-msg").textContent = "";
     sdkSolucion = sdkMezclar(sdkBaseValida());
@@ -309,7 +326,10 @@ function sdkVerificar(){
     });
     if(!completo){ msg.className="jm-msg lose"; msg.textContent="Todavía faltan celdas por completar."; }
     else if(!correcto){ msg.className="jm-msg lose"; msg.textContent="Hay errores (marcados en rojo). ¡Seguí intentando!"; }
-    else{ msg.className="jm-msg win"; msg.textContent="🎉 ¡Sudoku resuelto correctamente! Sos un crack."; }
+    else{
+        msg.className="jm-msg win"; msg.textContent="🎉 ¡Sudoku resuelto correctamente! Sos un crack.";
+        if(!sdkResuelto){ sdkResuelto=true; _maJuegoTerminado('sudoku', 15); }
+    }
 }
 function sdkPista(){
     const inputs=[...document.querySelectorAll("#sdk-grid input:not([disabled])")].filter(i=>!i.value);
@@ -370,6 +390,7 @@ function cmFin(){
     const m=document.getElementById("cm-msg");
     m.className="jm-msg win";
     m.textContent=`🏁 Resolviste ${cmPts} operaciones. ${cmPts>=15?"¡Excelente!":cmPts>=8?"¡Muy bien!":"Seguí practicando."}`;
+    _maJuegoTerminado('calculo', cmPts);
 }
 document.getElementById("cm-input").addEventListener("keydown",e=>{
     if(e.key!=="Enter"||!cmActivo) return;
@@ -399,6 +420,7 @@ function fnSiguiente(){
     if(fnRonda>=8){
         document.getElementById("fn-msg").className="jm-msg win";
         document.getElementById("fn-msg").textContent=`🏁 Terminaste: ${fnPts}/8 correctas.`;
+        _maJuegoTerminado('funcion', fnPts);
         return;
     }
     fnRonda++;
@@ -498,6 +520,7 @@ function memClick(idx,el){
                 const m=document.getElementById("mem-msg");
                 m.className="jm-msg win";
                 m.textContent=`🎉 ¡Completado en ${memMov} movimientos!`;
+                _maJuegoTerminado('memoria', Math.max(4, 14 - memMov));
             }
         }else{
             memBloqueo=true;
@@ -586,10 +609,12 @@ function wdlEnviar(){
         else cel.classList.add("no");
     }
     if(intento===wdlSol){
-        wdlFin=true;wdlMsg("🎉 ¡Adivinaste la ecuación!","win");return;
+        wdlFin=true;wdlMsg("🎉 ¡Adivinaste la ecuación!","win");
+        _maJuegoTerminado('wordle', Math.max(2, 12 - wdlFila*2));
+        return;
     }
     wdlFila++;wdlCol=0;
-    if(wdlFila>=6){ wdlFin=true;wdlMsg("😔 Se acabó. Era: "+wdlSol,"lose"); }
+    if(wdlFila>=6){ wdlFin=true;wdlMsg("😔 Se acabó. Era: "+wdlSol,"lose"); _maJuegoTerminado('wordle', 0); }
 }
 function wdlMsg(t,cls){
     const m=document.getElementById("wdl-msg");
@@ -630,6 +655,7 @@ function qzMostrar(){
         m.textContent=`🏁 Terminaste con ${qzPts}/${QZ_PREGUNTAS.length} puntos. ${qzPts>=6?"¡Muy bien!":"Repasá un poco más."}`;
         document.getElementById("qz-pregunta").textContent="";
         document.getElementById("qz-ops").innerHTML=`<button class="jm-btn" onclick="qzNuevo()" style="margin:0 auto;display:block">🔄 Jugar de nuevo</button>`;
+        _maJuegoTerminado('quiz', qzPts);
         return;
     }
     const p=QZ_PREGUNTAS[qzOrden[qzIdx]];
@@ -671,8 +697,9 @@ const TG_PIEZAS=[
     {nom:"t6",color:"#0d9488",poly:"0,42 42,0 85,42 42,85",hx:42,hy:128},
     {nom:"t7",color:"#db2777",poly:"0,85 85,0 170,85",hx:0,hy:170}
 ];
-let tgEstado=[];
+let tgEstado=[], tgResuelto=false;
 function tgReiniciar(){
+    tgResuelto=false;
     const board=document.getElementById("tg-board");
     board.innerHTML="";
     document.getElementById("tg-msg").textContent="";
@@ -732,6 +759,7 @@ function tgChequear(){
         const m=document.getElementById("tg-msg");
         m.className="jm-msg win";
         m.textContent="🎉 ¡Armaste el cuadrado perfecto!";
+        if(!tgResuelto){ tgResuelto=true; _maJuegoTerminado('tangram', 12); }
     }
 }
 
@@ -747,6 +775,7 @@ function frSiguiente(){
         m.textContent=`🏁 Terminaste: ${frPts}/10 correctas.`;
         document.getElementById("fr-visual").innerHTML="";
         document.getElementById("fr-ops").innerHTML=`<button class="jm-btn" onclick="frNuevo()" style="grid-column:1/-1;margin:0 auto">🔄 Jugar de nuevo</button>`;
+        _maJuegoTerminado('fracciones', frPts);
         return;
     }
     frRonda++;
