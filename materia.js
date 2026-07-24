@@ -1397,7 +1397,8 @@
     async function renderEjercicios() {
         const section = document.getElementById("mat-ejercicios-section");
         if (!section) return;
-        if (ejerciciosMateria.length === 0) { section.style.display = "none"; return; }
+        const esAdmin = perfilActual?.rol === 'admin';
+        if (ejerciciosMateria.length === 0 && !esAdmin) { section.style.display = "none"; return; }
         section.style.display = "block";
         // Cargar respuestas previas del usuario
         if (perfilActual) {
