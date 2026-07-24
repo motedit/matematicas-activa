@@ -160,6 +160,53 @@ async function sbRanking() {
     return data || [];
 }
 
+// ===================== ANALÍTICA DE USO ==========================
+// Registra un evento de uso: tiempo en sitio (heartbeat), vista de
+// tema/materia, o juego jugado. No corta el flujo si falla (best-effort).
+async function sbRegistrarEvento(tipo, datos = {}) {
+    const u = await sbUsuario(); if (!u) return;
+    const { error } = await sb.from("eventos_uso").insert({
+        usuario_id: u.id, tipo,
+        materia: datos.materia || null,
+        tema_id: datos.temaId || null,
+        juego: datos.juego || null,
+        puntos_ganados: datos.puntos || 0,
+        segundos: datos.segundos || 0,
+    });
+    if (error) console.warn("Error registrando evento:", error);
+}
+// Heartbeat de sesión: cada 60s, si la pestaña está visible y hay un
+// usuario logueado, suma 60s a su tiempo en el sitio. Corre en toda
+// página que cargue este archivo (home, materias, juegos).
+(function () {
+    setInterval(async () => {
+        if (document.visibilityState !== "visible") return;
+        try { await sbRegistrarEvento("sesion_heartbeat", { segundos: 60 }); }
+        catch (e) { /* silencioso: no debe romper la página */ }
+    }, 60000);
+})();
+// ===================== ESTADÍSTICAS (SOLO ADMIN) ==================
+async function sbAdminListarPagos(limite = 200) {
+    const { data, error } = await sb.from("historial_pagos")
+        .select("id, usuario_id, monto, moneda, dias_activados, tipo, mp_payment_id, creado_en, perfiles:usuario_id(username)")
+        .order("creado_en", { ascending: false }).limit(limite);
+    if (error) { console.warn("Error listando pagos:", error); return []; }
+    return data || [];
+}
+async function sbAdminEventosUso(desde) {
+    let q = sb.from("eventos_uso").select("usuario_id, tipo, materia, tema_id, juego, puntos_ganados, segundos, creado_en");
+    if (desde) q = q.gte("creado_en", desde);
+    const { data, error } = await q.order("creado_en", { ascending: false }).limit(5000);
+    if (error) { console.warn("Error listando eventos_uso:", error); return []; }
+    return data || [];
+}
+async function sbAdminLogrosUsuarios() {
+    const { data, error } = await sb.from("logros_usuarios")
+        .select("usuario_id, logro_id, desbloqueado_en, logros:logro_id(nombre, icono)");
+    if (error) { console.warn("Error listando logros_usuarios:", error); return []; }
+    return data || [];
+}
+
 // ===================== COMENTARIOS ==============================
 async function sbListarComentarios(archivoId) {
     const { data, error } = await sb.from("comentarios")
@@ -665,4 +712,6 @@ window.MA_SUPABASE = {
     sbObtenerNotifConfig, sbGuardarNotifConfig,
     // Pagos MercadoPago
     sbCrearPreferencia,
+    // Analítica de uso / estadísticas admin
+    sbRegistrarEvento, sbAdminListarPagos, sbAdminEventosUso, sbAdminLogrosUsuarios,
 };

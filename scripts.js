@@ -507,7 +507,7 @@ async function cambiarMiPassword() {
 
 // ============ ADMIN ============
 function adminTab(tab) {
-    ["archivos","usuarios","subir","ejercicios"].forEach(t => {
+    ["archivos","usuarios","subir","ejercicios","estadisticas"].forEach(t => {
         const el = document.getElementById("admin-tab-"+t);
         if (el) el.style.display = (t===tab) ? "block" : "none";
     });
@@ -517,6 +517,7 @@ function adminTab(tab) {
     if (tab==="archivos") renderAdminArchivos();
     if (tab==="usuarios") renderAdminUsuarios();
     if (tab==="ejercicios") renderAdminEjercicios();
+    if (tab==="estadisticas") renderAdminEstadisticas();
 }
 
 async function renderAdminArchivos() {
@@ -584,6 +585,108 @@ async function renderAdminUsuarios() {
             </div>
         </div>`;
     }).join("");
+}
+
+async function renderAdminEstadisticas() {
+    const cont = document.getElementById("admin-estadisticas-cont"); if (!cont) return;
+    cont.innerHTML = `<p style="text-align:center;color:#64748b;padding:24px">Cargando estadísticas...</p>`;
+
+    const [pagos, perfiles, eventos, logrosUsu, temas] = await Promise.all([
+        MA().sbAdminListarPagos(),
+        MA().sbListarPerfiles(),
+        MA().sbAdminEventosUso(),
+        MA().sbAdminLogrosUsuarios(),
+        MA().sbListarTemas(),
+    ]);
+
+    const montoNum = m => parseFloat(String(m).replace(/[^\d.,-]/g, "").replace(",", ".")) || 0;
+    const ahora = Date.now(), hace7 = ahora - 7*86400000, hace30 = ahora - 30*86400000;
+    const ingresoTotal = pagos.reduce((s,p) => s + montoNum(p.monto), 0);
+    const ingreso30 = pagos.filter(p => new Date(p.creado_en).getTime() >= hace30).reduce((s,p) => s + montoNum(p.monto), 0);
+    const pagosPorTipo = { activacion: pagos.filter(p=>p.tipo==="activacion").length, renovacion: pagos.filter(p=>p.tipo==="renovacion").length };
+
+    const porPlan = { gratis: 0, basico: 0, premium: 0 };
+    perfiles.forEach(p => { const n = nivelDe(p); porPlan[n] = (porPlan[n]||0) + 1; });
+    const nuevos7 = perfiles.filter(p => new Date(p.creado_en).getTime() >= hace7).length;
+    const nuevos30 = perfiles.filter(p => new Date(p.creado_en).getTime() >= hace30).length;
+
+    const topPuntos = [...perfiles].sort((a,b) => (b.puntos||0)-(a.puntos||0)).slice(0,5);
+
+    const logrosCount = {};
+    logrosUsu.forEach(l => { const n = l.logros?.nombre || "?"; logrosCount[n] = (logrosCount[n]||0)+1; });
+    const topLogros = Object.entries(logrosCount).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+    const heartbeats = eventos.filter(e => e.tipo === "sesion_heartbeat");
+    const segundosPorUsuario = {};
+    heartbeats.forEach(e => { segundosPorUsuario[e.usuario_id] = (segundosPorUsuario[e.usuario_id]||0) + (e.segundos||0); });
+    const segundosTotal = heartbeats.reduce((s,e) => s + (e.segundos||0), 0);
+    const topTiempo = Object.entries(segundosPorUsuario).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const nombreUsuario = uid => perfiles.find(p => p.id === uid)?.username || "Usuario";
+
+    const vistasTema = eventos.filter(e => e.tipo === "tema_vista");
+    const temaCount = {};
+    vistasTema.forEach(e => { if (e.tema_id) temaCount[e.tema_id] = (temaCount[e.tema_id]||0)+1; });
+    const nombreTema = id => temas.find(t => t.id === id)?.nombre || "(tema eliminado)";
+    const topTemas = Object.entries(temaCount).sort((a,b) => b[1]-a[1]).slice(0,8);
+
+    const materiaCount = {};
+    vistasTema.forEach(e => { if (e.materia) materiaCount[e.materia] = (materiaCount[e.materia]||0)+1; });
+    const topMaterias = Object.entries(materiaCount).sort((a,b) => b[1]-a[1]);
+
+    const juegosJugados = eventos.filter(e => e.tipo === "juego_jugado");
+    const juegoCount = {};
+    juegosJugados.forEach(e => { const j = e.juego || "?"; if (!juegoCount[j]) juegoCount[j] = { jugadas: 0, puntos: 0 }; juegoCount[j].jugadas++; juegoCount[j].puntos += e.puntos_ganados || 0; });
+    const topJuegos = Object.entries(juegoCount).sort((a,b) => b[1].jugadas-a[1].jugadas);
+
+    const fmtMoneda = n => "$ " + Math.round(n).toLocaleString("es-AR");
+    const fmtTiempo = seg => { const h = Math.floor(seg/3600), m = Math.floor((seg%3600)/60); return h>0 ? `${h}h ${m}m` : `${m}m`; };
+    const NOMBRE_JUEGO = { sudoku:"Sudoku", calculo:"Cálculo Mental", funcion:"¿Qué función es?", memoria:"Memoria de Fórmulas", wordle:"Wordle Matemático", quiz:"Quiz Estadística", tangram:"Tangram Digital", fracciones:"Puzzle de Fracciones" };
+
+    cont.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card"><p class="stat-label">💰 Ingresos totales</p><p class="stat-value">${fmtMoneda(ingresoTotal)}</p><p class="stat-sub">${fmtMoneda(ingreso30)} en los últimos 30 días</p></div>
+            <div class="stat-card"><p class="stat-label">💳 Pagos realizados</p><p class="stat-value">${pagos.length}</p><p class="stat-sub">${pagosPorTipo.activacion} activaciones · ${pagosPorTipo.renovacion} renovaciones</p></div>
+            <div class="stat-card"><p class="stat-label">👥 Usuarios totales</p><p class="stat-value">${perfiles.length}</p><p class="stat-sub">${porPlan.basico} básico · ${porPlan.premium} premium · ${porPlan.gratis} gratis</p></div>
+            <div class="stat-card"><p class="stat-label">🆕 Altas recientes</p><p class="stat-value">${nuevos7}</p><p class="stat-sub">últimos 7 días · ${nuevos30} en 30 días</p></div>
+            <div class="stat-card"><p class="stat-label">⏱️ Tiempo total en sitio</p><p class="stat-value">${fmtTiempo(segundosTotal)}</p><p class="stat-sub">acumulado, todos los usuarios${segundosTotal===0?' — recién empieza a medirse':''}</p></div>
+            <div class="stat-card"><p class="stat-label">🎮 Juegos jugados</p><p class="stat-value">${juegosJugados.length}</p><p class="stat-sub">${topJuegos[0] ? (NOMBRE_JUEGO[topJuegos[0][0]]||topJuegos[0][0])+" es el más jugado" : "todavía sin datos"}</p></div>
+        </div>
+
+        <h4 class="stats-subtitulo">💳 Últimos pagos</h4>
+        <div class="stats-tabla-wrap">
+            ${pagos.length ? `<table class="stats-tabla"><thead><tr><th>Usuario</th><th>Monto</th><th>Tipo</th><th>Días</th><th>Fecha</th></tr></thead><tbody>
+                ${pagos.slice(0,15).map(p => `<tr><td>${esc(p.perfiles?.username||"—")}</td><td>${esc(p.monto)}</td><td>${p.tipo==="activacion"?"🆕 Activación":"🔁 Renovación"}</td><td>${p.dias_activados}</td><td>${formatearFecha(p.creado_en)}</td></tr>`).join("")}
+            </tbody></table>` : `<p class="stats-vacio">Todavía no hay pagos registrados.</p>`}
+        </div>
+
+        <div class="stats-cols">
+            <div>
+                <h4 class="stats-subtitulo">🏆 Top puntos</h4>
+                ${topPuntos.length ? `<ol class="stats-lista">${topPuntos.map(p => `<li>${esc(p.username||"Usuario")} — <strong>${p.puntos||0} pts</strong></li>`).join("")}</ol>` : `<p class="stats-vacio">Sin datos.</p>`}
+            </div>
+            <div>
+                <h4 class="stats-subtitulo">🏅 Logros más desbloqueados</h4>
+                ${topLogros.length ? `<ol class="stats-lista">${topLogros.map(([n,c]) => `<li>${esc(n)} — <strong>${c}</strong> ${c===1?"vez":"veces"}</li>`).join("")}</ol>` : `<p class="stats-vacio">Sin datos.</p>`}
+            </div>
+        </div>
+
+        <div class="stats-cols">
+            <div>
+                <h4 class="stats-subtitulo">⏱️ Top tiempo en sitio</h4>
+                ${topTiempo.length ? `<ol class="stats-lista">${topTiempo.map(([uid,seg]) => `<li>${esc(nombreUsuario(uid))} — <strong>${fmtTiempo(seg)}</strong></li>`).join("")}</ol>` : `<p class="stats-vacio">Todavía no hay datos de tiempo en el sitio — se acaba de activar la medición, dale unos días.</p>`}
+            </div>
+            <div>
+                <h4 class="stats-subtitulo">🎮 Juegos más jugados</h4>
+                ${topJuegos.length ? `<ol class="stats-lista">${topJuegos.map(([j,d]) => `<li>${NOMBRE_JUEGO[j]||j} — <strong>${d.jugadas}</strong> jugadas · ${d.puntos} pts otorgados</li>`).join("")}</ol>` : `<p class="stats-vacio">Todavía no hay juegos jugados registrados.</p>`}
+            </div>
+        </div>
+
+        <h4 class="stats-subtitulo">📚 Materias con más interés</h4>
+        ${topMaterias.length ? `<ol class="stats-lista">${topMaterias.map(([m,c]) => `<li>${esc(MATERIAS[m]||m)} — <strong>${c}</strong> vistas</li>`).join("")}</ol>` : `<p class="stats-vacio">Todavía no hay datos de vistas por materia — se acaba de activar la medición.</p>`}
+
+        <h4 class="stats-subtitulo">📖 Temas con más interés</h4>
+        ${topTemas.length ? `<ol class="stats-lista">${topTemas.map(([id,c]) => `<li>${esc(nombreTema(id))} — <strong>${c}</strong> vistas</li>`).join("")}</ol>` : `<p class="stats-vacio">Todavía no hay datos de vistas por tema.</p>`}
+    `;
 }
 
 async function adminResetPassword(usuarioId) {

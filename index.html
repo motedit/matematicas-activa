@@ -87,7 +87,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="stylesheet" href="styles.css?v=13">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -585,6 +585,7 @@
                 <button type="button" class="admin-tab" onclick="adminTab('usuarios')">👥 Usuarios</button>
                 <button type="button" class="admin-tab" onclick="adminTab('subir')">⬆️ Subir</button>
                 <button type="button" class="admin-tab" onclick="adminTab('ejercicios')">🎯 Ejercicios</button>
+                <button type="button" class="admin-tab" onclick="adminTab('estadisticas')">📊 Estadísticas</button>
             </div>
             <div id="admin-tab-archivos">
                 <div class="tab-toolbar">
@@ -617,6 +618,7 @@
                 </div>
             </div>
             <div id="admin-tab-ejercicios" style="display:none"><div id="admin-ejercicios-lista"></div></div>
+            <div id="admin-tab-estadisticas" style="display:none"><div id="admin-estadisticas-cont"><p style="text-align:center;color:#64748b;padding:24px">Cargando...</p></div></div>
         </div>
     </div>
 
@@ -778,7 +780,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=13"></script>
-    <script src="scripts.js?v=14"></script>
+    <script src="scripts.js?v=15"></script>
     <script src="gamification.js?v=1"></script>
     <script src="historias.js?v=1"></script>
     <script src="visual-fx.js?v=1"></script>
