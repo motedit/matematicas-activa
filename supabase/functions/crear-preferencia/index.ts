@@ -5,8 +5,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const PLANES: Record<string, { title: string; price: number; dias: number }> = {
-  basico:  { title: "Plan Básico — Matemáticas Activa",  price: 7000,  dias: 23 },
-  premium: { title: "Plan Premium — Matemáticas Activa", price: 12000, dias: 30 },
+  basico:  { title: "Plan Básico — Matemáticas Activas",  price: 7000,  dias: 23 },
+  premium: { title: "Plan Premium — Matemáticas Activas", price: 12000, dias: 30 },
 };
 
 Deno.serve(async (req) => {
