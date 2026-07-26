@@ -388,7 +388,7 @@
 
     // ---- Construir página ----
     function construirPagina() {
-        document.title = NOMBRE + " — Matemáticas Activa";
+        document.title = NOMBRE + " — Matemáticas Activas";
         document.body.innerHTML = `
             <header class="mat-header">
                 <a href="../../index.html" class="mat-brand" title="Volver al inicio">
@@ -455,7 +455,7 @@
                     <a href="../../politica-privacidad.html">Privacidad</a>
                     <a href="../../terminos-servicio.html">Términos</a>
                 </div>
-                <p>Copyright © 2025 Matemáticas Activa · Todos los derechos reservados</p>
+                <p>Copyright © 2025 Matemáticas Activas · Todos los derechos reservados</p>
             </footer>
 
             <!-- VISOR -->

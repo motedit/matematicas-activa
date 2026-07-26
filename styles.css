@@ -522,7 +522,7 @@ ul{list-style:none;}
 .con-marca-agua [id^="modal-visor"]::after { display:none; }
 #modal-visor.con-marca-agua > .overlay-panel { position: relative; }
 #modal-visor.con-marca-agua > .overlay-panel::after {
-    content: "© Matemáticas Activa";
+    content: "© Matemáticas Activas";
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%,-50%) rotate(-25deg);
     font-size: 48px; font-weight: 900;

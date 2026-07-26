@@ -1,5 +1,5 @@
 /* ============================================================
-   visual-fx.js  —  Matemáticas Activa  —  Visual Effects Module
+   visual-fx.js  —  Matemáticas Activas  —  Visual Effects Module
    7 visual enhancements in a single IIFE
    ============================================================ */
 (function () {

@@ -886,7 +886,7 @@ async function verContenido(id) {
     // Marca de agua disuasiva en archivos admin (con username)
     if (appState.perfilActual && !a.es_personal && a.seccion !== "texto") {
         const wm = document.getElementById("modal-visor");
-        const txt = `© Matemáticas Activa · ${appState.perfilActual.username || "usuario"} · ${new Date().toLocaleDateString("es-AR")}`;
+        const txt = `© Matemáticas Activas · ${appState.perfilActual.username || "usuario"} · ${new Date().toLocaleDateString("es-AR")}`;
         wm.dataset.watermark = txt;
         wm.classList.add("con-marca-agua");
     } else {
@@ -1465,7 +1465,7 @@ function verificarRetornoPago() {
             await refrescarEstado();
             actualizarNavbar();
             renderSeccionPremium();
-            mostrarToast("Plan activado. ¡Disfrutá de Matemáticas Activa! 🎉", "ok");
+            mostrarToast("Plan activado. ¡Disfrutá de Matemáticas Activas! 🎉", "ok");
         }, 5000);
     } else if (pago === "error") {
         mostrarToast("Hubo un problema con el pago. Intentá de nuevo.", "warn");
