@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- Gráfico destacado para Google Play (1024 × 500). Se abre en el navegador y se captura
+     (lo hace herramientas/play-store/capturas.py, o una captura de pantalla a 1024 × 500). -->
+<html lang="es"><head><meta charset="utf-8"><title>Gráfico destacado</title>
+<link rel="stylesheet" href="../../lib/fuentes/fuentes.css"><link rel="stylesheet" href="../../lib/katex/katex.min.css">
+<script src="../../lib/katex/katex.min.js"></script>
+<style>
+html,body{margin:0;width:1024px;height:500px;overflow:hidden}
+body{background:linear-gradient(115deg,#0d1b2a 0%,#15304c 62%,#12558f 100%);color:#fff;font-family:Inter,sans-serif;position:relative}
+body::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px}
+.izq{position:absolute;left:64px;top:92px;width:470px}
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.logo img{width:64px;height:64px;border-radius:16px}
+.logo span{font-family:Sora,sans-serif;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#9fc6ec}
+h1{font-family:Sora,sans-serif;font-size:50px;line-height:1.05;margin:0 0 16px}
+p{font-size:21px;line-height:1.4;color:#d6e4f2;margin:0}
+.chips{display:flex;gap:8px;margin-top:26px}
+.chips b{font-size:14px;font-weight:600;background:rgba(23,163,152,.22);color:#7fe3d9;border:1px solid rgba(127,227,217,.35);padding:6px 12px;border-radius:20px}
+.hoja{position:absolute;right:56px;top:58px;width:384px;background:#fff;color:#0e1f33;border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.45);padding:20px 22px;transform:rotate(1.5deg)}
+.paso{display:flex;gap:12px;margin-bottom:14px}
+.paso i{flex:none;width:26px;height:26px;border-radius:8px;background:#1b6ec2;color:#fff;font-style:normal;font-weight:700;display:grid;place-items:center;font-size:14px}
+.paso h3{margin:0 0 4px;font-family:Sora,sans-serif;font-size:14px}
+.f{font-size:17px}
+.res{margin-top:6px;background:linear-gradient(90deg,rgba(224,165,58,.25),rgba(224,165,58,.08));border-radius:10px;padding:10px;text-align:center;font-size:19px}
+</style></head><body>
+<div class="izq">
+  <div class="logo"><img src="../../iconos/icono-192.png" alt=""><span>Matemáticas Activa</span></div>
+  <h1>Matemática<br>paso a paso</h1>
+  <p>Escribí el ejercicio: la app detecta el tema, lo resuelve, explica cada paso y verifica.</p>
+  <div class="chips"><b>Álgebra</b><b>Cálculo</b><b>Geometría</b><b>Estadística</b></div>
+</div>
+<div class="hoja">
+  <div class="paso"><i>1</i><div><h3>Calculamos el discriminante</h3><div class="f" data-lx="\Delta=b^2-4ac=(-5)^2-4\cdot 1\cdot 6=1"></div></div></div>
+  <div class="paso"><i>2</i><div><h3>Aplicamos la fórmula resolvente</h3><div class="f" data-lx="x_{1,2}=\dfrac{5\pm\sqrt{1}}{2}"></div></div></div>
+  <div class="paso"><i>3</i><div><h3>Verificamos</h3><div class="f" data-lx="3^2-5\cdot 3+6=0\;\checkmark"></div></div></div>
+  <div class="res" data-lx="x_1=3,\quad x_2=2"></div>
+</div>
+<script>document.querySelectorAll('[data-lx]').forEach(e => katex.render(e.dataset.lx, e, { throwOnError: false }));</script>
+</body></html>

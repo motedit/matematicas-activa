@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pruebas automáticas · Matemática paso a paso</title>
+<!-- Pruebas de la calculadora: abrí este archivo (doble clic) después de cambiar un motor.
+     Resuelve todos los ejemplos de datos/ejemplos.json y revisa:
+       1) que no haya errores, 2) que haya pasos y un paso "Verificamos" con ✓,
+       3) que todas las fórmulas se puedan dibujar con KaTeX,
+       4) que los casos de la lista ESPERADOS den el resultado correcto. -->
+<link rel="stylesheet" href="../lib/fuentes/fuentes.css">
+<script src="../lib/katex/katex.min.js"></script>
+<style>
+  body{font-family:Inter,system-ui,sans-serif;margin:0;background:#eef3f8;color:#0e1f33}
+  header{background:linear-gradient(100deg,#0d1b2a,#15304c);color:#fff;padding:16px 22px}
+  header h1{margin:0;font-family:Sora,sans-serif;font-size:1.15rem}header p{margin:4px 0 0;color:#a9c2dc;font-size:.85rem}
+  main{max-width:1100px;margin:0 auto;padding:20px}
+  .resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  .tarjeta{background:#fff;border:1px solid #e4ecf3;border-radius:12px;padding:12px 14px}
+  .tarjeta b{display:block;font-family:'Space Mono',monospace;font-size:1.4rem}.tarjeta span{font-size:.8rem;color:#5a748c}
+  .ok b{color:#0f7d74}.mal b{color:#c23b22}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:.84rem}
+  th,td{padding:7px 10px;border-bottom:1px solid #e4ecf3;text-align:left;vertical-align:top}th{background:#eef3f8;color:#3a5775}
+  td code{font-family:'Space Mono',monospace;font-size:.8rem}.estado-ok{color:#0f7d74;font-weight:700}.estado-mal{color:#c23b22;font-weight:700}
+  button{font:inherit;border:0;border-radius:10px;padding:10px 18px;background:#17a398;color:#fff;font-weight:700;cursor:pointer}
+  label{font-size:.85rem;margin-left:12px}
+</style>
+</head>
+<body>
+<header><h1>Pruebas automáticas · Matemática paso a paso</h1><p>Resuelve todos los ejemplos y casos de control de las siete áreas y revisa que todo esté bien.</p></header>
+<main>
+  <p><button id="correr">Correr las pruebas</button><label><input type="checkbox" id="soloFallas" checked> Mostrar solo lo que falla</label></p>
+  <div class="resumen" id="resumen"></div>
+  <table><thead><tr><th>Área</th><th>Ejercicio</th><th>Tema · método</th><th>Estado</th></tr></thead><tbody id="filas"></tbody></table>
+</main>
+<script src="../datos/ejemplos.js"></script>
+<script src="../js/motor-aritmetica.js"></script>
+<script src="../js/motor-algebra.js"></script>
+<script src="../js/motor-geometria-analitica.js"></script>
+<script src="../js/motor-trigonometria.js"></script>
+<script src="../js/motor-calculo-diferencial.js"></script>
+<script src="../js/motor-calculo-integral.js"></script>
+<script src="../js/motor-estadistica.js"></script>
+<script>
+'use strict';
+const AREAS = { arit: [resolver, 'Aritmética'], alg: [resolverAlgebra, 'Álgebra'], geo: [resolverGeo, 'Geometría analítica'], trig: [resolverTrig, 'Geometría y trigonometría'], calc: [resolverCalc, 'Cálculo diferencial'], integ: [resolverInteg, 'Cálculo integral'], est: [resolverEst, 'Estadística y probabilidad'] };
+// Casos de control: el resultado (en LaTeX) tiene que contener el texto indicado. Agregá los tuyos.
+const ESPERADOS = [
+  ['arit', 'mcd(12, 18)', '6'], ['arit', '1/2 + 2/3', '\\frac{7}{6}'], ['alg', 'x^2 - 5x + 6 = 0', 'x_{1}=3'], ['alg', '2x + y = 7; x - y = 2', 'y=1'],
+  ['alg', 'factorizar x^3 - 4x', 'x\\left(x-2\\right)\\left(x+2\\right)'], ['geo', 'distancia entre (1, 2) y (4, 6)', '5'], ['trig', 'sen 30° + cos 60°', '1'],
+  ['calc', 'lim x→2 (x^2 - 4)/(x - 2)', '=4'], ['calc', 'derivada de x^3', '3{x}^{2}'], ['integ', '∫_0^2 x^2 dx', '\\frac{8}{3}'], ['integ', '∑_{i=1}^{10} i^2', '385'],
+  ['est', 'media, mediana y moda de 4, 7, 5, 9, 5, 6, 8', '\\text{Me}=6'], ['est', 'binomial n = 10, p = 0,3, P(X = 4)', '0{,}2001'],
+  // temas nuevos
+  ['alg', 'El doble de un número aumentado en 7 es 25', 'x=9'], ['alg', 'La suma de tres números consecutivos es 45', '14,\\;15,\\;16'], ['alg', 'Juan tiene el triple de la edad de su hijo y entre los dos suman 48 años', '36\\text{ años}'],
+  ['alg', 'El largo de un rectángulo mide 3 cm más que el ancho y su área es 40 cm2', '5\\text{ cm}'], ['alg', 'Después de un aumento del 20 % un producto cuesta $ 3600. ¿Cuánto costaba antes?', '3{.}000'],
+  ['alg', 'Una canilla llena un tanque en 4 horas y otra en 6 horas. ¿Cuánto tardan las dos juntas?', '2,4'], ['alg', 'Pedro tiene 24 años más que su hijo. Dentro de 6 años Pedro tendrá el triple de la edad de su hijo', '30\\text{ años}'],
+  ['arit', 'capital $ 100.000 al 5 % mensual durante 6 meses, interés compuesto', '134{.}009{,}56'], ['arit', 'cuota de un préstamo de $ 500.000 al 4 % mensual en 12 cuotas', '53{.}276{,}09'],
+  ['est', 'C(10, 4)', '210'], ['est', 'permutaciones de la palabra BANANA', '60'], ['est', '¿de cuántas formas se pueden sentar 6 personas en una mesa redonda?', '120'],
+  ['geo', 'producto vectorial de u = (2, -1, 3) y v = (1, 4, -2)', '\\left(-10;\\,7;\\,9\\right)'], ['geo', 'volumen del paralelepípedo u = (1, 0, 2), v = (2, 1, 0), w = (0, 3, 1)', 'V=13'],
+  ['integ', 'serie ∑_{n=1}^{∞} 1/2^n', 'S=1'], ['integ', 'serie ∑_{n=1}^{∞} 1/n', 'diverge'], ['integ', "y' = 3y, y(0) = 2", '2{e}^{3x}'], ['integ', "y' + 2y = 4, y(0) = 1", '+2']
+];
+function probar(area, texto, esperado) {
+  const [fn] = AREAS[area], fallas = []; let r = null; const t0 = performance.now();
+  try { r = fn(texto); } catch (e) { return { area, texto, fallas: ['Error: ' + e.message], ms: performance.now() - t0 }; }
+  if (!r.pasos || !r.pasos.length) fallas.push('No tiene pasos');
+  const verif = r.pasos.filter(p => /^Verificamos/.test(p.titulo));
+  if (!verif.length) fallas.push('Falta el paso “Verificamos”');
+  else if (!verif.some(p => /checkmark/.test(JSON.stringify(p)))) fallas.push('La verificación no tiene ✓');
+  const formulas = [r.resultado, ...r.pasos.flatMap(p => [...p.mates, ...((p.texto || '').match(/\$([^$]+)\$/g) || []).map(m => m.slice(1, -1)), ...((p.html || '').replace(/<svg[\s\S]*?<\/svg>/g, '').match(/\$([^$]+)\$/g) || []).map(m => m.slice(1, -1))])];
+  for (const f of formulas) { try { katex.renderToString(f, { throwOnError: true, displayMode: true, strict: 'ignore' }); } catch (e) { fallas.push('Fórmula que no se dibuja: ' + f.slice(0, 60)); break; } }
+  if (esperado && !r.resultado.includes(esperado)) fallas.push(`Se esperaba “${esperado}” en el resultado y dio ${r.resultado}`);
+  if (/NaN|undefined/.test(JSON.stringify(r))) fallas.push('Aparece NaN o undefined');
+  return { area, texto, r, fallas, ms: performance.now() - t0 };
+}
+function correr() {
+  const casos = [];
+  for (const [a, d] of Object.entries(window.DATOS_EJEMPLOS.areas)) for (const ej of [...Object.values(d.porTema).flat(), ...d.auto]) casos.push([a, ej.t || latexATexto(ej.lx), null]);
+  casos.push(...ESPERADOS);
+  const t0 = performance.now(), res = casos.map(([a, t, e]) => probar(a, t, e)), ms = performance.now() - t0;
+  const mal = res.filter(x => x.fallas.length), porArea = {};
+  res.forEach(x => { const p = porArea[x.area] = porArea[x.area] || { n: 0, ok: 0 }; p.n++; if (!x.fallas.length) p.ok++; });
+  document.getElementById('resumen').innerHTML = `<div class="tarjeta ${mal.length ? 'mal' : 'ok'}"><b>${res.length - mal.length}/${res.length}</b><span>pruebas correctas</span></div><div class="tarjeta"><b>${(ms / 1000).toFixed(1)} s</b><span>tiempo total</span></div>` +
+    Object.entries(porArea).map(([a, p]) => `<div class="tarjeta ${p.ok === p.n ? 'ok' : 'mal'}"><b>${p.ok}/${p.n}</b><span>${AREAS[a][1]}</span></div>`).join('');
+  const solo = document.getElementById('soloFallas').checked, lista = solo ? mal : res;
+  document.getElementById('filas').innerHTML = lista.length ? lista.map(x => `<tr><td>${AREAS[x.area][1]}</td><td><code>${x.texto.replace(/</g, '&lt;')}</code></td><td>${x.r ? (x.r.tema + ' · ' + x.r.metodo).replace(/</g, '&lt;') : '—'}</td><td class="${x.fallas.length ? 'estado-mal' : 'estado-ok'}">${x.fallas.length ? x.fallas.join('<br>').replace(/</g, '&lt;').replace(/&lt;br>/g, '<br>') : '✓ bien'}</td></tr>`).join('') : '<tr><td colspan="4" class="estado-ok">✓ Todo correcto: no hay fallas.</td></tr>';
+  document.title = (mal.length ? '✗ ' : '✓ ') + document.title.replace(/^[✓✗] /, '');
+  window.RESULTADO_PRUEBAS = { total: res.length, fallas: mal.length };
+}
+document.getElementById('correr').addEventListener('click', correr);
+document.getElementById('soloFallas').addEventListener('change', correr);
+correr();
+</script>
+</body>
+</html>

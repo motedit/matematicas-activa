@@ -1,0 +1,78 @@
+/* Copia de datos/plataforma.json para cuando la página se abre con doble clic (file://).
+ * Si cambiás la configuración, cambiá los dos archivos. */
+window.DATOS_PLATAFORMA = {
+  "version": 1,
+  "descripcion": "Configuración de la plataforma: planes (gratis / completa), enlaces a las clases y reconocimiento de fotos. Si cambiás este archivo, copiá el mismo contenido en plataforma.js.",
+  "sitio": {
+    "url": "",
+    "nombre": "Matemáticas Activa",
+    "_url": "Dirección donde vas a publicar la carpeta Calculadora (por ejemplo https://matematicasactiva.com/calculadora/). La usa herramientas/generar-paginas.js para el sitemap y los datos para Google."
+  },
+  "docente": {
+    "activo": false,
+    "_activo": "Herramientas para docentes dentro de la calculadora (Fichas, Modo clase y compartir el progreso con un curso). false = ocultas por ahora. Dentro de tu Pizarra Docente siempre aparecen."
+  },
+  "planes": {
+    "activo": false,
+    "_activo": "false = todo gratis (como ahora). true = se aplican los límites de la versión gratuita.",
+    "nombreGratis": "Versión gratuita",
+    "nombreCompleta": "Versión completa",
+    "precio": "Consultá el precio en Matemáticas Activa",
+    "enlaceSuscripcion": "",
+    "_enlaceSuscripcion": "Dirección de tu página de pago (Mercado Pago, Hotmart, tu web…). Vacío = no se muestra el botón.",
+    "limiteDiarioGratis": 10,
+    "funcionesCompletas": [
+      "fichas",
+      "imagen",
+      "pdf",
+      "practica",
+      "voz",
+      "progreso",
+      "asistente"
+    ],
+    "_funcionesCompletas": "fichas · imagen · pdf · practica · voz · progreso · historial · enlace · foto · asistente",
+    "beneficios": [
+      "Ejercicios ilimitados todos los días",
+      "Práctica con ejercicios parecidos y puntaje",
+      "Fichas con soluciones para imprimir",
+      "Imagen y PDF de cada resolución",
+      "Lectura en voz alta",
+      "Seguimiento de tu progreso por tema",
+      "Asistente con IA: “No entiendo este paso”"
+    ],
+    "codigos": [],
+    "_codigos": "Huellas SHA-256 de los códigos de activación (generalas con pruebas/codigos.html)."
+  },
+  "clases": {
+    "textoBoton": "Ver la clase de este tema",
+    "baseUrl": "",
+    "_baseUrl": "Si tus clases siguen el patrón baseUrl/área/tema (por ejemplo https://tusitio.com/clases/alg/segundogrado), poné acá baseUrl. Vacío = solo se usan los enlaces de porTema.",
+    "porTema": {},
+    "_porTema": "Enlaces puntuales, con clave área.tema. Ejemplo: \"alg.segundogrado\": \"https://tusitio.com/clases/ecuaciones-cuadraticas\""
+  },
+  "foto": {
+    "proveedor": "tesseract",
+    "_proveedor": "tesseract = gratis y en el navegador (bueno para texto impreso). mathpix = servicio pago, muy bueno con fórmulas y letra a mano.",
+    "mathpix": {
+      "app_id": "",
+      "app_key": ""
+    }
+  },
+  "nube": {
+    "url": "",
+    "clave": "",
+    "curso": "",
+    "_url": "Dirección del proyecto de Supabase (https://xxxx.supabase.co). Vacío = todo queda guardado solo en cada navegador.",
+    "_clave": "La clave pública (anon key) del proyecto.",
+    "_curso": "Curso por defecto (opcional). Los alumnos también pueden escribir el suyo en “Mi progreso”."
+  },
+  "estadisticas": {
+    "url": "",
+    "clave": "",
+    "_url": "Supabase (puede ser el mismo proyecto de nube). Vacío = las estadísticas quedan solo en cada navegador. Se crea con servidor/supabase.sql."
+  },
+  "asistente": {
+    "url": "",
+    "_url": "Dirección de la función de servidor (https://<proyecto>.supabase.co/functions/v1/asistente). Vacío = el botón “No entiendo este paso” no aparece. Ver servidor/asistente/index.ts."
+  }
+};

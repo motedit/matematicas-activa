@@ -1,0 +1,52 @@
+{
+  "packageId": "com.matematicasactiva.pasoapaso",
+  "host": "matematicasactiva.com",
+  "name": "Matemática paso a paso",
+  "launcherName": "Paso a paso",
+  "display": "standalone",
+  "orientation": "default",
+  "themeColor": "#0D1B2A",
+  "themeColorDark": "#0D1B2A",
+  "navigationColor": "#0D1B2A",
+  "navigationColorDark": "#0D1B2A",
+  "navigationDividerColor": "#0D1B2A",
+  "navigationDividerColorDark": "#0D1B2A",
+  "backgroundColor": "#EEF3F8",
+  "enableNotifications": false,
+  "startUrl": "/calculadora/Matem%C3%A1tica%20paso%20a%20paso.html",
+  "iconUrl": "https://matematicasactiva.com/calculadora/iconos/icono-512.png",
+  "maskableIconUrl": "https://matematicasactiva.com/calculadora/iconos/icono-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Álgebra",
+      "shortName": "Álgebra",
+      "url": "/calculadora/Matem%C3%A1tica%20paso%20a%20paso.html?area=alg",
+      "chosenIconUrl": "https://matematicasactiva.com/calculadora/iconos/icono-192.png"
+    },
+    {
+      "name": "Graficador",
+      "shortName": "Graficador",
+      "url": "/calculadora/Matem%C3%A1tica%20paso%20a%20paso.html?graficador",
+      "chosenIconUrl": "https://matematicasactiva.com/calculadora/iconos/icono-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://matematicasactiva.com/calculadora/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://matematicasactiva.com/calculadora/",
+  "minSdkVersion": 21
+}
