@@ -1,0 +1,13 @@
+/* Tipografías locales (Inter, Sora y Space Mono): la página funciona sin internet */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('inter-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('inter-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('inter-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('inter-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Sora';font-style:normal;font-weight:600;font-display:swap;src:url('sora-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Sora';font-style:normal;font-weight:700;font-display:swap;src:url('sora-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Sora';font-style:normal;font-weight:800;font-display:swap;src:url('sora-latin-800-normal.woff2') format('woff2')}
+@font-face{font-family:'Space Mono';font-style:normal;font-weight:400;font-display:swap;src:url('space-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Space Mono';font-style:normal;font-weight:700;font-display:swap;src:url('space-mono-latin-700-normal.woff2') format('woff2')}
+
+@font-face{font-family:'OpenDyslexic';font-style:normal;font-weight:400;font-display:swap;src:url('opendyslexic-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'OpenDyslexic';font-style:normal;font-weight:700;font-display:swap;src:url('opendyslexic-latin-700-normal.woff2') format('woff2')}
