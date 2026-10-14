@@ -16,3 +16,8 @@ desktop.ini
 
 # OneDrive
 *:Zone.Identifier
+
+# No se publican (respaldo del servidor y archivos de revisión)
+_revisar/
+backend/
+LEEME.md

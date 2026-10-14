@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batalla de Tablas ⚔️</title><meta name="description" content="Juego de tablas de multiplicar: ganale al rival respondiendo rápido y practicá las tablas jugando."><link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/batalla-de-tablas.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#210b12;
+    --bg-mid:#3d1420;
+    --bg-ember:#5c1c28;
+    --gold:#ffb648;
+    --coral:#ff5f5f;
+    --magic:#7ee8c1;
+    --cream:#fff3e0;
+    --cream-dim:#e0bfae;
+    --card:#3a1420;
+    --card-light:#552030;
+    --shadow: 0 10px 30px rgba(0,0,0,0.45);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,182,72,0.14), transparent 45%),
+      radial-gradient(ellipse at 85% 15%, rgba(255,95,95,0.10), transparent 50%),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 55%, var(--bg-ember) 100%);
+    background-attachment:fixed;
+    font-family:'Nunito', sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 60px;
+  }
+
+  .app{ width:100%; max-width:560px; }
+  :focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+  .hidden{ display:none !important; }
+
+  /* Header */
+  .header{ text-align:center; margin-bottom:22px; }
+  .mission-badge{
+    display:inline-block;
+    background:var(--card-light);
+    border:2px solid var(--gold);
+    color:var(--gold);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:1px;
+    padding:5px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(26px, 7vw, 36px);
+    margin:0 0 8px;
+    text-shadow:0 3px 0 rgba(0,0,0,0.35);
+  }
+  .subtitle{ margin:0; color:var(--cream-dim); font-size:15px; font-weight:600; padding:0 10px; }
+
+  /* Buttons */
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{
+    background:linear-gradient(180deg, #ffcb70, var(--gold));
+    color:#3a1f00;
+    font-size:17px;
+    padding:14px 30px;
+    box-shadow:0 6px 0 #b5761a, var(--shadow);
+  }
+  .btn-primary:disabled{ opacity:.4; cursor:not-allowed; box-shadow:0 6px 0 rgba(0,0,0,0.2); }
+  .btn-primary:not(:disabled):hover{ transform:translateY(-2px); }
+  .btn-ghost{
+    background:transparent;
+    border:2px solid var(--card-light);
+    color:var(--cream-dim);
+    padding:10px 18px;
+    font-size:14px;
+  }
+  .btn-ghost:hover{ border-color:var(--magic); color:var(--magic); }
+  .btn-small{ padding:8px 14px; font-size:13px; }
+
+  /* Monster select screen */
+  .monsters-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .monster-btn{
+    position:relative;
+    aspect-ratio:1;
+    border-radius:22px;
+    border:3px solid var(--card-light);
+    background:var(--card);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .monster-btn .m-emoji{ font-size:30px; line-height:1; }
+  .monster-btn .m-table{ font-family:'Baloo 2', sans-serif; font-weight:700; font-size:13px; color:var(--gold); margin-top:4px; }
+  .monster-btn .m-name{ font-size:9px; font-weight:600; color:var(--cream-dim); margin-top:1px; text-align:center; padding:0 4px; }
+  .monster-btn:hover{ transform:translateY(-3px); }
+  .monster-btn.selected{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(255,182,72,0.25); transform:scale(1.05); }
+  .monster-btn.selected::after{
+    content:"✓";
+    position:absolute;
+    top:-6px; right:-6px;
+    background:var(--magic);
+    color:#083328;
+    width:22px; height:22px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    border:2px solid var(--bg-deep);
+  }
+
+  .select-actions{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+
+  /* Battle screen */
+  .stats-bar{
+    display:flex;
+    justify-content:space-between;
+    background:var(--card);
+    border-radius:var(--radius-md);
+    padding:14px 10px;
+    margin-bottom:18px;
+    box-shadow:var(--shadow);
+  }
+  .stat{ flex:1; text-align:center; }
+  .stat-value{ display:block; font-family:'Baloo 2', sans-serif; font-size:24px; font-weight:800; color:var(--gold); }
+  .stat-label{ display:block; font-size:11px; color:var(--cream-dim); font-weight:700; letter-spacing:.3px; text-transform:uppercase; margin-top:2px; }
+
+  .battle-scene{ text-align:center; margin-bottom:14px; }
+  .monster-name-tag{
+    display:inline-block;
+    font-family:'Baloo 2', sans-serif;
+    font-size:14px;
+    font-weight:700;
+    color:var(--gold);
+    margin-bottom:10px;
+  }
+  .monster-frame{
+    width:110px; height:110px;
+    margin:0 auto 12px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--card-light), var(--bg-deep));
+    border:4px solid var(--gold);
+    box-shadow:0 0 22px rgba(255,182,72,0.35), var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    animation:idleBob 2.4s ease-in-out infinite;
+  }
+  .monster-frame.hit{ animation:hitFlash .35s ease; }
+  .monster-frame.dodge{ animation:dodgeShake .4s ease; }
+  .monster-frame.defeated{ animation:defeatSpin .6s ease forwards; }
+  .monster-emoji{ font-size:52px; }
+
+  .hp-bar{
+    display:flex;
+    gap:5px;
+    justify-content:center;
+    max-width:220px;
+    margin:0 auto;
+  }
+  .hp-segment{
+    flex:1;
+    height:12px;
+    background:var(--card-light);
+    border-radius:6px;
+    border:2px solid var(--bg-deep);
+    transition:background .25s ease;
+  }
+  .hp-segment.filled{ background:linear-gradient(90deg, var(--magic), var(--gold)); }
+
+  .question-card{
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    padding:22px 18px 18px;
+    text-align:center;
+    box-shadow:var(--shadow);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+    animation:bounceIn .35s ease;
+  }
+  .planet-tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--bg-deep);
+    background:var(--magic);
+    padding:4px 12px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .question{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(34px, 11vw, 46px);
+    letter-spacing:1px;
+  }
+  .feedback-message{ min-height:22px; font-weight:700; font-size:14px; margin-top:8px; color:var(--gold); }
+
+  .options-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .option-btn{
+    background:var(--card-light);
+    color:var(--cream);
+    font-family:'Baloo 2', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    border:2px solid transparent;
+    border-radius:var(--radius-md);
+    padding:18px 8px;
+    cursor:pointer;
+    transition:transform .12s ease, background .2s ease, border-color .2s ease;
+  }
+  .option-btn:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--magic); }
+  .option-btn:disabled{ cursor:default; }
+  .option-btn.correct{ background:var(--magic); color:#08322e; border-color:var(--magic); }
+  .option-btn.wrong{ background:var(--coral); color:#3a0d0d; animation:shakeBtn .35s ease; }
+
+  .hint-area{ text-align:center; margin-bottom:16px; }
+  .hint-text{
+    margin:10px auto 0;
+    max-width:420px;
+    background:var(--card);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--cream-dim);
+    line-height:1.5;
+  }
+
+  .play-actions{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+
+  /* Overlays */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(15, 5, 10, 0.85);
+    display:flex; align-items:center; justify-content:center;
+    z-index:20;
+    padding:20px;
+  }
+  .overlay-card{ text-align:center; animation:bounceIn .4s ease; max-width:340px; }
+  .overlay-emoji{ font-size:60px; margin-bottom:10px; }
+  .overlay-title{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:26px; color:var(--gold); margin-bottom:6px; }
+  .overlay-sub{ color:var(--cream-dim); font-weight:600; font-size:14px; margin-bottom:16px; }
+
+  .spark{
+    position:absolute;
+    font-size:16px;
+    pointer-events:none;
+    animation:sparkFly 0.7s ease-out forwards;
+  }
+
+  @keyframes idleBob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-5px);} }
+  @keyframes hitFlash{ 0%{ filter:brightness(1);} 30%{ filter:brightness(2.2) drop-shadow(0 0 10px var(--coral)); transform:scale(1.08);} 100%{ filter:brightness(1); transform:scale(1);} }
+  @keyframes dodgeShake{ 0%,100%{ transform:translateX(0);} 30%{ transform:translateX(-14px) rotate(-6deg);} 70%{ transform:translateX(10px) rotate(4deg);} }
+  @keyframes defeatSpin{ to{ transform:rotate(340deg) scale(0.2); opacity:0;} }
+  @keyframes bounceIn{ 0%{ transform:scale(0.9); opacity:0;} 60%{ transform:scale(1.02); opacity:1;} 100%{ transform:scale(1);} }
+  @keyframes shakeBtn{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-6px);} 75%{ transform:translateX(6px);} }
+  @keyframes sparkFly{ from{ transform:translate(0,0) scale(1); opacity:1;} to{ transform:translate(var(--sx,20px), var(--sy,-30px)) scale(0.3); opacity:0;} }
+
+  @media (prefers-reduced-motion: reduce){
+    .monster-frame, .question-card, .overlay-card, .spark{ animation:none !important; }
+  }
+</style>
+</head>
+<body><a href="../Juegos.html" style="position:fixed;top:10px;left:10px;z-index:9999;background:#0f172a;color:#fff;padding:8px 14px;border-radius:10px;font:600 14px sans-serif;text-decoration:none;opacity:.9">← Volver a Juegos</a>
+<div class="app">
+
+  <div class="header">
+    <div class="mission-badge">NIVEL <span id="levelDisplay">1</span></div>
+    <h1 class="title">⚔️ Batalla de Tablas</h1>
+    <p class="subtitle">Elegí a qué monstruos querés enfrentar y derrotalos respondiendo bien. Sin cronómetro, a tu ritmo.</p>
+  </div>
+
+  <section id="selectScreen" class="select-screen">
+    <div class="monsters-grid" id="monstersGrid"></div>
+    <div class="select-actions">
+      <button id="selectAllBtn" class="btn btn-ghost">👹 Elegir todos los monstruos</button>
+      <button id="startBtn" class="btn btn-primary" disabled>Empezar batalla ⚔️</button>
+    </div>
+  </section>
+
+  <section id="battleScreen" class="battle-screen hidden">
+    <div class="stats-bar">
+      <div class="stat"><span class="stat-value" id="correctTotal">0</span><span class="stat-label">Correctas</span></div>
+      <div class="stat"><span class="stat-value" id="rachaActual">0</span><span class="stat-label">Racha</span></div>
+      <div class="stat"><span class="stat-value" id="defeatedTotal">0</span><span class="stat-label">Vencidos</span></div>
+    </div>
+
+    <div class="battle-scene">
+      <div class="monster-name-tag" id="monsterNameTag">Monstruo</div>
+      <div class="monster-frame" id="monsterFrame">
+        <span class="monster-emoji" id="monsterEmoji">👹</span>
+      </div>
+      <div class="hp-bar" id="hpBar"></div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="planet-tag" id="planetTag">Tabla del 2</div>
+      <div class="question" id="questionText">? × ? = ?</div>
+      <div class="feedback-message" id="feedbackMsg">&nbsp;</div>
+    </div>
+
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <div class="hint-area">
+      <button id="hintBtn" class="btn btn-ghost btn-small">💡 Ver pista</button>
+      <p id="hintText" class="hint-text hidden"></p>
+    </div>
+
+    <div class="play-actions">
+      <button id="changeMonstersBtn" class="btn btn-ghost btn-small">👹 Cambiar monstruos</button>
+      <button id="resetBtn" class="btn btn-ghost btn-small">🔄 Reiniciar todo</button>
+    </div>
+  </section>
+
+  <div class="overlay hidden" id="victoryOverlay">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🏆</div>
+      <div class="overlay-title" id="victoryTitle">¡Monstruo vencido!</div>
+      <div class="overlay-sub" id="victorySub">Preparando al siguiente...</div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="finalOverlay">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🎉</div>
+      <div class="overlay-title">¡Victoria total!</div>
+      <div class="overlay-sub">Derrotaste a todos los monstruos que elegiste.</div>
+      <button id="continueBtn" class="btn btn-primary">Elegir más monstruos</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var MONSTERS = [
+    { table:2,  name:'Ogro Ogrón',          emoji:'👹' },
+    { table:3,  name:'Trasgo Traviesa',     emoji:'👺' },
+    { table:4,  name:'Fantasma Fiu',        emoji:'👻' },
+    { table:5,  name:'Dragón Dragoncito',   emoji:'🐉' },
+    { table:6,  name:'Alien Alocado',       emoji:'👾' },
+    { table:7,  name:'Calamar Calculador',  emoji:'🦑' },
+    { table:8,  name:'Pulpo Pícaro',        emoji:'🐙' },
+    { table:9,  name:'Rex Rugiente',        emoji:'🦖' },
+    { table:10, name:'Zombie Zumbón',       emoji:'🧟' }
+  ];
+  var HITS_TO_DEFEAT = 5;
+  var CORRECT_MSGS = ['¡Golpe directo!', '¡Excelente ataque!', '¡Sos un crack!', '¡Imparable!', '¡Muy bien!', '¡Certero!'];
+  var WRONG_MSGS = ['¡Esquivó! Probá de nuevo', 'No le diste... ¡vos podés!', 'Casi, ¡otro intento!', '¡Apuntá mejor, dale de nuevo!'];
+
+  var state = {
+    selected: new Set(),
+    queue: [],
+    queueIndex: 0,
+    level: 1,
+    hits: 0,
+    racha: 0,
+    correctTotal: 0,
+    defeatedTotal: 0,
+    current: null,
+    wrongAttempts: 0
+  };
+
+  var monstersGrid = document.getElementById('monstersGrid');
+  var startBtn = document.getElementById('startBtn');
+  var selectAllBtn = document.getElementById('selectAllBtn');
+  var selectScreen = document.getElementById('selectScreen');
+  var battleScreen = document.getElementById('battleScreen');
+  var levelDisplay = document.getElementById('levelDisplay');
+  var monsterNameTag = document.getElementById('monsterNameTag');
+  var monsterFrame = document.getElementById('monsterFrame');
+  var monsterEmoji = document.getElementById('monsterEmoji');
+  var hpBar = document.getElementById('hpBar');
+  var questionCard = document.getElementById('questionCard');
+  var planetTag = document.getElementById('planetTag');
+  var questionText = document.getElementById('questionText');
+  var feedbackMsg = document.getElementById('feedbackMsg');
+  var optionsGrid = document.getElementById('optionsGrid');
+  var hintBtn = document.getElementById('hintBtn');
+  var hintText = document.getElementById('hintText');
+  var changeMonstersBtn = document.getElementById('changeMonstersBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var victoryOverlay = document.getElementById('victoryOverlay');
+  var victoryTitle = document.getElementById('victoryTitle');
+  var finalOverlay = document.getElementById('finalOverlay');
+  var continueBtn = document.getElementById('continueBtn');
+  var correctTotalEl = document.getElementById('correctTotal');
+  var rachaActualEl = document.getElementById('rachaActual');
+  var defeatedTotalEl = document.getElementById('defeatedTotal');
+
+  function buildMonsters(){
+    monstersGrid.innerHTML = '';
+    MONSTERS.forEach(function(m){
+      var btn = document.createElement('button');
+      btn.className = 'monster-btn';
+      btn.innerHTML = '<span class="m-emoji">' + m.emoji + '</span><span class="m-table">×' + m.table + '</span><span class="m-name">' + m.name + '</span>';
+      btn.dataset.table = m.table;
+      btn.addEventListener('click', function(){
+        if(state.selected.has(m.table)){
+          state.selected.delete(m.table);
+          btn.classList.remove('selected');
+        } else {
+          state.selected.add(m.table);
+          btn.classList.add('selected');
+        }
+        startBtn.disabled = state.selected.size === 0;
+      });
+      monstersGrid.appendChild(btn);
+    });
+  }
+
+  selectAllBtn.addEventListener('click', function(){
+    var allSelected = state.selected.size === MONSTERS.length;
+    document.querySelectorAll('.monster-btn').forEach(function(btn){
+      var table = Number(btn.dataset.table);
+      if(allSelected){
+        state.selected.delete(table);
+        btn.classList.remove('selected');
+      } else {
+        state.selected.add(table);
+        btn.classList.add('selected');
+      }
+    });
+    startBtn.disabled = state.selected.size === 0;
+    selectAllBtn.textContent = allSelected ? '👹 Elegir todos los monstruos' : '🌑 Deseleccionar todos';
+  });
+
+  startBtn.addEventListener('click', function(){
+    state.queue = Array.from(state.selected);
+    state.queueIndex = 0;
+    selectScreen.classList.add('hidden');
+    battleScreen.classList.remove('hidden');
+    loadMonster();
+  });
+
+  changeMonstersBtn.addEventListener('click', function(){
+    battleScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  resetBtn.addEventListener('click', function(){
+    state.level = 1;
+    state.hits = 0;
+    state.racha = 0;
+    state.correctTotal = 0;
+    state.defeatedTotal = 0;
+    state.selected = new Set();
+    state.queue = [];
+    state.queueIndex = 0;
+    updateStatsUI();
+    levelDisplay.textContent = state.level;
+    document.querySelectorAll('.monster-btn.selected').forEach(function(b){ b.classList.remove('selected'); });
+    startBtn.disabled = true;
+    battleScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  continueBtn.addEventListener('click', function(){
+    finalOverlay.classList.add('hidden');
+    battleScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function loadMonster(){
+    var table = state.queue[state.queueIndex];
+    var monster = MONSTERS.find(function(m){ return m.table === table; });
+    state.hits = 0;
+    state.activeMonster = monster;
+    monsterNameTag.textContent = monster.name + ' · Tabla del ' + monster.table;
+    monsterEmoji.textContent = monster.emoji;
+    monsterFrame.classList.remove('defeated');
+    buildHpBar();
+    nextQuestion();
+  }
+
+  function buildHpBar(){
+    hpBar.innerHTML = '';
+    for(var i=0;i<HITS_TO_DEFEAT;i++){
+      var seg = document.createElement('div');
+      seg.className = 'hp-segment';
+      hpBar.appendChild(seg);
+    }
+  }
+
+  function generateQuestion(){
+    var a = state.activeMonster.table;
+    var b = Math.floor(Math.random()*10)+1;
+    var correct = a*b;
+
+    var candidates = new Set();
+    var raw = [a*(b-1), a*(b+1), (a+1)*b, (a-1>0?a-1:a+2)*b, correct+a, correct-a, correct+1, correct-1, correct+2];
+    raw.forEach(function(v){ if(v>0 && v!==correct) candidates.add(v); });
+    var pool = Array.from(candidates);
+    var distractors = [];
+    while(distractors.length < 3 && pool.length){
+      var idx = Math.floor(Math.random()*pool.length);
+      distractors.push(pool.splice(idx,1)[0]);
+    }
+    while(distractors.length < 3){
+      var fallback = correct + (distractors.length+2) * (Math.random()<0.5?-1:1);
+      if(fallback>0 && fallback!==correct && distractors.indexOf(fallback)===-1) distractors.push(fallback);
+    }
+
+    var options = distractors.concat([correct]);
+    for(var i=options.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp = options[i]; options[i]=options[j]; options[j]=tmp;
+    }
+
+    state.current = { a:a, b:b, correct:correct, options:options };
+    state.wrongAttempts = 0;
+  }
+
+  function nextQuestion(){
+    generateQuestion();
+    var c = state.current;
+    planetTag.textContent = 'Tabla del ' + c.a;
+    questionText.textContent = c.a + ' × ' + c.b + ' = ?';
+    feedbackMsg.textContent = '\u00A0';
+    hintText.classList.add('hidden');
+    hintText.textContent = '';
+    renderOptions();
+    questionCard.style.animation = 'none';
+    void questionCard.offsetWidth;
+    questionCard.style.animation = '';
+  }
+
+  function renderOptions(){
+    optionsGrid.innerHTML = '';
+    state.current.options.forEach(function(val){
+      var btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = val;
+      btn.addEventListener('click', function(){ handleAnswer(val, btn); });
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(val, btnEl){
+    var allBtns = optionsGrid.querySelectorAll('.option-btn');
+    if(val === state.current.correct){
+      allBtns.forEach(function(b){ b.disabled = true; });
+      btnEl.classList.add('correct');
+      feedbackMsg.textContent = pickRandom(CORRECT_MSGS) + ' ⚡';
+      state.racha++;
+      state.correctTotal++;
+      state.hits++;
+      updateStatsUI();
+      flashMonster('hit');
+      spawnSparks();
+      updateHpBar();
+
+      if(state.hits >= HITS_TO_DEFEAT){
+        setTimeout(defeatMonster, 550);
+      } else {
+        setTimeout(nextQuestion, 950);
+      }
+    } else {
+      btnEl.classList.add('wrong');
+      btnEl.disabled = true;
+      state.wrongAttempts++;
+      state.racha = 0;
+      updateStatsUI();
+      feedbackMsg.textContent = pickRandom(WRONG_MSGS);
+      flashMonster('dodge');
+      setTimeout(function(){ btnEl.classList.remove('wrong'); }, 400);
+
+      if(state.wrongAttempts >= 2){
+        showHint();
+      }
+    }
+  }
+
+  function flashMonster(type){
+    monsterFrame.classList.remove('hit','dodge');
+    void monsterFrame.offsetWidth;
+    monsterFrame.classList.add(type);
+  }
+
+  function updateHpBar(){
+    var segs = hpBar.querySelectorAll('.hp-segment');
+    segs.forEach(function(seg, i){
+      if(i < state.hits) seg.classList.add('filled');
+    });
+  }
+
+  function showHint(){
+    var c = state.current;
+    var terms = [];
+    for(var i=0;i<c.b;i++){ terms.push(c.a); }
+    hintText.textContent = '🔎 Pensalo así: ' + terms.join(' + ') + ' = ' + c.correct + '  (sumar ' + c.a + ', ' + c.b + ' veces)';
+    hintText.classList.remove('hidden');
+  }
+
+  hintBtn.addEventListener('click', function(){
+    if(hintText.classList.contains('hidden')){
+      showHint();
+    } else {
+      hintText.classList.add('hidden');
+    }
+  });
+
+  function defeatMonster(){
+    monsterFrame.classList.add('defeated');
+    state.defeatedTotal++;
+    state.level++;
+    updateStatsUI();
+    levelDisplay.textContent = state.level;
+
+    victoryTitle.textContent = '¡Venciste a ' + state.activeMonster.name + '!';
+    var hasNext = state.queueIndex + 1 < state.queue.length;
+    document.getElementById('victorySub').textContent = hasNext ? 'Preparando al siguiente...' : 'Sin más monstruos en la fila...';
+    victoryOverlay.classList.remove('hidden');
+
+    setTimeout(function(){
+      victoryOverlay.classList.add('hidden');
+      state.queueIndex++;
+      if(state.queueIndex < state.queue.length){
+        loadMonster();
+      } else {
+        finalOverlay.classList.remove('hidden');
+      }
+    }, 1400);
+  }
+
+  function updateStatsUI(){
+    correctTotalEl.textContent = state.correctTotal;
+    rachaActualEl.textContent = state.racha;
+    defeatedTotalEl.textContent = state.defeatedTotal;
+  }
+
+  function spawnSparks(){
+    var symbols = ['✨','⚡','💥'];
+    var rect = monsterFrame.getBoundingClientRect();
+    for(var i=0;i<6;i++){
+      var s = document.createElement('span');
+      s.className = 'spark';
+      s.textContent = pickRandom(symbols);
+      s.style.left = (40 + Math.random()*30) + '%';
+      s.style.top = (30 + Math.random()*30) + '%';
+      s.style.setProperty('--sx', (Math.random()*60-30) + 'px');
+      s.style.setProperty('--sy', (Math.random()*-50-10) + 'px');
+      monsterFrame.appendChild(s);
+      (function(el){ setTimeout(function(){ el.remove(); }, 750); })(s);
+    }
+  }
+
+  buildMonsters();
+  updateStatsUI();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arma la Fórmula 🧩</title><meta name="description" content="Juego de productos notables: armá la fórmula pieza por pieza y practicá el cuadrado y el cubo de un binomio."><link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/arma-la-formula.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0d2b2e;
+    --bg-mid:#14403f;
+    --bg-glow:#1f5c52;
+    --accent:#7cf5c4;
+    --gold:#ffcb6b;
+    --coral:#ff6b6b;
+    --cream:#eafff5;
+    --cream-dim:#b9d9cf;
+    --card:#123a3a;
+    --card-light:#1c4f4d;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(124,245,196,0.14), transparent 45%),
+      radial-gradient(ellipse at 85% 10%, rgba(255,203,107,0.10), transparent 50%),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 55%, var(--bg-glow) 100%);
+    background-attachment:fixed;
+    font-family:'Nunito', sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 60px;
+  }
+
+  .app{ width:100%; max-width:560px; }
+  :focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+  .hidden{ display:none !important; }
+
+  .header{ text-align:center; margin-bottom:20px; }
+  .title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(22px, 6vw, 32px);
+    margin:0 0 8px;
+    text-shadow:0 3px 0 rgba(0,0,0,0.3);
+  }
+  .subtitle{ margin:0; color:var(--cream-dim); font-size:14.5px; font-weight:600; padding:0 10px; }
+
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{
+    background:linear-gradient(180deg, #a8f5d8, var(--accent));
+    color:#0d2b2e;
+    font-size:17px;
+    padding:14px 30px;
+    box-shadow:0 6px 0 #3fae8a, var(--shadow);
+  }
+  .btn-primary:not(:disabled):hover{ transform:translateY(-2px); }
+  .btn-ghost{
+    background:transparent;
+    border:2px solid var(--card-light);
+    color:var(--cream-dim);
+    padding:10px 18px;
+    font-size:14px;
+  }
+  .btn-ghost:hover{ border-color:var(--gold); color:var(--gold); }
+  .btn-small{ padding:8px 14px; font-size:13px; }
+
+  .stats-bar{
+    display:flex; justify-content:space-between;
+    background:var(--card); border-radius:var(--radius-md);
+    padding:14px 10px; margin-bottom:18px; box-shadow:var(--shadow);
+  }
+  .stat{ flex:1; text-align:center; }
+  .stat-value{ display:block; font-family:'Baloo 2', sans-serif; font-size:22px; font-weight:800; color:var(--gold); }
+  .stat-label{ display:block; font-size:10.5px; color:var(--cream-dim); font-weight:700; letter-spacing:.3px; text-transform:uppercase; margin-top:2px; }
+
+  .formula-card{
+    background:var(--card); border-radius:var(--radius-lg);
+    padding:20px 16px; margin-bottom:18px; box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .formula-label{
+    font-family:'Baloo 2', sans-serif; font-weight:800;
+    font-size:clamp(16px, 4.5vw, 20px); color:var(--cream); margin-bottom:14px;
+  }
+  .formula-row{ display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; }
+  .formula-plus{ color:var(--cream-dim); font-weight:700; font-size:14px; }
+  .formula-pill{
+    min-width:38px; padding:6px 10px; border-radius:10px;
+    background:var(--card-light); color:var(--cream-dim);
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:14px;
+    border:2px solid transparent;
+  }
+  .formula-pill.filled{ background:var(--accent); color:#0d2b2e; }
+  .formula-pill.active{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(255,203,107,0.25);
+    animation:pulseActive 1.4s ease-in-out infinite;
+  }
+
+  .question-card{
+    background:var(--card); border-radius:var(--radius-lg);
+    padding:20px 18px 16px; text-align:center;
+    box-shadow:var(--shadow); margin-bottom:16px;
+    position:relative; overflow:hidden;
+    animation:bounceIn .35s ease;
+  }
+  .power-tag{
+    display:inline-block; font-size:12px; font-weight:700;
+    color:#0d2b2e; background:var(--accent);
+    padding:4px 12px; border-radius:999px; margin-bottom:10px;
+  }
+  .question{
+    font-family:'Baloo 2', sans-serif; font-weight:800;
+    font-size:clamp(18px, 5vw, 22px);
+  }
+  .feedback-message{ min-height:22px; font-weight:700; font-size:14px; margin-top:8px; color:var(--gold); }
+
+  .options-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .option-btn{
+    background:var(--card-light); color:var(--cream);
+    font-family:'Baloo 2', sans-serif; font-size:20px; font-weight:700;
+    border:2px solid transparent; border-radius:var(--radius-md);
+    padding:16px 8px; cursor:pointer;
+    transition:transform .12s ease, background .2s ease, border-color .2s ease;
+  }
+  .option-btn:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--gold); }
+  .option-btn:disabled{ cursor:default; }
+  .option-btn.correct{ background:var(--accent); color:#0d2b2e; border-color:var(--accent); }
+  .option-btn.wrong{ background:var(--coral); color:#3a0d0d; animation:shakeBtn .35s ease; }
+
+  .hint-area{ text-align:center; margin-bottom:16px; }
+  .hint-text{
+    margin:10px auto 0; max-width:440px;
+    background:var(--card); border-radius:var(--radius-sm);
+    padding:12px 14px; font-size:13.5px; font-weight:600;
+    color:var(--cream-dim); line-height:1.5;
+  }
+
+  .play-actions{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(5, 20, 18, 0.85);
+    display:flex; align-items:center; justify-content:center;
+    z-index:20; padding:20px;
+  }
+  .overlay-card{ text-align:center; animation:bounceIn .4s ease; max-width:380px; }
+  .overlay-emoji{ font-size:56px; margin-bottom:10px; }
+  .overlay-title{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:23px; color:var(--gold); margin-bottom:6px; }
+  .overlay-sub{ color:var(--cream-dim); font-weight:600; font-size:14px; margin-bottom:16px; line-height:1.5; }
+
+  @keyframes pulseActive{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.08);} }
+  @keyframes bounceIn{ 0%{ transform:scale(0.9); opacity:0;} 60%{ transform:scale(1.02); opacity:1;} 100%{ transform:scale(1);} }
+  @keyframes shakeBtn{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-6px);} 75%{ transform:translateX(6px);} }
+
+  @media (prefers-reduced-motion: reduce){
+    .formula-pill.active, .question-card, .overlay-card{ animation:none !important; }
+  }
+</style>
+</head>
+<body><a href="../Juegos.html" style="position:fixed;top:10px;left:10px;z-index:9999;background:#0f172a;color:#fff;padding:8px 14px;border-radius:10px;font:600 14px sans-serif;text-decoration:none;opacity:.9">← Volver a Juegos</a>
+<div class="app">
+
+  <div class="header">
+    <h1 class="title">🧩 Arma la Fórmula</h1>
+    <p class="subtitle">Completá el desarrollo de (a + b + c + d)² término por término, sin cronómetro.</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-value" id="completedCount">0</span><span class="stat-label">Completados</span></div>
+    <div class="stat"><span class="stat-value" id="totalCount">10</span><span class="stat-label">Total</span></div>
+    <div class="stat"><span class="stat-value" id="rachaActual">0</span><span class="stat-label">Racha</span></div>
+  </div>
+
+  <div class="formula-card">
+    <div class="formula-label">(a + b + c + d)² =</div>
+    <div class="formula-row" id="formulaRow"></div>
+  </div>
+
+  <div class="question-card">
+    <div class="power-tag" id="powerTag">Término 1 de 10</div>
+    <div class="question">¿Cuál es el término correcto?</div>
+    <div class="feedback-message" id="feedbackMsg">&nbsp;</div>
+  </div>
+
+  <div class="options-grid" id="optionsGrid"></div>
+
+  <div class="hint-area">
+    <button id="hintBtn" class="btn btn-ghost btn-small">💡 Ver pista</button>
+    <p id="hintText" class="hint-text hidden"></p>
+  </div>
+
+  <div class="play-actions">
+    <button id="resetBtn" class="btn btn-ghost btn-small">🔄 Reiniciar</button>
+  </div>
+
+  <div class="overlay hidden" id="completeOverlay">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🎉</div>
+      <div class="overlay-title">¡Fórmula completa!</div>
+      <div class="overlay-sub" id="completeSub"></div>
+      <button id="playAgainBtn" class="btn btn-primary">Jugar de nuevo</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var TERMS = [
+    { display:'a²',  type:'square', v:'a' },
+    { display:'b²',  type:'square', v:'b' },
+    { display:'c²',  type:'square', v:'c' },
+    { display:'d²',  type:'square', v:'d' },
+    { display:'2ab', type:'cross',  v1:'a', v2:'b' },
+    { display:'2ac', type:'cross',  v1:'a', v2:'c' },
+    { display:'2ad', type:'cross',  v1:'a', v2:'d' },
+    { display:'2bc', type:'cross',  v1:'b', v2:'c' },
+    { display:'2bd', type:'cross',  v1:'b', v2:'d' },
+    { display:'2cd', type:'cross',  v1:'c', v2:'d' }
+  ];
+  var ALL_VARS = ['a','b','c','d'];
+
+  var CORRECT_MSGS = ['¡Término perfecto!', '¡Excelente!', '¡Sos un crack!', '¡Imparable!', '¡Muy bien!'];
+  var WRONG_MSGS = ['No es ese término... ¡probá de nuevo!', 'Casi, ¡intentá otra vez!', '¡Revisá el coeficiente y probá de nuevo!'];
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function shuffleArray(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  function distractorsFor(term){
+    if(term.type === 'square'){
+      var others = ALL_VARS.filter(function(x){ return x !== term.v; });
+      var wrongVar = pickRandom(others);
+      return [wrongVar + '²', '2' + term.v, term.v];
+    } else {
+      return [term.v1 + term.v2, term.v1 + '²', '3' + term.v1 + term.v2];
+    }
+  }
+
+  function hintFor(term){
+    if(term.type === 'square'){
+      return '🔎 Este término sale de multiplicar "' + term.v + '" por sí mismo: ' + term.v + ' × ' + term.v + ' = ' + term.v + '²';
+    } else {
+      return '🔎 Este término aparece dos veces al multiplicar, porque ' + term.v1 + '×' + term.v2 + ' y ' + term.v2 + '×' + term.v1 + ' son iguales. Por eso el coeficiente es 2: 2' + term.v1 + term.v2;
+    }
+  }
+
+  function powerTagFor(term, idx){
+    if(term.type === 'square'){
+      return 'Término ' + (idx+1) + ' de 10 · cuadrado de ' + term.v;
+    } else {
+      return 'Término ' + (idx+1) + ' de 10 · producto de ' + term.v1 + ' y ' + term.v2;
+    }
+  }
+
+  var state = { currentIndex:0, racha:0, wrongAttempts:0 };
+
+  var formulaRow = document.getElementById('formulaRow');
+  var completedCountEl = document.getElementById('completedCount');
+  var rachaActualEl = document.getElementById('rachaActual');
+  var powerTag = document.getElementById('powerTag');
+  var feedbackMsg = document.getElementById('feedbackMsg');
+  var optionsGrid = document.getElementById('optionsGrid');
+  var hintBtn = document.getElementById('hintBtn');
+  var hintText = document.getElementById('hintText');
+  var resetBtn = document.getElementById('resetBtn');
+  var completeOverlay = document.getElementById('completeOverlay');
+  var completeSub = document.getElementById('completeSub');
+  var playAgainBtn = document.getElementById('playAgainBtn');
+
+  function buildFormulaRow(){
+    formulaRow.innerHTML = '';
+    TERMS.forEach(function(term, i){
+      if(i > 0){
+        var plus = document.createElement('span');
+        plus.className = 'formula-plus';
+        plus.textContent = '+';
+        formulaRow.appendChild(plus);
+      }
+      var pill = document.createElement('span');
+      pill.className = 'formula-pill';
+      pill.id = 'pill-' + i;
+      pill.textContent = '▢';
+      formulaRow.appendChild(pill);
+    });
+  }
+
+  function markActivePill(){
+    for(var i=0;i<TERMS.length;i++){
+      var pill = document.getElementById('pill-' + i);
+      pill.classList.remove('active');
+    }
+    if(state.currentIndex < TERMS.length){
+      document.getElementById('pill-' + state.currentIndex).classList.add('active');
+    }
+  }
+
+  function startGame(){
+    state = { currentIndex:0, racha:0, wrongAttempts:0 };
+    buildFormulaRow();
+    updateStats();
+    completeOverlay.classList.add('hidden');
+    nextQuestion();
+  }
+
+  function nextQuestion(){
+    markActivePill();
+    state.wrongAttempts = 0;
+    var term = TERMS[state.currentIndex];
+    powerTag.textContent = powerTagFor(term, state.currentIndex);
+    feedbackMsg.textContent = '\u00A0';
+    hintText.classList.add('hidden');
+
+    var options = shuffleArray(distractorsFor(term).concat([term.display]));
+    optionsGrid.innerHTML = '';
+    options.forEach(function(val){
+      var btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = val;
+      btn.addEventListener('click', function(){ handleAnswer(val, btn, term); });
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(val, btnEl, term){
+    var allBtns = optionsGrid.querySelectorAll('.option-btn');
+    if(val === term.display){
+      allBtns.forEach(function(b){ b.disabled = true; });
+      btnEl.classList.add('correct');
+      feedbackMsg.textContent = pickRandom(CORRECT_MSGS) + ' ✨';
+      state.racha++;
+      updateStats();
+
+      var pill = document.getElementById('pill-' + state.currentIndex);
+      pill.textContent = term.display;
+      pill.classList.add('filled');
+      pill.classList.remove('active');
+
+      state.currentIndex++;
+      completedCountEl.textContent = state.currentIndex;
+
+      if(state.currentIndex >= TERMS.length){
+        var full = TERMS.map(function(t){ return t.display; }).join(' + ');
+        completeSub.textContent = '(a+b+c+d)² = ' + full;
+        setTimeout(function(){ completeOverlay.classList.remove('hidden'); }, 500);
+      } else {
+        setTimeout(nextQuestion, 950);
+      }
+    } else {
+      btnEl.classList.add('wrong');
+      btnEl.disabled = true;
+      state.wrongAttempts++;
+      state.racha = 0;
+      updateStats();
+      feedbackMsg.textContent = pickRandom(WRONG_MSGS);
+      setTimeout(function(){ btnEl.classList.remove('wrong'); }, 400);
+      if(state.wrongAttempts >= 2){
+        hintText.textContent = hintFor(term);
+        hintText.classList.remove('hidden');
+      }
+    }
+  }
+
+  function updateStats(){
+    rachaActualEl.textContent = state.racha;
+    completedCountEl.textContent = state.currentIndex;
+  }
+
+  hintBtn.addEventListener('click', function(){
+    var term = TERMS[state.currentIndex];
+    if(!term) return;
+    if(hintText.classList.contains('hidden')){
+      hintText.textContent = hintFor(term);
+      hintText.classList.remove('hidden');
+    } else {
+      hintText.classList.add('hidden');
+    }
+  });
+
+  resetBtn.addEventListener('click', startGame);
+  playAgainBtn.addEventListener('click', function(){
+    completeOverlay.classList.add('hidden');
+    startGame();
+  });
+
+  startGame();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+/* ===== Navbar con desplegables (nav.js) ===== */
+.nav-dd{position:relative}
+.nav-dd-btn{display:inline-flex!important;align-items:center;gap:5px;cursor:pointer}
+.nav-dd-btn .flecha{font-size:10px;opacity:.75;transition:transform .2s}
+.nav-dd.abierto .nav-dd-btn .flecha{transform:rotate(180deg)}
+.nav-dd-menu{display:none;position:absolute;top:calc(100% + 8px);left:0;min-width:250px;background:#1e293b;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,.35);z-index:950;list-style:none;margin:0}
+.nav-dd-menu.derecha{left:auto;right:0}
+.nav-dd-menu::before{content:"";position:absolute;top:-10px;left:0;right:0;height:10px}
+.nav-dd.abierto .nav-dd-menu{display:block}
+@media (hover:hover) and (min-width:1025px){.nav-dd:hover .nav-dd-menu,.nav-dd:focus-within .nav-dd-menu{display:block}}
+.nav-dd-menu li{width:100%}
+.navbar-links .nav-dd-menu li a{display:flex!important;align-items:center;gap:10px;padding:9px 12px!important;border-radius:8px;font-size:14px!important;color:rgba(255,255,255,.85)!important;white-space:nowrap}
+.navbar-links .nav-dd-menu li a:hover{background:rgba(255,255,255,.08)!important;color:#fff!important}
+.nav-dd-menu .dd-ico{width:22px;text-align:center;flex:none}
+.nav-dd-menu .dd-txt{display:flex;flex-direction:column;line-height:1.25}
+.nav-dd-menu .dd-txt small{font-size:11.5px;color:rgba(255,255,255,.5);font-weight:400}
+.nav-dd-menu .dd-sep{height:1px;background:rgba(255,255,255,.08);margin:4px 6px}
+.nav-dd-menu .dd-destacado .dd-txt>span{color:#fbbf24;font-weight:700}
+.nav-cuenta-btn .flecha{display:none}
+#nav-cuenta.con-sesion .nav-cuenta-btn .flecha{display:inline}
+
+@media (max-width:1024px){
+  .nav-dd-btn{width:100%;justify-content:space-between}
+  .nav-dd-btn .flecha{display:none}
+  .nav-dd-menu{display:block!important;position:static;min-width:0;background:rgba(255,255,255,.03);border:0;box-shadow:none;padding:2px 0 6px 10px;margin-top:2px}
+  .nav-dd-menu::before{display:none}
+  .navbar-links .nav-dd-menu li a{font-size:14.5px!important;padding:9px 12px!important}
+  #nav-cuenta:not(.con-sesion) .nav-dd-menu{display:none!important}
+}
+
+/* ===== Ajustes para celular de la portada (14/10/2026) ===== */
+#nav-puntos:empty{display:none!important}
+@media (max-width:900px){
+  /* El buscador no entraba en la barra: ahora aparece arriba del menú ☰ al abrirlo */
+  .navbar-search{display:none}
+  .navbar-inner:has(.navbar-links.open) .navbar-search{display:flex;position:absolute;top:calc(var(--navbar-h) + 10px);left:12px;right:12px;width:auto;margin:0;z-index:902;background:#0f172a}
+  .navbar-inner:has(.navbar-search) .navbar-links.open{padding-top:62px}
+}
+@media (max-width:767px){
+  .dark-toggle-fixed{display:none!important}   /* el botón 🌙 ya está dentro del menú ☰ */
+}
+@media (max-width:520px){
+  .navbar-inner{gap:10px;padding:0 12px}
+  .navbar-brand{font-size:15px}
+  .vidas-container{padding:2px 6px!important;gap:1px!important}
+  .vida-heart{font-size:12px!important}
+}
+@media (max-width:700px){
+  .footer-links{flex-wrap:wrap;justify-content:center;gap:10px 18px}
+  .footer-brand{flex-wrap:wrap;justify-content:center}
+  .footer-copy{max-width:100%;text-align:center}
+}

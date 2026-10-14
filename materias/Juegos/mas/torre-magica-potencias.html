@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torre Mágica de Potencias 🧙</title><meta name="description" content="Juego de potencias: subí la Torre Mágica resolviendo potencias y sus propiedades."><link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/torre-magica-potencias.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#241849;
+    --sky-mid:#6a3f8f;
+    --sky-bottom:#ff9f6b;
+    --stone:#8b6f56;
+    --stone-light:#c9a876;
+    --magic:#a78bfa;
+    --gold:#ffd76a;
+    --coral:#ff6b6b;
+    --cream:#fff6e8;
+    --cream-dim:#e2d3c4;
+    --card:#3a2a52;
+    --card-light:#4f3a6e;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 12%, rgba(255,255,255,0.55) 0px, rgba(255,255,255,0.55) 2px, transparent 3px),
+      radial-gradient(circle at 75% 8%, rgba(255,255,255,0.4) 0px, rgba(255,255,255,0.4) 1.5px, transparent 3px),
+      radial-gradient(circle at 55% 18%, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1.5px, transparent 3px),
+      linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-bottom) 100%);
+    background-attachment:fixed;
+    font-family:'Nunito', sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 60px;
+  }
+
+  .app{ width:100%; max-width:560px; }
+  :focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+  .hidden{ display:none !important; }
+
+  .header{ text-align:center; margin-bottom:22px; }
+  .mission-badge{
+    display:inline-block;
+    background:var(--card-light);
+    border:2px solid var(--gold);
+    color:var(--gold);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:1px;
+    padding:5px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(24px, 6.6vw, 34px);
+    margin:0 0 8px;
+    text-shadow:0 3px 0 rgba(0,0,0,0.3);
+  }
+  .subtitle{ margin:0; color:var(--cream-dim); font-size:15px; font-weight:600; padding:0 10px; }
+
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{
+    background:linear-gradient(180deg, #d8c4ff, var(--magic));
+    color:#241849;
+    font-size:17px;
+    padding:14px 30px;
+    box-shadow:0 6px 0 #6b4fa8, var(--shadow);
+  }
+  .btn-primary:disabled{ opacity:.4; cursor:not-allowed; box-shadow:0 6px 0 rgba(0,0,0,0.2); }
+  .btn-primary:not(:disabled):hover{ transform:translateY(-2px); }
+  .btn-ghost{
+    background:transparent;
+    border:2px solid var(--card-light);
+    color:var(--cream-dim);
+    padding:10px 18px;
+    font-size:14px;
+  }
+  .btn-ghost:hover{ border-color:var(--gold); color:var(--gold); }
+  .btn-small{ padding:8px 14px; font-size:13px; }
+
+  /* Type select screen */
+  .types-grid{ display:flex; flex-direction:column; gap:12px; margin-bottom:22px; }
+  .type-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--card);
+    border:3px solid var(--card-light);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    cursor:pointer;
+    text-align:left;
+    transition:transform .15s ease, border-color .15s ease;
+    position:relative;
+  }
+  .type-card:hover{ transform:translateY(-2px); }
+  .type-card.selected{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(255,215,106,0.2); }
+  .type-card.selected::after{
+    content:"✓";
+    position:absolute;
+    top:-8px; right:-8px;
+    background:var(--gold);
+    color:#3a2600;
+    width:24px; height:24px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    border:2px solid var(--sky-top);
+  }
+  .type-icon{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:22px;
+    color:var(--magic);
+    background:var(--card-light);
+    width:52px; height:52px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .type-label{ font-family:'Baloo 2', sans-serif; font-weight:700; font-size:16px; }
+  .type-desc{ font-size:12px; color:var(--cream-dim); margin-top:2px; }
+
+  .select-actions{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+
+  /* Play screen */
+  .stats-bar{
+    display:flex;
+    justify-content:space-between;
+    background:var(--card);
+    border-radius:var(--radius-md);
+    padding:14px 10px;
+    margin-bottom:18px;
+    box-shadow:var(--shadow);
+  }
+  .stat{ flex:1; text-align:center; }
+  .stat-value{ display:block; font-family:'Baloo 2', sans-serif; font-size:24px; font-weight:800; color:var(--gold); }
+  .stat-label{ display:block; font-size:11px; color:var(--cream-dim); font-weight:700; letter-spacing:.3px; text-transform:uppercase; margin-top:2px; }
+
+  .tower-scene{
+    position:relative;
+    background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.15));
+    border-radius:var(--radius-md);
+    padding:14px 10px 0;
+    margin-bottom:16px;
+    text-align:center;
+  }
+  .wizard{
+    font-size:34px;
+    margin-bottom:6px;
+    display:inline-block;
+    animation:wizardFloat 2.6s ease-in-out infinite;
+  }
+  .wizard.cast{ animation:wizardCast .5s ease; }
+  .tower-stack{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    max-height:210px;
+    overflow-y:auto;
+    padding:6px 8px 12px;
+    scroll-behavior:smooth;
+  }
+  .tower-stack::-webkit-scrollbar{ width:6px; }
+  .tower-stack::-webkit-scrollbar-thumb{ background:var(--card-light); border-radius:6px; }
+  .floor-block{
+    background:linear-gradient(180deg, var(--stone-light), var(--stone));
+    border:2px solid rgba(0,0,0,0.2);
+    border-radius:10px;
+    padding:9px 10px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:#3a2a1a;
+    text-align:center;
+    animation:blockDrop .35s ease;
+    flex-shrink:0;
+  }
+  .floor-block.milestone{
+    background:linear-gradient(180deg, var(--gold), #e0a83a);
+    box-shadow:0 0 14px rgba(255,215,106,0.6);
+  }
+  .tower-empty-hint{
+    color:var(--cream-dim);
+    font-size:13px;
+    font-weight:600;
+    padding:20px 10px;
+    font-style:italic;
+  }
+  .tower-base{
+    height:10px;
+    background:linear-gradient(180deg, var(--card-light), transparent);
+    border-radius:0 0 var(--radius-md) var(--radius-md);
+  }
+
+  .question-card{
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    padding:22px 18px 18px;
+    text-align:center;
+    box-shadow:var(--shadow);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+    animation:bounceIn .35s ease;
+  }
+  .power-tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--sky-top);
+    background:var(--magic);
+    padding:4px 12px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .question{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(34px, 11vw, 46px);
+    letter-spacing:1px;
+  }
+  .question sup{ font-size:0.55em; vertical-align:0.7em; }
+  .feedback-message{ min-height:22px; font-weight:700; font-size:14px; margin-top:8px; color:var(--gold); }
+
+  .options-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .option-btn{
+    background:var(--card-light);
+    color:var(--cream);
+    font-family:'Baloo 2', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    border:2px solid transparent;
+    border-radius:var(--radius-md);
+    padding:18px 8px;
+    cursor:pointer;
+    transition:transform .12s ease, background .2s ease, border-color .2s ease;
+  }
+  .option-btn:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--gold); }
+  .option-btn:disabled{ cursor:default; }
+  .option-btn.correct{ background:var(--magic); color:#241849; border-color:var(--magic); }
+  .option-btn.wrong{ background:var(--coral); color:#3a0d0d; animation:shakeBtn .35s ease; }
+
+  .hint-area{ text-align:center; margin-bottom:16px; }
+  .hint-text{
+    margin:10px auto 0;
+    max-width:420px;
+    background:var(--card);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--cream-dim);
+    line-height:1.5;
+  }
+
+  .play-actions{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+
+  @keyframes wizardFloat{ 0%,100%{ transform:translateY(0) rotate(0);} 50%{ transform:translateY(-4px) rotate(-3deg);} }
+  @keyframes wizardCast{ 0%{ transform:scale(1);} 40%{ transform:scale(1.25) rotate(8deg); filter:drop-shadow(0 0 10px var(--magic));} 100%{ transform:scale(1) rotate(0);} }
+  @keyframes blockDrop{ from{ transform:translateY(-14px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+  @keyframes bounceIn{ 0%{ transform:scale(0.9); opacity:0;} 60%{ transform:scale(1.02); opacity:1;} 100%{ transform:scale(1);} }
+  @keyframes shakeBtn{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-6px);} 75%{ transform:translateX(6px);} }
+  @keyframes shakeTower{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-5px);} 75%{ transform:translateX(5px);} }
+  .tower-stack.wobble{ animation:shakeTower .4s ease; }
+
+  @media (prefers-reduced-motion: reduce){
+    .wizard, .question-card, .floor-block, .tower-stack.wobble{ animation:none !important; }
+  }
+</style>
+</head>
+<body><a href="../Juegos.html" style="position:fixed;top:10px;left:10px;z-index:9999;background:#0f172a;color:#fff;padding:8px 14px;border-radius:10px;font:600 14px sans-serif;text-decoration:none;opacity:.9">← Volver a Juegos</a>
+<div class="app">
+
+  <div class="header">
+    <div class="mission-badge">PISOS: <span id="floorsDisplay">0</span></div>
+    <h1 class="title">🧙 Torre Mágica de Potencias</h1>
+    <p class="subtitle">Resolvé las potencias para agregar bloques mágicos a tu torre. Sin cronómetro, a tu ritmo.</p>
+  </div>
+
+  <section id="selectScreen" class="select-screen">
+    <div class="types-grid" id="typesGrid"></div>
+    <div class="select-actions">
+      <button id="selectAllBtn" class="btn btn-ghost">🔮 Elegir todos los tipos</button>
+      <button id="startBtn" class="btn btn-primary" disabled>Empezar a construir 🏗️</button>
+    </div>
+  </section>
+
+  <section id="playScreen" class="play-screen hidden">
+    <div class="stats-bar">
+      <div class="stat"><span class="stat-value" id="floorsTotal">0</span><span class="stat-label">Pisos</span></div>
+      <div class="stat"><span class="stat-value" id="rachaActual">0</span><span class="stat-label">Racha</span></div>
+      <div class="stat"><span class="stat-value" id="mejorRacha">0</span><span class="stat-label">Mejor racha</span></div>
+    </div>
+
+    <div class="tower-scene">
+      <div class="wizard" id="wizard">🧙</div>
+      <div class="tower-stack" id="towerStack">
+        <div class="tower-empty-hint" id="towerEmptyHint">Tu torre todavía no tiene pisos... ¡resolvé la primera potencia!</div>
+      </div>
+      <div class="tower-base"></div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="power-tag" id="powerTag">Cuadrado</div>
+      <div class="question" id="questionText">? = ?</div>
+      <div class="feedback-message" id="feedbackMsg">&nbsp;</div>
+    </div>
+
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <div class="hint-area">
+      <button id="hintBtn" class="btn btn-ghost btn-small">💡 Ver pista</button>
+      <p id="hintText" class="hint-text hidden"></p>
+    </div>
+
+    <div class="play-actions">
+      <button id="changeTypesBtn" class="btn btn-ghost btn-small">🔮 Cambiar tipo de potencia</button>
+      <button id="resetBtn" class="btn btn-ghost btn-small">🔄 Reiniciar todo</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var TYPES = [
+    { id:'square', exponent:2, sup:'²', label:'Cuadrados',       icon:'x²', baseMin:2, baseMax:10, desc:'Bases del 2 al 10' },
+    { id:'cube',   exponent:3, sup:'³', label:'Cubos',           icon:'x³', baseMin:2, baseMax:6,  desc:'Bases del 2 al 6' },
+    { id:'fourth', exponent:4, sup:'⁴', label:'Potencias de 4',  icon:'x⁴', baseMin:2, baseMax:4,  desc:'Bases del 2 al 4' }
+  ];
+
+  var CORRECT_MSGS = ['¡Hechizo perfecto!', '¡Excelente magia!', '¡Sos un crack!', '¡Imparable!', '¡Muy bien!', '¡Bloque forjado!'];
+  var WRONG_MSGS = ['¡El hechizo falló! Probá de nuevo', 'No es ese número... ¡vos podés!', 'Casi, ¡intentá otra vez!', 'La torre tiembla... ¡dale de nuevo!'];
+
+  var state = {
+    selected: new Set(),
+    floorsTotal: 0,
+    racha: 0,
+    mejorRacha: 0,
+    current: null,
+    wrongAttempts: 0
+  };
+
+  var typesGrid = document.getElementById('typesGrid');
+  var startBtn = document.getElementById('startBtn');
+  var selectAllBtn = document.getElementById('selectAllBtn');
+  var selectScreen = document.getElementById('selectScreen');
+  var playScreen = document.getElementById('playScreen');
+  var floorsDisplay = document.getElementById('floorsDisplay');
+  var wizard = document.getElementById('wizard');
+  var towerStack = document.getElementById('towerStack');
+  var towerEmptyHint = document.getElementById('towerEmptyHint');
+  var questionCard = document.getElementById('questionCard');
+  var powerTag = document.getElementById('powerTag');
+  var questionText = document.getElementById('questionText');
+  var feedbackMsg = document.getElementById('feedbackMsg');
+  var optionsGrid = document.getElementById('optionsGrid');
+  var hintBtn = document.getElementById('hintBtn');
+  var hintText = document.getElementById('hintText');
+  var changeTypesBtn = document.getElementById('changeTypesBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var floorsTotalEl = document.getElementById('floorsTotal');
+  var rachaActualEl = document.getElementById('rachaActual');
+  var mejorRachaEl = document.getElementById('mejorRacha');
+
+  function buildTypes(){
+    typesGrid.innerHTML = '';
+    TYPES.forEach(function(t){
+      var card = document.createElement('button');
+      card.className = 'type-card';
+      card.innerHTML =
+        '<span class="type-icon">' + t.icon + '</span>' +
+        '<span><span class="type-label">' + t.label + '</span>' +
+        '<span class="type-desc">' + t.desc + '</span></span>';
+      card.dataset.id = t.id;
+      card.addEventListener('click', function(){
+        if(state.selected.has(t.id)){
+          state.selected.delete(t.id);
+          card.classList.remove('selected');
+        } else {
+          state.selected.add(t.id);
+          card.classList.add('selected');
+        }
+        startBtn.disabled = state.selected.size === 0;
+      });
+      typesGrid.appendChild(card);
+    });
+  }
+
+  selectAllBtn.addEventListener('click', function(){
+    var allSelected = state.selected.size === TYPES.length;
+    document.querySelectorAll('.type-card').forEach(function(card){
+      var id = card.dataset.id;
+      if(allSelected){
+        state.selected.delete(id);
+        card.classList.remove('selected');
+      } else {
+        state.selected.add(id);
+        card.classList.add('selected');
+      }
+    });
+    startBtn.disabled = state.selected.size === 0;
+    selectAllBtn.textContent = allSelected ? '🔮 Elegir todos los tipos' : '🌑 Deseleccionar todos';
+  });
+
+  startBtn.addEventListener('click', function(){
+    selectScreen.classList.add('hidden');
+    playScreen.classList.remove('hidden');
+    nextQuestion();
+  });
+
+  changeTypesBtn.addEventListener('click', function(){
+    playScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  resetBtn.addEventListener('click', function(){
+    state.floorsTotal = 0;
+    state.racha = 0;
+    state.mejorRacha = 0;
+    state.selected = new Set();
+    towerStack.innerHTML = '';
+    towerStack.appendChild(towerEmptyHint);
+    updateStatsUI();
+    document.querySelectorAll('.type-card.selected').forEach(function(c){ c.classList.remove('selected'); });
+    startBtn.disabled = true;
+    playScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function power(base, exp){ var r=1; for(var i=0;i<exp;i++){ r*=base; } return r; }
+
+  function generateQuestion(){
+    var typeIds = Array.from(state.selected);
+    var typeId = pickRandom(typeIds);
+    var type = TYPES.find(function(t){ return t.id === typeId; });
+    var a = randInt(type.baseMin, type.baseMax);
+    var correct = power(a, type.exponent);
+
+    var candidates = new Set();
+    candidates.add(a * type.exponent); // classic mix-up: multiplying instead of powering
+    if(type.exponent > 2) candidates.add(power(a, type.exponent - 1));
+    candidates.add(power(a, type.exponent + 1));
+    candidates.add(power(a + 1, type.exponent));
+    if(a - 1 >= 1) candidates.add(power(a - 1, type.exponent));
+    candidates.add(correct + a);
+    candidates.add(correct - a > 0 ? correct - a : correct + type.exponent);
+    candidates.add(correct + 1);
+    candidates.add(correct - 1 > 0 ? correct - 1 : correct + 2);
+
+    candidates.delete(correct);
+    var pool = Array.from(candidates).filter(function(v){ return v > 0; });
+    var distractors = [];
+    while(distractors.length < 3 && pool.length){
+      var idx = Math.floor(Math.random()*pool.length);
+      distractors.push(pool.splice(idx,1)[0]);
+    }
+    while(distractors.length < 3){
+      var fallback = correct + (distractors.length+2) * (Math.random()<0.5?-1:1);
+      if(fallback>0 && fallback!==correct && distractors.indexOf(fallback)===-1) distractors.push(fallback);
+    }
+
+    var options = distractors.concat([correct]);
+    for(var i=options.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp = options[i]; options[i]=options[j]; options[j]=tmp;
+    }
+
+    state.current = { a:a, exponent:type.exponent, sup:type.sup, label:type.label, correct:correct, options:options };
+    state.wrongAttempts = 0;
+  }
+
+  function nextQuestion(){
+    generateQuestion();
+    var c = state.current;
+    powerTag.textContent = c.label;
+    questionText.innerHTML = c.a + '<sup>' + c.sup + '</sup> = ?';
+    feedbackMsg.textContent = '\u00A0';
+    hintText.classList.add('hidden');
+    hintText.textContent = '';
+    renderOptions();
+    questionCard.style.animation = 'none';
+    void questionCard.offsetWidth;
+    questionCard.style.animation = '';
+  }
+
+  function renderOptions(){
+    optionsGrid.innerHTML = '';
+    state.current.options.forEach(function(val){
+      var btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = val;
+      btn.addEventListener('click', function(){ handleAnswer(val, btn); });
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(val, btnEl){
+    var allBtns = optionsGrid.querySelectorAll('.option-btn');
+    if(val === state.current.correct){
+      allBtns.forEach(function(b){ b.disabled = true; });
+      btnEl.classList.add('correct');
+      state.racha++;
+      state.floorsTotal++;
+      if(state.racha > state.mejorRacha) state.mejorRacha = state.racha;
+      updateStatsUI();
+      addFloorBlock();
+      castWizard();
+
+      if(state.floorsTotal % 5 === 0){
+        feedbackMsg.textContent = '🏗️ ¡Piso número ' + state.floorsTotal + '! Tu torre sigue creciendo';
+      } else {
+        feedbackMsg.textContent = pickRandom(CORRECT_MSGS) + ' ✨';
+      }
+
+      setTimeout(nextQuestion, 1000);
+    } else {
+      btnEl.classList.add('wrong');
+      btnEl.disabled = true;
+      state.wrongAttempts++;
+      state.racha = 0;
+      updateStatsUI();
+      feedbackMsg.textContent = pickRandom(WRONG_MSGS);
+      wobbleTower();
+      setTimeout(function(){ btnEl.classList.remove('wrong'); }, 400);
+
+      if(state.wrongAttempts >= 2){
+        showHint();
+      }
+    }
+  }
+
+  function addFloorBlock(){
+    if(towerEmptyHint.parentNode) towerEmptyHint.remove();
+    var c = state.current;
+    var block = document.createElement('div');
+    block.className = 'floor-block';
+    if(state.floorsTotal % 5 === 0) block.classList.add('milestone');
+    block.textContent = c.a + c.sup + ' = ' + c.correct;
+    towerStack.prepend(block);
+    towerStack.scrollTop = 0;
+  }
+
+  function castWizard(){
+    wizard.classList.remove('cast');
+    void wizard.offsetWidth;
+    wizard.classList.add('cast');
+  }
+
+  function wobbleTower(){
+    towerStack.classList.remove('wobble');
+    void towerStack.offsetWidth;
+    towerStack.classList.add('wobble');
+  }
+
+  function showHint(){
+    var c = state.current;
+    var terms = [];
+    for(var i=0;i<c.exponent;i++){ terms.push(c.a); }
+    hintText.textContent = '🔎 Pensalo así: ' + c.a + c.sup + ' = ' + terms.join(' × ') + ' = ' + c.correct;
+    hintText.classList.remove('hidden');
+  }
+
+  hintBtn.addEventListener('click', function(){
+    if(hintText.classList.contains('hidden')){
+      showHint();
+    } else {
+      hintText.classList.add('hidden');
+    }
+  });
+
+  function updateStatsUI(){
+    floorsTotalEl.textContent = state.floorsTotal;
+    rachaActualEl.textContent = state.racha;
+    mejorRachaEl.textContent = state.mejorRacha;
+    floorsDisplay.textContent = state.floorsTotal;
+  }
+
+  buildTypes();
+  updateStatsUI();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para docentes · Matemáticas Activas</title>
+<meta name="description" content="Herramientas de matemática para docentes: pizarra virtual, calculadora paso a paso con generador de fichas y modo clase, 85 temas con ejercicios resueltos y juegos para el aula.">
+<link rel="canonical" href="https://matematicasactivas.com/docentes/">
+<meta property="og:title" content="Para docentes · Matemáticas Activas">
+<meta property="og:description" content="Pizarra virtual, calculadora paso a paso con fichas, ejercicios resueltos y juegos para dar clase de matemática.">
+<meta property="og:url" content="https://matematicasactivas.com/docentes/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="../img/descarga.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0f172a;--navy2:#1e293b;--ink:#0f172a;--soft:#475569;--line:#e2e8f0;--bg:#f8fafc;--card:#fff;--teal:#0d9488;--teal2:#0e7490;--blue:#2563eb;--purple:#7c3aed;--amber:#f59e0b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit}
+.barra{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;box-shadow:0 2px 14px rgba(0,0,0,.2)}
+.barra-in{max-width:1180px;margin:0 auto;padding:0 20px;height:64px;display:flex;align-items:center;gap:14px}
+.marca{display:flex;align-items:center;gap:8px;font-family:Poppins,sans-serif;font-weight:600;font-size:17px;text-decoration:none;color:#fff;white-space:nowrap}
+.marca .sig{font-size:24px;background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.marca strong{color:#60a5fa}
+.barra nav{margin-left:auto;display:flex;gap:4px;flex-wrap:nowrap}
+.barra nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:7px 12px;border-radius:8px;white-space:nowrap}
+.barra nav a:hover{background:rgba(255,255,255,.1);color:#fff}
+.barra nav a.cta{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;font-weight:700}
+@media(max-width:700px){.barra nav a:not(.cta):not(.volver){display:none}.marca span:last-child{display:none}}
+
+.hero{background:linear-gradient(135deg,#0f172a 0%,#134e4a 60%,#0e7490 100%);color:#fff;padding:64px 20px 72px;text-align:center}
+.hero .tag{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:5px 14px;border-radius:99px;font-size:13px;font-weight:600;margin-bottom:16px}
+.hero h1{font-family:Poppins,sans-serif;font-size:clamp(28px,5vw,46px);line-height:1.15;font-weight:800;max-width:820px;margin:0 auto 14px}
+.hero h1 span{color:#5eead4}
+.hero p{max-width:640px;margin:0 auto 26px;color:rgba(255,255,255,.85);font-size:17px}
+.hero .botones{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:12px;font-weight:700;text-decoration:none;font-size:15px;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn-amarillo{background:#facc15;color:#422006;box-shadow:0 6px 20px rgba(250,204,21,.35)}
+.btn-borde{border:1.5px solid rgba(255,255,255,.5);color:#fff}
+
+.seccion{max-width:1180px;margin:0 auto;padding:60px 20px}
+.seccion h2{font-family:Poppins,sans-serif;font-size:clamp(22px,3.5vw,32px);text-align:center;margin-bottom:8px}
+.seccion .sub{text-align:center;color:var(--soft);max-width:640px;margin:0 auto 34px}
+
+.herr{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.h-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(15,23,42,.05);transition:box-shadow .2s,transform .2s}
+.h-card:hover{box-shadow:0 14px 34px rgba(15,23,42,.12);transform:translateY(-3px)}
+.h-cab{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.h-ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.h-card h3{font-family:Poppins,sans-serif;font-size:20px}
+.h-card .que{font-size:13px;color:var(--soft)}
+.h-card ul{list-style:none;margin:6px 0 18px;display:flex;flex-direction:column;gap:7px;flex:1}
+.h-card li{font-size:14.5px;padding-left:24px;position:relative}
+.h-card li::before{content:"✓";position:absolute;left:0;top:0;color:var(--teal);font-weight:800}
+.h-card .ir{align-self:flex-start;background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none}
+.h-card .ir:hover{background:#334155}
+
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:p}
+.paso{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;position:relative}
+.paso::before{counter-increment:p;content:counter(p);position:absolute;top:-14px;left:20px;width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.paso h4{font-size:16px;margin:6px 0 6px}
+.paso p{font-size:14px;color:var(--soft)}
+
+.recursos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.rec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start;text-decoration:none}
+.rec:hover{border-color:var(--teal)}
+.rec .ri{font-size:26px}
+.rec b{display:block;font-size:15px}
+.rec small{color:var(--soft);font-size:13px}
+
+.plan{background:linear-gradient(135deg,#f0fdfa,#ecfeff);border:2px solid var(--teal);border-radius:22px;padding:34px;display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:center}
+.plan h2{text-align:left}
+.plan p{color:var(--soft);margin:8px 0 16px}
+.combo{background:#fff;border-radius:16px;padding:20px;border:1px solid var(--line)}
+.combo .fila{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+.combo .tot{display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;margin-top:4px;border-top:2px solid var(--ink)}
+.combo .tot strong{font-size:26px;font-family:Poppins,sans-serif}
+.combo .desc{color:var(--teal);font-weight:600}
+.btn-teal{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;margin-top:14px;width:100%;justify-content:center}
+
+.pie{background:var(--navy);color:rgba(255,255,255,.7);text-align:center;padding:28px 20px;font-size:14px}
+.pie a{color:#fff;margin:0 8px}
+
+@media(max-width:900px){.herr,.plan{grid-template-columns:1fr}.pasos,.recursos{grid-template-columns:1fr}}
+@media(max-width:480px){.hero{padding:44px 16px 52px}.seccion{padding:44px 16px}.h-card,.plan{padding:20px}}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <div class="barra-in">
+    <a class="marca" href="../index.html"><span class="sig" aria-hidden="true">∑</span><span>Matemáticas<strong>Activas</strong></span></a>
+    <nav aria-label="Navegación">
+      <a class="volver" href="../index.html">← Inicio</a>
+      <a href="#herramientas">Herramientas</a>
+      <a href="#recursos">Recursos</a>
+      <a class="cta" href="#plan">Plan docente</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="tag">👩‍🏫 Para docentes y tutores</span>
+  <h1>Todo lo que necesitás para <span>dar clase de matemática</span>, en un solo lugar</h1>
+  <p>Una pizarra para explicar, una calculadora que muestra cada paso y arma fichas con soluciones, ejercicios resueltos y juegos para el aula.</p>
+  <div class="botones">
+    <a class="btn btn-amarillo" href="#plan">🧩 Armar mi plan docente</a>
+    <a class="btn btn-borde" href="#herramientas">Ver las herramientas</a>
+  </div>
+</section>
+
+<section class="seccion" id="herramientas">
+  <h2>Herramientas para el aula</h2>
+  <p class="sub">Funcionan en la computadora, la tablet o el celular, y se pueden proyectar en clase.</p>
+  <div class="herr">
+    <article class="h-card">
+      <div class="h-cab"><div class="h-ico" style="background:#ccfbf1">🖍️</div><div><h3>Pizarra virtual</h3><p class="que">Para explicar en clase o en tutorías</p></div></div>
+      <ul>
+        <li>Lápiz, figuras, texto, cuadrícula y fondo verde de pizarrón</li>
+        <li>Editor de ecuaciones y panel de símbolos matemáticos</li>
+        <li>Escritura a mano que se convierte en texto</li>
+        <li>Regla, escuadras, transportador y compás</li>
+        <li>Lista de alumnos por curso y archivos de la clase</li>
+        <li>Guardá la pizarra o descargala como imagen</li>
+      </ul>
+      <a class="ir" href="../pizarra/index.html">Abrir la pizarra →</a>
+    </article>
+    <article class="h-card">
+      <div class="h-cab"><div class="h-ico" style="background:#fef3c7">🧮</div><div><h3>Calculadora Inteligente</h3><p class="que">Resuelve y explica cada paso</p></div></div>
+      <ul>
+        <li><b>Generador de fichas</b>: elegí área, tema y cantidad, con o sin soluciones</li>
+        <li><b>Modo clase</b>: oculta el resultado hasta que lo pidas</li>
+        <li>Mandá la resolución a la pizarra</li>
+        <li>Exportá a Word con fórmulas editables, LaTeX o PDF</li>
+        <li>Graficador interactivo con deslizadores</li>
+        <li>Escribí, dictá o sacale una foto al ejercicio</li>
+      </ul>
+      <a class="ir" href="../calculadora/index.html">Abrir la calculadora →</a>
+    </article>
+    <article class="h-card">
+      <div class="h-cab"><div class="h-ico" style="background:#dbeafe">📚</div><div><h3>Ejercicios resueltos</h3><p class="que">85 temas, de secundaria a universidad</p></div></div>
+      <ul>
+        <li>374 ejercicios resueltos paso a paso</li>
+        <li>Aritmética, álgebra, geometría, trigonometría, cálculo y estadística</li>
+        <li>Ideales para repasar o para dejar de tarea</li>
+        <li>Gratis y sin necesidad de cuenta</li>
+      </ul>
+      <a class="ir" href="../calculadora/temas/index.html">Ver los temas →</a>
+    </article>
+    <article class="h-card">
+      <div class="h-cab"><div class="h-ico" style="background:#fce7f3">🎮</div><div><h3>Juegos matemáticos</h3><p class="que">Para empezar o cerrar la clase</p></div></div>
+      <ul>
+        <li>Batalla de Tablas y Misión Multiplicación</li>
+        <li>Torre Mágica de Potencias y Arma la Fórmula</li>
+        <li>Sudoku, cálculo mental, wordle matemático y más</li>
+        <li>Se juegan en el navegador, sin instalar nada</li>
+      </ul>
+      <a class="ir" href="../materias/Juegos/Juegos.html">Ver los juegos →</a>
+    </article>
+  </div>
+</section>
+
+<section class="seccion" style="padding-top:10px">
+  <h2>Una clase en 3 pasos</h2>
+  <p class="sub">Así podés usar las herramientas juntas.</p>
+  <div class="pasos">
+    <div class="paso"><h4>Explicá en la pizarra</h4><p>Proyectá la pizarra, escribí a mano o con el editor de ecuaciones y graficá en vivo.</p></div>
+    <div class="paso"><h4>Practiquen con la calculadora</h4><p>Activá el modo clase: cada alumno intenta primero y después ve la resolución paso a paso.</p></div>
+    <div class="paso"><h4>Dejá la ficha de tarea</h4><p>Generá una ficha del tema con o sin soluciones e imprimila o mandala en PDF.</p></div>
+  </div>
+</section>
+
+<section class="seccion" id="recursos" style="padding-top:10px">
+  <h2>Recursos para descargar</h2>
+  <p class="sub">Material gratuito para usar en el aula.</p>
+  <div class="recursos">
+    <a class="rec" href="recursos/hoja_milimetrada_A4.pdf" download><span class="ri">📄</span><span><b>Hoja milimetrada A4</b><small>PDF listo para imprimir · gratis</small></span></a>
+    <a class="rec" href="../calculadora/temas/index.html"><span class="ri">📝</span><span><b>Ejercicios por tema</b><small>Para armar guías y tareas</small></span></a>
+    <a class="rec" href="https://wa.me/5493827654154?text=Hola%21%20Soy%20docente%20y%20quiero%20consultar%20por%20Matem%C3%A1ticas%20Activas." target="_blank" rel="noopener"><span class="ri">💬</span><span><b>¿Sos institución?</b><small>Consultanos por precios para escuelas</small></span></a>
+  </div>
+</section>
+
+<section class="seccion" id="plan">
+  <div class="plan">
+    <div>
+      <h2>Plan a Medida para docentes</h2>
+      <p>Pagás solo lo que vas a usar, por 30 días. Te sugerimos el combo para el aula, pero podés sumar o sacar herramientas y materias.</p>
+      <a class="btn btn-teal" href="../index.html#plan-docente">🧩 Armar mi plan</a>
+    </div>
+    <div class="combo" aria-label="Combo sugerido">
+      <div class="fila"><span>🖍️ Pizarra virtual</span><span>$ 5.000</span></div>
+      <div class="fila"><span>🧮 Calculadora Inteligente</span><span>$ 6.000</span></div>
+      <div class="fila"><span>🎮 Juegos matemáticos</span><span>$ 2.000</span></div>
+      <div class="fila desc"><span>Descuento 10% (3 opciones)</span><span>− $ 1.300</span></div>
+      <div class="tot"><span>Total · 30 días</span><strong>$ 11.700</strong></div>
+    </div>
+  </div>
+</section>
+
+<footer class="pie">
+  <p>© 2026 Matemáticas Activas · <a href="../index.html">Inicio</a> <a href="../guia-pago.html">Guía de pago</a> <a href="../terminos-servicio.html">Términos</a> <a href="../politica-privacidad.html">Privacidad</a></p>
+</footer>
+
+</body>
+</html>

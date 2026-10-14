@@ -38,16 +38,30 @@
         {
           "@type": "Offer",
           "name": "Plan Básico",
-          "price": "7000",
+          "price": "8000",
           "priceCurrency": "ARS",
-          "description": "Acceso a contenido educativo por 23 días"
+          "description": "Todo el material premium de todas las materias por 23 días"
         },
         {
           "@type": "Offer",
           "name": "Plan Premium",
-          "price": "12000",
+          "price": "16000",
           "priceCurrency": "ARS",
-          "description": "Acceso completo a todo el contenido por 30 días"
+          "description": "Acceso completo a todo el contenido por 30 días, con la Calculadora Inteligente ilimitada"
+        },
+        {
+          "@type": "Offer",
+          "name": "Calculadora paso a paso (7 días)",
+          "price": "5000",
+          "priceCurrency": "ARS",
+          "description": "Calculadora de matemática con resolución paso a paso, acceso ilimitado por 7 días"
+        },
+        {
+          "@type": "Offer",
+          "name": "Plan a Medida",
+          "price": "2000",
+          "priceCurrency": "ARS",
+          "description": "Elegí por 30 días solo lo que necesitás: calculadora, pizarra virtual, juegos o materias sueltas"
         }
       ]
     }
@@ -87,7 +101,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=13">
+    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="planes.css?v=3">
+    <link rel="stylesheet" href="nav.css?v=2">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -173,15 +189,29 @@
             </div>
             <ul class="navbar-links" id="navbar-links">
                 <li><a href="#materias">Materias</a></li>
+                <li class="nav-dd" id="nav-herramientas">
+                    <a href="#" class="nav-dd-btn" aria-haspopup="true" aria-expanded="false" onclick="navDesplegar(event,'nav-herramientas')">🧰 Herramientas <span class="flecha" aria-hidden="true">▾</span></a>
+                    <ul class="nav-dd-menu">
+                        <li class="dd-destacado"><a href="calculadora/index.html"><span class="dd-ico">🧮</span><span class="dd-txt"><span>Calculadora Inteligente</span><small>Resolvé paso a paso · 3 gratis por día</small></span></a></li>
+                        <li><a href="calculadora/temas/index.html"><span class="dd-ico">📚</span><span class="dd-txt"><span>Ejercicios resueltos</span><small>85 temas explicados paso a paso</small></span></a></li>
+                        <li><a href="pizarra/index.html"><span class="dd-ico">🖍️</span><span class="dd-txt"><span>Pizarra virtual</span><small>Para explicar y practicar</small></span></a></li>
+                        <li><a href="materias/Juegos/Juegos.html"><span class="dd-ico">🎮</span><span class="dd-txt"><span>Juegos matemáticos</span><small>Aprendé jugando</small></span></a></li>
+                        <li class="dd-sep" role="separator"></li>
+                        <li><a href="docentes/index.html"><span class="dd-ico">👩‍🏫</span><span class="dd-txt"><span>Para docentes</span><small>Herramientas para el aula</small></span></a></li>
+                    </ul>
+                </li>
                 <li><a href="#suscripcion">Planes</a></li>
-                <li><a href="materias/Juegos/Juegos.html">🎮 Juegos</a></li>
                 <li><a href="#ranking">🏆 Ranking</a></li>
                 <li id="nav-diagnostico-link"><a href="#" onclick="window.iniciarDiagnostico(event)">🧠 Diagnóstico</a></li>
-                <li id="nav-mis-archivos-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirMisArchivos(event)">📁 Mis archivos</a></li>
-                <li id="nav-historias-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirHistorias(event)">📖 Historias</a></li>
-                <li id="nav-perfil-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirPerfil(event)">👤 Mi perfil</a></li>
-                <li id="nav-salir-link" style="display:none" class="nav-user-item"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn">Salir</a></li>
-                <li><a href="#" onclick="abrirAuth(event)" class="nav-cta-btn"><span id="nav-cuenta-label">Ingresar</span></a></li>
+                <li class="nav-dd" id="nav-cuenta">
+                    <a href="#" class="nav-cta-btn nav-dd-btn nav-cuenta-btn" aria-haspopup="true" aria-expanded="false" onclick="navCuentaClick(event)"><span id="nav-cuenta-label">Ingresar</span> <span class="flecha" aria-hidden="true">▾</span></a>
+                    <ul class="nav-dd-menu derecha">
+                        <li id="nav-perfil-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirPerfil(event)"><span class="dd-ico">👤</span><span class="dd-txt"><span>Mi perfil</span></span></a></li>
+                        <li id="nav-historias-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirHistorias(event)"><span class="dd-ico">📖</span><span class="dd-txt"><span>Historias</span></span></a></li>
+                        <li id="nav-admin-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirAdmin(event)" class="nav-admin-btn"><span class="dd-ico">🛠️</span><span class="dd-txt"><span>Panel de admin</span><small>Subir archivos y gestionar</small></span></a></li>
+                        <li id="nav-salir-link" style="display:none" class="nav-user-item"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn"><span class="dd-ico">🚪</span><span class="dd-txt"><span>Salir</span></span></a></li>
+                    </ul>
+                </li>
                 <li><span id="nav-puntos" class="nav-puntos" style="display:none" title="Puntos del Ranking"></span></li>
                 <li><button type="button" id="dark-mode-toggle" class="dark-toggle" onclick="window.toggleDarkMode()" title="Modo oscuro">🌙</button></li>
             </ul>
@@ -200,7 +230,7 @@
         <div class="hero-content">
             <div class="hero-badge">📚 Plataforma educativa</div>
             <h1 class="hero-title">Aprendé Matemáticas<br><span class="hero-gradient">para Secundaria y Universidad en Argentina</span></h1>
-            <p class="hero-sub">Videos, ejercicios, PDFs, juegos y contenido premium para secundaria y universidad. Ganá puntos, subí tus propios archivos y competí en el ranking.</p>
+            <p class="hero-sub">Videos, ejercicios, PDFs, juegos y contenido premium para secundaria y universidad. Ganá puntos y competí en el ranking.</p>
             <div class="hero-btns">
                 <a href="#" onclick="abrirAuth(event)" class="btn-hero-main">Crear cuenta gratis →</a>
                 <a href="#materias" class="btn-hero-sec">Explorar materias</a>
@@ -217,6 +247,30 @@
         </div>
     </section>
 
+    <section class="calc-banner-wrap" aria-label="Calculadora Inteligente">
+        <a class="calc-banner" href="calculadora/index.html">
+            <span class="calc-banner-tag">NUEVO</span>
+            <span class="calc-banner-ico" aria-hidden="true">🧮</span>
+            <span class="calc-banner-txt">
+                <strong>Calculadora Inteligente</strong>
+                <span>Resolvé cualquier ejercicio con todos los pasos explicados. 3 gratis por día.</span>
+            </span>
+            <span class="calc-banner-btn">Probala gratis →</span>
+        </a>
+    </section>
+
+    <section class="calc-banner-wrap" aria-label="Pizarra virtual" style="margin-top:18px">
+        <a class="calc-banner" href="pizarra/index.html" style="background:linear-gradient(135deg,#0f766e,#0e7490)">
+            <span class="calc-banner-tag">NUEVO</span>
+            <span class="calc-banner-ico" aria-hidden="true">🖍️</span>
+            <span class="calc-banner-txt">
+                <strong>Pizarra virtual</strong>
+                <span>Escribí, dibujá y graficá como en el pizarrón: ecuaciones, símbolos, calculadora y escritura a mano.</span>
+            </span>
+            <span class="calc-banner-btn">Abrir pizarra →</span>
+        </a>
+    </section>
+
     <section class="section" id="que-podes">
         <div class="section-inner que-podes">
             <div class="section-header">
@@ -226,10 +280,11 @@
             <div class="qp-grid">
                 <div class="qp-card"><div class="qp-icon" aria-hidden="true">📚</div><h3>Estudiá por materias</h3><p>8 áreas de matemática organizadas por niveles, desde aritmética hasta matemática universitaria.</p></div>
                 <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎬</div><h3>Videos y PDFs</h3><p>Explicaciones paso a paso en video y guías descargables para repasar cuando quieras.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🧮</div><h3>Calculadora y graficadora</h3><p>Herramientas interactivas para resolver ejercicios y visualizar funciones al instante.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🧮</div><h3>Calculadora Inteligente</h3><p>Resolvé ejercicios con todos los pasos explicados y graficá funciones al instante. 3 gratis por día.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🖍️</div><h3>Pizarra virtual</h3><p>Una pizarra para explicar y practicar: dibujá, escribí ecuaciones y graficá funciones.</p></div>
                 <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎮</div><h3>Juegos matemáticos</h3><p>Sudoku, cálculo mental, wordle matemático y más — aprendé mientras te divertís.</p></div>
                 <div class="qp-card"><div class="qp-icon" aria-hidden="true">🏆</div><h3>Puntos y ranking</h3><p>Ganá puntos viendo contenido y comentando. Competí en el ranking semanal de estudiantes.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📁</div><h3>Tu carpeta personal</h3><p>Subí tus propios apuntes, PDFs y videos a un espacio privado solo para vos.</p></div>
+                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📁</div><h3>Material del profe</h3><p>Guías, PDFs y videos preparados por el profe, ordenados por materia y tema.</p></div>
             </div>
         </div>
     </section>
@@ -319,32 +374,6 @@
     </section>
 
 
-    <section class="section section-alt" id="mis-archivos-section" style="display:none">
-        <div class="section-inner">
-            <div class="section-header">
-                <div class="section-icon" style="background:linear-gradient(135deg,#10b981,#059669)">📁</div>
-                <h2 class="section-title">Mis Archivos</h2>
-                <p class="section-sub">Subí tus PDFs, Word, imágenes — son privados, solo vos los ves (el admin puede verlos para moderar)</p>
-            </div>
-            <div style="max-width:640px;margin:0 auto 24px;padding:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
-                <h4 style="margin:0 0 14px;font-size:15px;color:#0f172a">➕ Subir un archivo nuevo</h4>
-                <div class="form-group"><label for="mu-titulo">Título *</label><input type="text" id="mu-titulo" placeholder="Mi resumen de álgebra"></div>
-                <div class="form-group"><label for="mu-materia">📚 Materia</label><select id="mu-materia"><option value="general">General</option><option value="algebra">Álgebra</option><option value="aritmetica">Aritmética</option><option value="geometria">Geometría</option><option value="estadistica">Estadística</option><option value="trigonometria">Trigonometría</option><option value="calculo">Cálculo</option><option value="razonamiento">Razonamiento</option><option value="juegos">Juegos</option></select></div>
-                <div class="form-group"><label for="mu-tema">🎯 Tema de la ruta (opcional)</label><select id="mu-tema"><option value="">— Sin tema específico —</option></select></div>
-                <div class="form-group"><label for="mu-seccion">📂 Tipo de contenido</label><select id="mu-seccion"><option value="pdf">PDF</option><option value="imagen">Imagen</option><option value="texto">Nota de texto</option><option value="video">Video</option></select></div>
-                <div class="form-group"><label for="mu-tipo">Formato</label><select id="mu-tipo" onchange="(function(){var t=document.getElementById('mu-tipo').value;document.getElementById('mu-archivo-wrap').style.display=t==='archivo'?'block':'none';document.getElementById('mu-texto-wrap').style.display=t==='texto'?'block':'none';document.getElementById('mu-url-wrap').style.display=t==='url-video'?'block':'none';})()"><option value="archivo">Subir archivo (PDF, Word, imagen, etc.)</option><option value="texto">Nota de texto</option><option value="url-video">URL de video (YouTube/Vimeo)</option></select></div>
-                <div id="mu-archivo-wrap" class="form-group"><label for="mu-archivo">Archivo (máx. 2 GB)</label><input type="file" id="mu-archivo" accept=".pdf,.doc,.docx,.txt,image/*,video/*"></div>
-                <div id="mu-texto-wrap" class="form-group" style="display:none"><label for="mu-texto">Texto</label><textarea id="mu-texto" rows="5" placeholder="Tu nota..."></textarea></div>
-                <div id="mu-url-wrap" class="form-group" style="display:none"><label for="mu-url">URL</label><input type="url" id="mu-url" placeholder="https://youtube.com/..."></div>
-                <div class="form-group"><label for="mu-desc">Descripción (opcional)</label><input type="text" id="mu-desc" placeholder="Breve descripción"></div>
-                <div id="mu-progress" style="display:none;margin:.5rem 0"><div class="progress-bar-wrap"><div class="progress-bar-fill" id="mu-progress-fill"></div></div><p style="font-size:12px;color:#666;margin-top:4px">Subiendo...</p></div>
-                <div id="mu-error" class="form-error" role="alert"></div>
-                <div id="mu-success" class="form-success" role="status"></div>
-                <button type="button" class="btn-subir" onclick="subirMiArchivo()">⬆️ Subir mi archivo</button>
-            </div>
-            <div id="mis-archivos-grid" class="contenido-grid"></div>
-        </div>
-    </section>
 
     <section class="section section-alt" id="ranking">
         <div class="section-inner">
@@ -413,6 +442,10 @@
             <div class="footer-links">
                 <a href="#materias">Materias</a>
                 <a href="materias/Juegos/Juegos.html">Juegos</a>
+                <a href="calculadora/index.html">Calculadora Inteligente</a>
+                <a href="calculadora/temas/index.html">Ejercicios resueltos</a>
+                <a href="pizarra/index.html">Pizarra virtual</a>
+                <a href="docentes/index.html">Para docentes</a>
                 <a href="#ranking">Ranking</a>
                 <a href="#suscripcion">Planes</a>
                 <a href="#sobre-mi">Sobre el profe</a>
@@ -658,66 +691,14 @@
                 <h2 style="font-size:24px;margin:0 0 6px">Elegí tu plan</h2>
                 <p style="color:#64748b;font-size:14px;margin:0">Mejorá tu experiencia y accedé a más contenido</p>
             </div>
-            <div class="tabla-planes-wrap">
-                <table class="tabla-planes">
-                    <thead>
-                        <tr><th>Característica</th><th>Plan Gratis</th><th>Plan Básico</th><th class="col-premium">Plan Premium</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Precio</td><td>$ 0</td><td>$ 7.000</td><td class="col-premium">$ 12.000</td></tr>
-                        <tr><td>Duración</td><td>Para siempre</td><td>23 días</td><td class="col-premium">30 días</td></tr>
-                        <tr><td>Archivos descargables</td><td>3 por semana</td><td>✅ Ilimitado</td><td class="col-premium">✅ Ilimitado</td></tr>
-                        <tr><td>Calculadora / Graficadora</td><td>3 usos por semana</td><td>✅ Sin límite</td><td class="col-premium">✅ Sin límite</td></tr>
-                        <tr><td>Ranking</td><td>✅</td><td>✅</td><td class="col-premium">✅</td></tr>
-                        <tr><td>Subir archivos personales</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
-                        <tr><td>Soporte personalizado con el profe</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
-                        <tr><td>Canal WhatsApp exclusivo</td><td>❌</td><td>❌</td><td class="col-premium">✅</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="planes-grid">
-                <div class="plan-card">
-                    <div class="plan-tag" style="background:#94a3b8">GRATIS</div>
-                    <h3>Plan Gratis</h3>
-                    <p class="plan-precio">$ 0</p>
-                    <p class="plan-sub">Para siempre</p>
-                    <ul class="plan-features">
-                        <li>✅ 3 archivos públicos por semana</li>
-                        <li>✅ 3 usos de calculadora/graficadora por semana</li>
-                        <li>✅ Acceso al ranking</li>
-                        <li>⏱️ Renovación cada 7 días</li>
-                        <li>❌ Sin archivos premium</li>
-                        <li>❌ Sin subir archivos personales</li>
-                    </ul>
-                    <button type="button" class="plan-btn plan-btn-gratis" disabled>Tu plan actual por defecto</button>
+            <div id="modal-planes"></div>
+            <!-- CALCULADORA SUELTA (publicar junto con la calculadora, no antes) -->
+            <div class="plan-calc-suelta" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:2px dashed #2563eb;border-radius:12px;padding:16px;margin-top:20px">
+                <div>
+                    <h4 style="margin:0 0 4px;font-size:16px">🧮 Calculadora paso a paso — 7 días</h4>
+                    <p style="margin:0;font-size:13px;color:#64748b">Ilimitada por 7 días, sin cambiar tu plan. $ 5.000 (gratis: 3 ejercicios por día).</p>
                 </div>
-                <div class="plan-card plan-card-popular">
-                    <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
-                    <h3>Plan Básico</h3>
-                    <p class="plan-precio">$ 7.000</p>
-                    <p class="plan-sub">23 días de acceso</p>
-                    <ul class="plan-features">
-                        <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
-                        <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
-                        <li>✅ Sistema de puntos y ranking</li>
-                        <li>❌ No podés subir archivos personales</li>
-                    </ul>
-                    <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Pagar con MercadoPago</button>
-                </div>
-                <div class="plan-card plan-card-premium">
-                    <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
-                    <h3>Plan Premium</h3>
-                    <p class="plan-precio">$ 12.000</p>
-                    <p class="plan-sub">30 días de acceso completo</p>
-                    <ul class="plan-features">
-                        <li>✅ <strong>Todo lo del plan Básico</strong></li>
-                        <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
-                        <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
-                        <li>✅ Carpeta personal ilimitada</li>
-                        <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
-                    </ul>
-                    <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Pagar con MercadoPago</button>
-                </div>
+                <button type="button" class="plan-btn plan-btn-basico" style="max-width:260px" onclick="iniciarPagoMP('calculadora', this)">💳 Comprar por $ 5.000</button>
             </div>
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-top:20px">
                 <h4 style="margin:0 0 8px;font-size:14px;color:#92400e">📋 Cómo funciona el pago:</h4>
@@ -780,7 +761,12 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=13"></script>
-    <script src="scripts.js?v=15"></script>
+    <script src="nav.js?v=1"></script>
+    <script src="planes.js?v=3"></script>
+    <script src="scripts.js?v=16"></script>
+    <script>
+      (function(){ var c=document.getElementById("modal-planes"); if(c && window.MA_PLANES){ c.innerHTML=window.MA_PLANES.tarjetasHtml("modal"); window.pmInit("modal"); } })();
+    </script>
     <script src="gamification.js?v=1"></script>
     <script src="historias.js?v=1"></script>
     <script src="visual-fx.js?v=1"></script>

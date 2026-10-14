@@ -1,5 +1,2 @@
 User-agent: *
 Allow: /
-Disallow: /pruebas/
-Disallow: /herramientas/
-# Falta la dirección del sitio: corré  node herramientas/generar-paginas.js https://tusitio.com/calculadora/

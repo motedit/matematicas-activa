@@ -468,6 +468,35 @@ ul{list-style:none;}
 .plan-btn-premium{background:linear-gradient(135deg,#f59e0b,#dc2626);}
 .plan-btn-premium:hover{opacity:.9;transform:translateY(-1px);}
 @media (max-width:780px){.planes-grid{grid-template-columns:1fr;}.plan-card-popular{transform:none;}.plan-card-popular:hover{transform:translateY(-4px);}}
+/* --- Calculadora Inteligente: botón del menú + franja de portada --- */
+.nav-calc-btn{background:linear-gradient(135deg,#f59e0b,#ef4444)!important;color:#fff!important;padding:6px 14px!important;border-radius:99px!important;font-weight:700!important;white-space:nowrap;animation:calcPulso 2.2s infinite;}
+@keyframes calcPulso{0%{box-shadow:0 0 0 0 rgba(245,158,11,.55)}70%{box-shadow:0 0 0 10px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+@media (prefers-reduced-motion:reduce){.nav-calc-btn{animation:none}}
+.calc-banner-wrap{max-width:1000px;margin:-44px auto 0;padding:0 20px;position:relative;z-index:5;}
+.calc-banner{position:relative;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 22px;border-radius:16px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;text-decoration:none;box-shadow:0 12px 32px rgba(37,99,235,.45);border:1px solid rgba(255,255,255,.25);transition:transform .2s;}
+.calc-banner:hover{transform:translateY(-3px);}
+.calc-banner-tag{position:absolute;top:-10px;left:22px;background:#facc15;color:#422006;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;letter-spacing:.5px;}
+.calc-banner-ico{width:58px;height:58px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:32px;flex:none;}
+.calc-banner-txt{flex:1;min-width:200px;display:flex;flex-direction:column;gap:3px;}
+.calc-banner-txt strong{font-size:20px;}
+.calc-banner-txt span{font-size:13px;color:#dbeafe;}
+.calc-banner-btn{background:#facc15;color:#422006;font-weight:800;padding:12px 22px;border-radius:10px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.25);}
+@media (max-width:600px){.calc-banner{padding:14px;gap:10px}.calc-banner-ico{width:44px;height:44px;font-size:24px}.calc-banner-txt strong{font-size:16px}.calc-banner-btn{width:100%;text-align:center}}
+/* --- Mejoras visuales modal de planes --- */
+.plan-card{box-shadow:0 2px 10px rgba(15,23,42,.06);}
+.plan-card:hover{box-shadow:0 12px 28px rgba(15,23,42,.14);}
+.plan-card-premium{box-shadow:0 10px 28px rgba(245,158,11,.22);}
+.plan-precio{font-size:36px;letter-spacing:-.02em;}
+.plan-card-premium .plan-precio{background:linear-gradient(135deg,#f59e0b,#dc2626);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;}
+.plan-features li{padding:7px 0;line-height:1.4;}
+.plan-btn{padding:13px;box-shadow:0 4px 12px rgba(37,99,235,.25);}
+.plan-btn-gratis{box-shadow:none;}
+.plan-btn-premium{box-shadow:0 4px 14px rgba(220,38,38,.28);}
+.plan-btn:disabled:not(.plan-btn-gratis){opacity:.7;cursor:wait;}
+.plan-calc-suelta{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1.5px solid #bfdbfe !important;border-radius:14px;box-shadow:0 4px 14px rgba(37,99,235,.10);}
+.plan-calc-suelta h4{color:#1e3a8a;}
+.plan-calc-suelta .plan-btn{width:auto;min-width:210px;}
+@media (max-width:780px){.plan-calc-suelta{flex-direction:column;align-items:stretch !important;text-align:center;}.plan-calc-suelta .plan-btn{width:100%;max-width:none !important;}}
 
 /* === BANNER DE QUOTA EXCEDIDA === */
 .quota-banner{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #f59e0b;border-radius:12px;padding:16px 20px;margin:16px 0;text-align:center;}

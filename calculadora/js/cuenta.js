@@ -165,6 +165,7 @@
 
     refrescar,
     estado: () => M.estado,
+    cliente: sb,   // cliente compartido (lo usa cuenta-usuario.js para el botón "Ingresar")
   };
   window.MA_CALC = API;
 

@@ -109,6 +109,9 @@
     // Misma fuente de verdad que scripts.js: perfiles.plan + perfiles.plan_hasta
     const NIVEL_RANGO = { gratis: 0, basico: 1, premium: 2 };
     function nivelDe(p) {
+        // Plan a Medida: si compró esta materia, la ve completa como Premium
+        const hm = p?.modulos?.[MATERIA_ID];
+        if (hm && new Date(hm).getTime() > Date.now()) return "premium";
         if (!p?.plan || p.plan === "gratis") return "gratis";
         if (!p.plan_hasta || new Date(p.plan_hasta).getTime() <= Date.now()) return "gratis";
         return p.plan;

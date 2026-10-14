@@ -1,0 +1,27 @@
+/* Botones "Inicio" y "Cuenta" de la barra + diálogo de cuenta */
+.boton-barra{cursor:pointer;text-decoration:none}
+.boton-barra:hover{background:#00000066;color:#fff}
+.boton-inicio{margin-right:4px}
+.boton-inicio svg{width:17px;height:17px;flex:0 0 auto}
+.boton-cuenta{background:var(--teal-btn);color:#fff}
+.boton-cuenta:hover{background:var(--teal-btn-d)}
+.boton-cuenta.conectado{background:#0000003d;color:#c9dbee;box-shadow:inset 0 0 0 1px #17a39880}
+.boton-cuenta #botonCuentaTexto{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){.boton-inicio span,.boton-cuenta #botonCuentaTexto{display:none}}
+
+.cuenta-pestanas{display:flex;gap:6px;margin-bottom:16px;background:var(--paper);padding:4px;border-radius:12px}
+.cuenta-pestanas button{flex:1;border:0;background:transparent;font:inherit;font-size:.86rem;font-weight:600;color:var(--ink-soft);padding:9px 8px;border-radius:9px;cursor:pointer}
+.cuenta-pestanas button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.cuenta-form{display:flex;flex-direction:column;gap:10px}
+.cuenta-form .etiqueta{display:flex;flex-direction:column;gap:5px}
+.cuenta-form .resolver{justify-content:center;margin-top:4px}
+.cuenta-nota{font-size:.82rem;color:var(--ink-soft);line-height:1.45;margin:0 0 4px}
+.cuenta-links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.84rem}
+.cuenta-mensaje{min-height:1.2em;margin:12px 0 0;font-size:.86rem;color:var(--ink-soft)}
+.cuenta-mensaje.error{color:var(--warn-texto)}
+.cuenta-mensaje.ok{color:var(--teal-texto)}
+.cuenta-perfil{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.cuenta-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blueprint));color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px}
+.cuenta-perfil b{font-size:1.05rem}
+.cuenta-plan{display:inline-block;background:var(--resalte);color:var(--brass-texto);font-weight:700;font-size:.78rem;padding:4px 10px;border-radius:20px}
+.cuenta-perfil .acciones{justify-content:center;margin-top:10px;flex-wrap:wrap}

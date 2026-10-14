@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizarra Docente · Matemáticas Activa</title><meta name="description" content="Pizarra virtual para clases de matemática: escribí y dibujá, editor de ecuaciones, símbolos, escritura a mano, graficador y lista de alumnos."><link rel="canonical" href="https://matematicasactivas.com/pizarra/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="lib/katex/katex.min.css">
+<script defer src="lib/katex/katex.min.js"></script>
+<script defer src="js/nerdamer.js"></script>
+<script defer src="js/app.js"></script>
+<script defer src="js/acceso.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <a href="../index.html" title="Volver a la página principal" style="display:inline-flex;align-items:center;gap:6px;margin-right:12px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.25);color:#fff;font-weight:600;font-size:.85rem;text-decoration:none;white-space:nowrap">← Inicio</a>
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h.01M9 12h.01M9 15h.01"/></svg></div>
+      <div><b>Pizarra Docente</b><small>Matemáticas Activa</small></div>
+    </div>
+    <button class="calc-launch" onclick="eqOpen()" title="Editor de ecuaciones" aria-label="Editor de ecuaciones" style="margin-right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7M7.5 7v10"/><path d="M14 17l2.5-10L19 17"/><path d="M13.5 13h6"/></svg></button>
+      <button class="calc-launch" onclick="symOpen()" title="Símbolos matemáticos" aria-label="Símbolos matemáticos" style="margin-right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l-8 8 8 8H5"/></svg></button>
+      <button class="calc-launch" onclick="calcOpen()" title="Calculadora matemática">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+      Calculadora
+    </button>
+    <div class="role-switch">
+      <button id="roleTeacher" class="active" onclick="setRole('teacher')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Docente</button>
+      <button id="roleStudent" onclick="setRole('student')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Alumno</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <!-- TEACHER -->
+    <div id="teacherView" class="view active">
+      <nav class="toolrail">
+        <div class="group">
+          <span class="glabel">Trazo</span>
+          <button class="tbtn tool active" data-tool="marker" data-tip="Marcador (M)" onclick="setTool('marker',this)" aria-label="Marcador (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg></button>
+          <button class="tbtn tool" data-tool="line" data-tip="Línea recta (L)" onclick="setTool('line',this)" aria-label="Línea recta (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/><circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="5" r="1.6"/></svg></button>
+          <button class="tbtn tool" data-tool="rect" data-tip="Rectángulo" onclick="setTool('rect',this)" aria-label="Rectángulo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg></button>
+          <button class="tbtn tool" data-tool="circle" data-tip="Círculo" onclick="setTool('circle',this)" aria-label="Círculo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg></button>
+          <button class="tbtn tool" data-tool="text" data-tip="Texto (T)" onclick="setTool('text',this)" aria-label="Texto (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6V4h14v2"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></button>
+          <button class="tbtn tool" data-tool="eraser" data-tip="Borrador (E)" onclick="setTool('eraser',this)" aria-label="Borrador (E)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16a2 2 0 0 1 0-3l9-9a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8"/><path d="M6 11l6 6"/></svg></button>
+        </div>
+        <div class="sep"></div>
+        <div class="group">
+          <span class="glabel">Escritura</span>
+          <button class="tbtn tool" data-tool="write" data-tip="Escritura inteligente · beta (W)" onclick="setTool('write',this)" style="color:var(--teal)" aria-label="Escritura inteligente · beta (W)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><path d="M9 7l1.5 1.5M14 10l-1 3"/></svg></button>
+        </div>
+        <div class="sep"></div>
+        <div class="group">
+          <span class="glabel">Útiles</span>
+          <button class="tbtn tool-inst" data-inst="ruler" data-tip="Regla" onclick="toggleInstrument('ruler',this)" aria-label="Regla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2" y="8" width="20" height="8" rx="1" transform="rotate(-12 12 12)"/><path d="M6 9.5v2M9.5 8.8v3M13 8.1v2M16.5 7.4v3" stroke-width="1.6"/></svg></button>
+          <button class="tbtn tool-inst" data-inst="set45" data-tip="Escuadra 45°" onclick="toggleInstrument('set45',this)" aria-label="Escuadra 45°"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20h16L4 4z"/></svg></button>
+          <button class="tbtn tool-inst" data-inst="set60" data-tip="Cartabón 30-60°" onclick="toggleInstrument('set60',this)" aria-label="Cartabón 30-60°"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 20h18L3 11z"/></svg></button>
+          <button class="tbtn tool-inst" data-inst="protractor" data-tip="Transportador" onclick="toggleInstrument('protractor',this)" aria-label="Transportador"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 16a9 9 0 0 1 18 0"/><path d="M3 16h18"/><path d="M12 16V8M7 16l1.5-4M17 16l-1.5-4"/></svg></button>
+          <button class="tbtn tool" data-tool="compass" data-tip="Compás" onclick="setTool('compass',this)" aria-label="Compás"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v3"/><path d="M12 9L6 20M12 9l6 11"/><path d="M8.5 15.5a6 6 0 0 0 7 0"/></svg></button>
+        </div>
+      </nav>
+
+      <div class="stage-wrap">
+        <div class="optionbar">
+          <div class="opt"><div class="swatches" id="swatches"></div>
+            <button class="colorpick" title="Color personalizado"><input type="color" id="customColor" value="#e8703a" oninput="setCustomColor(this.value)"></button>
+          </div>
+          <div class="obsep"></div>
+          <div class="opt"><label>Grosor</label><input type="range" id="sizeRange" min="1" max="40" value="4" oninput="setSize(this.value)"><span class="sizeval mono" id="sizeVal">4px</span></div>
+          <div class="obsep"></div>
+          <button class="obtn icon" id="undoBtn" onclick="undo()" title="Deshacer (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg></button>
+          <button class="obtn icon" id="redoBtn" onclick="redo()" title="Rehacer (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/></svg></button>
+          <button class="obtn" id="bgBtn" onclick="cycleBg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="1.2"/></svg><span id="bgLabel">Cuadrícula</span></button>
+          <button class="obtn" onclick="toggleBoardColor()" id="boardToggleBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 18l3-3M21 18l-3-3"/></svg><span>Verde</span></button>
+          <button class="obtn danger" onclick="clearBoard()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>Limpiar</button>
+          <button class="obtn icon" onclick="toggleFullscreen()" title="Pantalla completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+          <div class="spacer"></div>
+          <button class="obtn" onclick="downloadBoard()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG</button>
+          <button class="obtn primary" onclick="openSaveFile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Guardar para la clase</button>
+        </div>
+
+        <div class="stage" id="stage">
+          <canvas id="bg"></canvas>
+          <canvas id="board"></canvas>
+          <div class="reading mono" id="reading"></div>
+          <div class="write-hint" id="writeHint"><b>✎</b> Escribí y hacé una pausa: se reconoce y resuelve solo · beta</div>
+
+          <div class="instrument hidden" id="ruler"><div class="body" id="rulerBody"></div>
+            <div class="inst-handle rot-handle" data-h="rot" title="Girar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg></div>
+            <div class="inst-handle edge-handle" data-h="edge" title="Trazar filo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19l7-7 2 2-7 7-3 1z"/></svg></div>
+            <div class="inst-handle inst-close" data-h="close" title="Quitar">×</div></div>
+
+          <div class="instrument hidden" id="set45"><div class="body" id="set45Body"></div>
+            <div class="inst-handle rot-handle" data-h="rot" title="Girar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg></div>
+            <div class="inst-handle edge-handle" data-h="edge" title="Trazar filo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19l7-7 2 2-7 7-3 1z"/></svg></div>
+            <div class="inst-handle inst-close" data-h="close" title="Quitar">×</div></div>
+
+          <div class="instrument hidden" id="set60"><div class="body" id="set60Body"></div>
+            <div class="inst-handle rot-handle" data-h="rot" title="Girar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg></div>
+            <div class="inst-handle edge-handle" data-h="edge" title="Trazar filo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19l7-7 2 2-7 7-3 1z"/></svg></div>
+            <div class="inst-handle inst-close" data-h="close" title="Quitar">×</div></div>
+
+          <div class="instrument hidden" id="protractor"><div class="body" id="protractorBody"></div>
+            <div class="inst-handle rot-handle" data-h="rot" title="Girar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/></svg></div>
+            <div class="inst-handle inst-close" data-h="close" title="Quitar">×</div></div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="panel-tabs">
+          <button class="active" data-pane="students" onclick="setPane('students',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Alumnos <span class="badge" id="studCount">0</span></button>
+          <button data-pane="files" onclick="setPane('files',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Archivos <span class="badge" id="fileCount">0</span></button>
+        </div>
+        <div class="panel-body">
+          <div class="pane active" id="paneStudents">
+            <div class="field"><label>Curso y escuela</label>
+              <div class="row" style="margin-bottom:8px">
+                <input type="text" id="studentCurso" placeholder="Curso · ej. 3.° B" oninput="updateCursoHint()">
+                <input type="text" id="studentEscuela" placeholder="Escuela" oninput="updateCursoHint()">
+              </div>
+            </div>
+            <div class="field"><label>Nombre del alumno</label>
+              <div class="row"><input type="text" id="studentName" placeholder="Ej. Camila Suárez" onkeydown="if(event.key==='Enter')addStudent()">
+                <button class="btn" style="width:auto;padding:0 16px" onclick="addStudent()" title="Agregar alumno"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div>
+            </div>
+            <p class="hint-curso" id="hintCurso"></p>
+            <div class="search" id="studentSearchWrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input type="text" id="studentSearch" placeholder="Buscar alumno…" oninput="renderStudents()"></div>
+            <div id="studentList"></div>
+          </div>
+          <div class="pane" id="paneFiles">
+            <button class="btn ghost" style="margin-bottom:14px" onclick="document.getElementById('uploadInput').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>Subir imagen o PDF</button>
+            <input type="file" id="uploadInput" accept="image/*,application/pdf" style="display:none" onchange="handleUpload(event)">
+            <div id="fileFilterWrap"></div>
+            <div id="fileList"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- STUDENT -->
+    <div id="studentView" class="view student-view">
+      <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+          <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg></div>
+          <h2>Ingreso de alumnos</h2>
+          <p>Escribí el código que te dio tu profe para ver el material de la clase.</p>
+          <input type="text" id="codeInput" maxlength="6" placeholder="••••••" onkeydown="if(event.key==='Enter')studentLogin()">
+          <button class="btn teal" style="margin-top:16px" onclick="studentLogin()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Entrar</button>
+          <div class="login-err" id="loginErr"></div>
+        </div>
+      </div>
+      <div class="student-gallery" id="studentGallery" style="display:none">
+        <div class="gallery-head">
+          <div class="avatar" id="galleryAvatar"></div>
+          <div style="flex:1"><h2 id="galleryName">Hola</h2><p id="gallerySub">Material disponible</p></div>
+          <button class="obtn" onclick="studentLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Salir</button>
+        </div>
+        <div class="gallery-grid" id="galleryGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="saveModal" style="display:none">
+    <div class="modal-head"><h3>Guardar para la clase</h3><button class="iconbtn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nombre del material</label><input type="text" id="saveFileName" placeholder="Ej. Ecuación de la recta — clase 4"></div>
+      <div class="field"><label>¿Quién puede verlo?</label>
+        <div class="seg" id="accessSeg"><button class="active" data-access="all" onclick="setSaveAccess('all',this)">Toda la clase</button><button data-access="some" onclick="setSaveAccess('some',this)">Elegir alumnos</button></div>
+        <div id="saveCheckWrap" style="display:none"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" style="width:auto;padding:10px 18px" onclick="closeModal()">Cancelar</button><button class="btn" style="width:auto;padding:10px 18px" onclick="confirmSaveFile()">Guardar material</button></div>
+  </div>
+
+  <div class="modal" id="accessModal" style="display:none">
+    <div class="modal-head"><h3>Autorizar alumnos</h3><button class="iconbtn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="color:var(--ink-soft);font-size:.86rem;margin-bottom:14px" id="accessFileLabel"></p>
+      <div class="seg"><button class="active" data-access="all" onclick="setEditAccess('all',this)">Toda la clase</button><button data-access="some" onclick="setEditAccess('some',this)">Elegir alumnos</button></div>
+      <div id="accessCheckWrap"></div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" style="width:auto;padding:10px 18px" onclick="closeModal()">Cancelar</button><button class="btn" style="width:auto;padding:10px 18px" onclick="confirmAccess()">Guardar permisos</button></div>
+  </div>
+
+  <div class="modal" id="studentModal" style="display:none">
+    <div class="modal-head"><h3>Editar alumno</h3><button class="iconbtn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nombre</label><input type="text" id="edName"></div>
+      <div class="row"><div class="field" style="flex:1"><label>Curso</label><input type="text" id="edCurso" placeholder="Ej. 3.° B"></div><div class="field" style="flex:1"><label>Escuela</label><input type="text" id="edEscuela" placeholder="Escuela"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" style="width:auto;padding:10px 18px" onclick="closeModal()">Cancelar</button><button class="btn" style="width:auto;padding:10px 18px" onclick="saveStudentEdit()">Guardar cambios</button></div>
+  </div>
+
+  <div class="modal wide" id="previewModal" style="display:none">
+    <div class="modal-head"><h3 id="previewTitle">Material</h3><button class="iconbtn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="previewBody"></div>
+  </div>
+</div>
+
+<div class="calc-overlay" id="calcOverlay">
+  <div class="calc-modal">
+    <div class="calc-head">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></div>
+      <h3>Calculadora matemática</h3>
+      <button onclick="calcClose()">✕</button>
+    </div>
+    <div class="calc-tabs" id="calcTabs">
+      <button class="calc-tab active" data-tab="arit" onclick="calcTab('arit',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5v14" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="9"/></svg>Aritmética</button>
+      <button class="calc-tab" data-tab="alg" onclick="calcTab('alg',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 17h10"/><path d="M16 14l4 6M20 14l-4 6"/></svg>Álgebra</button>
+      <button class="calc-tab" data-tab="calc" onclick="calcTab('calc',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-2 0-2 8-2 8s0 8-2 8M5 12h6"/><path d="M14 8s3 8 6 8"/></svg>Cálculo</button>
+      <button class="calc-tab" data-tab="trig" onclick="calcTab('trig',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18L3 8z"/><path d="M3 14a6 6 0 0 0 5 0"/></svg>Trigonometría</button>
+      <button class="calc-tab" data-tab="geo" onclick="calcTab('geo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><rect x="11" y="11" width="9" height="9" rx="1"/></svg>Geometría</button>
+      <button class="calc-tab" data-tab="stat" onclick="calcTab('stat',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="13" y="8" width="3" height="10"/><rect x="19" y="5" width="0" height="0"/></svg>Estadística</button>
+      <button class="calc-tab" data-tab="poly" onclick="calcTab('poly',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M6 15c3 0 4-8 7-8s3 5 5 5"/></svg>Polinomios</button>
+      <button class="calc-tab" data-tab="func" onclick="calcTab('func',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M5 15c3 0 4-9 8-9s4 6 6 6"/></svg>Gráficos</button>
+      <button class="calc-tab" data-tab="prob" onclick="calcTab('prob',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3 0 4-10 9-10s6 10 9 10"/><path d="M3 21h18"/></svg>Probabilidad</button>
+    </div>
+    <div class="calc-content" id="calcContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="symOverlay">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><h3>Símbolos matemáticos</h3><button class="iconbtn" onclick="symClose()" aria-label="Cerrar">✕</button></div>
+    <div class="modal-body">
+      <div class="sym-tabs" id="symTabs"></div>
+      <div class="sym-grid" id="symGrid"></div>
+      <div class="sym-field"><input id="symField" placeholder="Tocá símbolos para armar tu expresión…" oninput="symPrevUpd()"><button class="iconbtn" title="Borrar último" aria-label="Borrar último" onclick="symBack()">⌫</button></div>
+      <div class="sym-prevbox" id="symPrevBox"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="symCopy()">Copiar</button>
+      <button class="btn-ghost" onclick="symToCalc()">A la calculadora</button>
+      <button class="btn-primary" onclick="symToBoard()">A la pizarra</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="eqOverlay">
+  <div class="modal" style="max-width:740px">
+    <div class="modal-head"><h3>Ecuaciones</h3><button class="iconbtn" onclick="eqClose()" aria-label="Cerrar">✕</button></div>
+    <div class="modal-body">
+      <div class="eq-chips" id="eqChips"></div>
+      <textarea id="eqInput" class="eq-input" rows="3" oninput="eqRender()" placeholder="Escribí en LaTeX. Ej: x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"></textarea>
+      <div class="eq-preview" id="eqPreview"><span style="color:var(--ink-soft,#5a748c)">La ecuación se verá acá…</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="eqCopy()">Copiar LaTeX</button>
+      <button class="btn-primary" onclick="eqToBoard()">A la pizarra</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

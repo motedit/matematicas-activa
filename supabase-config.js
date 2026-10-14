@@ -655,7 +655,7 @@ async function sbObtenerProgresoMateria(materia) {
 }
 
 // ===================== PAGOS MERCADOPAGO =========================
-async function sbCrearPreferencia(plan) {
+async function sbCrearPreferencia(plan, modulos) {
     const session = await sbSesion();
     if (!session?.access_token) return { error: "No autenticado" };
     try {
@@ -666,7 +666,7 @@ async function sbCrearPreferencia(plan) {
                 "Authorization": "Bearer " + session.access_token,
                 "apikey": SUPABASE_ANON_KEY,
             },
-            body: JSON.stringify({ plan }),
+            body: JSON.stringify(modulos && modulos.length ? { plan, modulos } : { plan }),
         });
         const data = await res.json();
         if (!res.ok) return { error: data.error || "Error creando preferencia" };

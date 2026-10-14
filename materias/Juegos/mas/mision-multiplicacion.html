@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misión Multiplicación 🚀</title><meta name="description" content="Juego de multiplicación: completá la misión resolviendo multiplicaciones y subí de nivel."><link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/mision-multiplicacion.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#170f3d;
+    --bg-mid:#2c1c68;
+    --bg-nebula:#4a2a8f;
+    --card:#2a1c63;
+    --card-light:#382a7a;
+    --gold:#ffc93c;
+    --coral:#ff6b6b;
+    --mint:#4ecdc4;
+    --cream:#fff8e7;
+    --cream-dim:#cabfe8;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.9) 0px, rgba(255,255,255,0.9) 2px, transparent 3px),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.7) 0px, rgba(255,255,255,0.7) 2px, transparent 3px),
+      radial-gradient(circle at 45% 65%, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0.6) 1.5px, transparent 3px),
+      radial-gradient(circle at 70% 80%, rgba(255,255,255,0.8) 0px, rgba(255,255,255,0.8) 2px, transparent 3px),
+      radial-gradient(circle at 25% 85%, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1.5px, transparent 3px),
+      radial-gradient(circle at 90% 55%, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0.6) 1.5px, transparent 3px),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 55%, var(--bg-nebula) 100%);
+    background-attachment:fixed;
+    font-family:'Nunito', sans-serif;
+    color:var(--cream);
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 60px;
+  }
+
+  .app{ width:100%; max-width:560px; }
+
+  :focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+
+  /* Header */
+  .header{ text-align:center; margin-bottom:22px; }
+  .mission-badge{
+    display:inline-block;
+    background:var(--card-light);
+    border:2px solid var(--gold);
+    color:var(--gold);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:1px;
+    padding:5px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(26px, 7vw, 36px);
+    margin:0 0 8px;
+    text-shadow:0 3px 0 rgba(0,0,0,0.25);
+  }
+  .subtitle{
+    margin:0;
+    color:var(--cream-dim);
+    font-size:15px;
+    font-weight:600;
+    padding:0 10px;
+  }
+
+  .hidden{ display:none !important; }
+
+  /* Buttons */
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{
+    background:linear-gradient(180deg, #ffd75e, var(--gold));
+    color:#3a2600;
+    font-size:17px;
+    padding:14px 30px;
+    box-shadow:0 6px 0 #c8961a, var(--shadow);
+  }
+  .btn-primary:disabled{ opacity:.4; cursor:not-allowed; box-shadow:0 6px 0 rgba(0,0,0,0.2); }
+  .btn-primary:not(:disabled):hover{ transform:translateY(-2px); }
+  .btn-ghost{
+    background:transparent;
+    border:2px solid var(--card-light);
+    color:var(--cream-dim);
+    padding:10px 18px;
+    font-size:14px;
+  }
+  .btn-ghost:hover{ border-color:var(--mint); color:var(--mint); }
+  .btn-small{ padding:8px 14px; font-size:13px; }
+
+  /* Planet select screen */
+  .planets-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .planet-btn{
+    position:relative;
+    aspect-ratio:1;
+    border-radius:50%;
+    border:3px solid transparent;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    color:#1a1140;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease;
+    box-shadow:inset 0 -10px 18px rgba(0,0,0,0.2), 0 6px 14px rgba(0,0,0,0.3);
+  }
+  .planet-btn .p-table{ font-size:22px; line-height:1; }
+  .planet-btn .p-name{ font-size:10px; font-weight:600; margin-top:2px; opacity:.8; }
+  .planet-btn:hover{ transform:translateY(-3px); }
+  .planet-btn.selected{
+    border-color:var(--cream);
+    transform:scale(1.06);
+  }
+  .planet-btn.selected::after{
+    content:"✓";
+    position:absolute;
+    top:-4px; right:-4px;
+    background:var(--mint);
+    color:#08322e;
+    width:22px; height:22px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    border:2px solid var(--bg-deep);
+  }
+
+  .select-actions{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+
+  /* Play screen */
+  .stats-bar{
+    display:flex;
+    justify-content:space-between;
+    background:var(--card);
+    border-radius:var(--radius-md);
+    padding:14px 10px;
+    margin-bottom:18px;
+    box-shadow:var(--shadow);
+  }
+  .stat{ flex:1; text-align:center; }
+  .stat-value{
+    display:block;
+    font-family:'Baloo 2', sans-serif;
+    font-size:24px;
+    font-weight:800;
+    color:var(--gold);
+  }
+  .stat-label{
+    display:block;
+    font-size:11px;
+    color:var(--cream-dim);
+    font-weight:700;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+
+  .rocket-scene{
+    position:relative;
+    height:130px;
+    margin-bottom:6px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+  }
+  .fuel-gauge{
+    width:100%;
+    max-width:280px;
+    height:14px;
+    background:var(--card);
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:14px;
+    border:2px solid var(--card-light);
+  }
+  .fuel-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--mint), var(--gold));
+    border-radius:999px;
+    transition:width .5s ease;
+  }
+  .rocket{
+    position:relative;
+    width:44px;
+    height:70px;
+    animation:float 2.6s ease-in-out infinite;
+  }
+  .rocket.shake{ animation:shakeRocket .4s ease; }
+  .rocket-body{
+    width:44px; height:58px;
+    background:linear-gradient(180deg, #ffffff, #d8d4f0);
+    border-radius:22px 22px 8px 8px;
+    position:relative;
+    box-shadow:inset -6px 0 10px rgba(0,0,0,0.08);
+  }
+  .rocket-window{
+    width:18px; height:18px;
+    background:var(--mint);
+    border:3px solid var(--bg-deep);
+    border-radius:50%;
+    position:absolute;
+    top:16px; left:50%;
+    transform:translateX(-50%);
+  }
+  .rocket-fin{
+    position:absolute;
+    bottom:2px;
+    width:0; height:0;
+    border-top:16px solid transparent;
+  }
+  .fin-left{ left:-11px; border-right:14px solid var(--coral); }
+  .fin-right{ right:-11px; border-left:14px solid var(--coral); }
+  .rocket-flame{
+    width:14px; height:22px;
+    background:linear-gradient(180deg, var(--gold), var(--coral));
+    border-radius:0 0 10px 10px;
+    margin:0 auto;
+    animation:flicker .25s ease-in-out infinite alternate;
+  }
+
+  .question-card{
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    padding:22px 18px 18px;
+    text-align:center;
+    box-shadow:var(--shadow);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+    animation:bounceIn .35s ease;
+  }
+  .planet-tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--bg-deep);
+    background:var(--mint);
+    padding:4px 12px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .question{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(34px, 11vw, 46px);
+    letter-spacing:1px;
+  }
+  .feedback-message{
+    min-height:22px;
+    font-weight:700;
+    font-size:14px;
+    margin-top:8px;
+    color:var(--gold);
+  }
+
+  .options-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .option-btn{
+    background:var(--card-light);
+    color:var(--cream);
+    font-family:'Baloo 2', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    border:2px solid transparent;
+    border-radius:var(--radius-md);
+    padding:18px 8px;
+    cursor:pointer;
+    transition:transform .12s ease, background .2s ease, border-color .2s ease;
+  }
+  .option-btn:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--mint); }
+  .option-btn:disabled{ cursor:default; }
+  .option-btn.correct{ background:var(--mint); color:#08322e; border-color:var(--mint); }
+  .option-btn.wrong{ background:var(--coral); color:#3a0d0d; animation:shakeBtn .35s ease; }
+
+  .hint-area{ text-align:center; margin-bottom:16px; }
+  .hint-text{
+    margin:10px auto 0;
+    max-width:420px;
+    background:var(--card);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--cream-dim);
+    line-height:1.5;
+  }
+
+  .play-actions{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  /* Level up overlay */
+  .level-up-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15, 9, 41, 0.82);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:20;
+  }
+  .level-up-card{ text-align:center; animation:bounceIn .4s ease; }
+  .level-up-emoji{ font-size:64px; margin-bottom:10px; }
+  .level-up-text{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:30px;
+    color:var(--gold);
+  }
+
+  .confetti-piece{
+    position:absolute;
+    top:10%;
+    width:8px; height:8px;
+    border-radius:2px;
+    pointer-events:none;
+    animation:confettiFall 0.9s ease-out forwards;
+  }
+
+  @keyframes float{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-6px);} }
+  @keyframes flicker{ from{ transform:scaleY(1); opacity:1;} to{ transform:scaleY(0.75); opacity:.8;} }
+  @keyframes bounceIn{ 0%{ transform:scale(0.9); opacity:0;} 60%{ transform:scale(1.02); opacity:1;} 100%{ transform:scale(1);} }
+  @keyframes shakeBtn{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-6px);} 75%{ transform:translateX(6px);} }
+  @keyframes shakeRocket{ 0%,100%{ transform:translateX(0) rotate(0);} 25%{ transform:translateX(-5px) rotate(-4deg);} 75%{ transform:translateX(5px) rotate(4deg);} }
+  @keyframes confettiFall{ from{ transform:translateY(0) rotate(0deg); opacity:1;} to{ transform:translateY(120px) rotate(360deg); opacity:0;} }
+
+  @media (prefers-reduced-motion: reduce){
+    .rocket, .rocket-flame, .question-card, .level-up-card, .confetti-piece{ animation:none !important; }
+  }
+
+  @media (max-width:360px){
+    .planets-grid{ grid-template-columns:repeat(3, 1fr); gap:10px; }
+  }
+</style>
+</head>
+<body><a href="../Juegos.html" style="position:fixed;top:10px;left:10px;z-index:9999;background:#0f172a;color:#fff;padding:8px 14px;border-radius:10px;font:600 14px sans-serif;text-decoration:none;opacity:.9">← Volver a Juegos</a>
+<div class="app">
+
+  <div class="header">
+    <div class="mission-badge">NIVEL <span id="levelDisplay">1</span></div>
+    <h1 class="title">🚀 Misión Multiplicación</h1>
+    <p class="subtitle" id="subtitleText">Elegí los planetas que querés visitar y practicá sus tablas. Sin cronómetro, a tu ritmo.</p>
+  </div>
+
+  <section id="selectScreen" class="select-screen">
+    <div class="planets-grid" id="planetsGrid"></div>
+    <div class="select-actions">
+      <button id="selectAllBtn" class="btn btn-ghost">🌌 Elegir todos los planetas</button>
+      <button id="startBtn" class="btn btn-primary" disabled>Iniciar misión 🚀</button>
+    </div>
+  </section>
+
+  <section id="playScreen" class="play-screen hidden">
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="correctTotal">0</span>
+        <span class="stat-label">Correctas</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="rachaActual">0</span>
+        <span class="stat-label">Racha</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="mejorRacha">0</span>
+        <span class="stat-label">Mejor racha</span>
+      </div>
+    </div>
+
+    <div class="rocket-scene">
+      <div class="fuel-gauge"><div class="fuel-fill" id="fuelFill"></div></div>
+      <div class="rocket" id="rocket">
+        <div class="rocket-body"><div class="rocket-window"></div></div>
+        <div class="rocket-fin fin-left"></div>
+        <div class="rocket-fin fin-right"></div>
+        <div class="rocket-flame"></div>
+      </div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="planet-tag" id="planetTag">Planeta</div>
+      <div class="question" id="questionText">? × ? = ?</div>
+      <div class="feedback-message" id="feedbackMsg">&nbsp;</div>
+    </div>
+
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <div class="hint-area">
+      <button id="hintBtn" class="btn btn-ghost btn-small">💡 Ver pista</button>
+      <p id="hintText" class="hint-text hidden"></p>
+    </div>
+
+    <div class="play-actions">
+      <button id="changePlanetsBtn" class="btn btn-ghost btn-small">🪐 Cambiar planetas</button>
+      <button id="resetBtn" class="btn btn-ghost btn-small">🔄 Reiniciar todo</button>
+    </div>
+  </section>
+
+  <div class="level-up-overlay hidden" id="levelUpOverlay">
+    <div class="level-up-card">
+      <div class="level-up-emoji">🚀</div>
+      <div class="level-up-text" id="levelUpText">¡Nivel 2!</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var PLANETS = [
+    { table:2,  name:'Mercurio', color:'#ff8f8f' },
+    { table:3,  name:'Venus',    color:'#ffd76a' },
+    { table:4,  name:'Tierra',   color:'#6fe0d6' },
+    { table:5,  name:'Marte',    color:'#ffab6b' },
+    { table:6,  name:'Júpiter',  color:'#c2b6ff' },
+    { table:7,  name:'Saturno',  color:'#ff9fc7' },
+    { table:8,  name:'Urano',    color:'#7be8c9' },
+    { table:9,  name:'Neptuno',  color:'#8fc4ff' },
+    { table:10, name:'Plutón',   color:'#ffe9a8' }
+  ];
+
+  var CORRECT_MSGS = ['¡Genial!', '¡Excelente!', '¡Sos un crack!', '¡Imparable!', '¡Muy bien!', '¡Así se hace!', '¡Perfecto!'];
+  var WRONG_MSGS = ['¡Casi! Probá de nuevo', 'No es esa... ¡vos podés!', 'Ups, intentá otra vez', 'Cerca, ¡dale de nuevo!'];
+
+  var state = {
+    selected: new Set(),
+    level: 1,
+    fuel: 0,
+    racha: 0,
+    mejorRacha: 0,
+    correctTotal: 0,
+    current: null,
+    wrongAttempts: 0
+  };
+
+  var planetsGrid = document.getElementById('planetsGrid');
+  var startBtn = document.getElementById('startBtn');
+  var selectAllBtn = document.getElementById('selectAllBtn');
+  var selectScreen = document.getElementById('selectScreen');
+  var playScreen = document.getElementById('playScreen');
+  var levelDisplay = document.getElementById('levelDisplay');
+  var fuelFill = document.getElementById('fuelFill');
+  var rocket = document.getElementById('rocket');
+  var questionCard = document.getElementById('questionCard');
+  var planetTag = document.getElementById('planetTag');
+  var questionText = document.getElementById('questionText');
+  var feedbackMsg = document.getElementById('feedbackMsg');
+  var optionsGrid = document.getElementById('optionsGrid');
+  var hintBtn = document.getElementById('hintBtn');
+  var hintText = document.getElementById('hintText');
+  var changePlanetsBtn = document.getElementById('changePlanetsBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var levelUpOverlay = document.getElementById('levelUpOverlay');
+  var levelUpText = document.getElementById('levelUpText');
+  var correctTotalEl = document.getElementById('correctTotal');
+  var rachaActualEl = document.getElementById('rachaActual');
+  var mejorRachaEl = document.getElementById('mejorRacha');
+
+  function buildPlanets(){
+    planetsGrid.innerHTML = '';
+    PLANETS.forEach(function(p){
+      var btn = document.createElement('button');
+      btn.className = 'planet-btn';
+      btn.style.background = 'radial-gradient(circle at 35% 30%, ' + p.color + ', ' + shade(p.color) + ')';
+      btn.innerHTML = '<span class="p-table">×' + p.table + '</span><span class="p-name">' + p.name + '</span>';
+      btn.addEventListener('click', function(){
+        if(state.selected.has(p.table)){
+          state.selected.delete(p.table);
+          btn.classList.remove('selected');
+        } else {
+          state.selected.add(p.table);
+          btn.classList.add('selected');
+        }
+        startBtn.disabled = state.selected.size === 0;
+      });
+      btn.dataset.table = p.table;
+      planetsGrid.appendChild(btn);
+    });
+  }
+
+  function shade(hex){
+    // simple darken helper for gradient depth
+    var c = hex.replace('#','');
+    var num = parseInt(c,16);
+    var r = Math.max(0,(num>>16)-40);
+    var g = Math.max(0,((num>>8)&0xff)-40);
+    var b = Math.max(0,(num&0xff)-40);
+    return 'rgb('+r+','+g+','+b+')';
+  }
+
+  selectAllBtn.addEventListener('click', function(){
+    var allSelected = state.selected.size === PLANETS.length;
+    document.querySelectorAll('.planet-btn').forEach(function(btn){
+      var table = Number(btn.dataset.table);
+      if(allSelected){
+        state.selected.delete(table);
+        btn.classList.remove('selected');
+      } else {
+        state.selected.add(table);
+        btn.classList.add('selected');
+      }
+    });
+    startBtn.disabled = state.selected.size === 0;
+    selectAllBtn.textContent = allSelected ? '🌌 Elegir todos los planetas' : '🌑 Deseleccionar todos';
+  });
+
+  startBtn.addEventListener('click', function(){
+    selectScreen.classList.add('hidden');
+    playScreen.classList.remove('hidden');
+    nextQuestion();
+  });
+
+  changePlanetsBtn.addEventListener('click', function(){
+    playScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  resetBtn.addEventListener('click', function(){
+    state.level = 1;
+    state.fuel = 0;
+    state.racha = 0;
+    state.mejorRacha = 0;
+    state.correctTotal = 0;
+    state.selected = new Set();
+    updateStatsUI();
+    fuelFill.style.width = '0%';
+    document.querySelectorAll('.planet-btn.selected').forEach(function(b){ b.classList.remove('selected'); });
+    startBtn.disabled = true;
+    playScreen.classList.add('hidden');
+    selectScreen.classList.remove('hidden');
+  });
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function generateQuestion(){
+    var tables = Array.from(state.selected);
+    var a = pickRandom(tables);
+    var b = Math.floor(Math.random()*10)+1;
+    var correct = a*b;
+
+    var candidates = new Set();
+    var raw = [a*(b-1), a*(b+1), (a+1)*b, (a-1>0?a-1:a+2)*b, correct+a, correct-a, correct+1, correct-1, correct+2];
+    raw.forEach(function(v){
+      if(v>0 && v!==correct) candidates.add(v);
+    });
+    var pool = Array.from(candidates);
+    var distractors = [];
+    while(distractors.length < 3 && pool.length){
+      var idx = Math.floor(Math.random()*pool.length);
+      distractors.push(pool.splice(idx,1)[0]);
+    }
+    while(distractors.length < 3){
+      var fallback = correct + (distractors.length+2) * (Math.random()<0.5?-1:1);
+      if(fallback>0 && fallback!==correct && distractors.indexOf(fallback)===-1) distractors.push(fallback);
+    }
+
+    var options = distractors.concat([correct]);
+    for(var i=options.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp = options[i]; options[i]=options[j]; options[j]=tmp;
+    }
+
+    var planet = PLANETS.find(function(p){ return p.table === a; });
+
+    state.current = { a:a, b:b, correct:correct, options:options, planet:planet };
+    state.wrongAttempts = 0;
+  }
+
+  function nextQuestion(){
+    generateQuestion();
+    var c = state.current;
+    planetTag.textContent = c.planet.name + ' · Tabla del ' + c.a;
+    questionText.textContent = c.a + ' × ' + c.b + ' = ?';
+    feedbackMsg.textContent = '\u00A0';
+    hintText.classList.add('hidden');
+    hintText.textContent = '';
+    renderOptions();
+    questionCard.style.animation = 'none';
+    void questionCard.offsetWidth;
+    questionCard.style.animation = '';
+  }
+
+  function renderOptions(){
+    optionsGrid.innerHTML = '';
+    state.current.options.forEach(function(val){
+      var btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = val;
+      btn.addEventListener('click', function(){ handleAnswer(val, btn); });
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(val, btnEl){
+    var allBtns = optionsGrid.querySelectorAll('.option-btn');
+    if(val === state.current.correct){
+      allBtns.forEach(function(b){ b.disabled = true; });
+      btnEl.classList.add('correct');
+      feedbackMsg.textContent = pickRandom(CORRECT_MSGS) + ' ✨';
+      spawnConfetti();
+      state.racha++;
+      state.correctTotal++;
+      state.fuel++;
+      if(state.racha > state.mejorRacha) state.mejorRacha = state.racha;
+      updateStatsUI();
+
+      if(state.fuel >= 5){
+        setTimeout(launchLevelUp, 500);
+      } else {
+        fuelFill.style.width = (state.fuel/5*100) + '%';
+        setTimeout(nextQuestion, 1000);
+      }
+    } else {
+      btnEl.classList.add('wrong');
+      btnEl.disabled = true;
+      state.wrongAttempts++;
+      state.racha = 0;
+      updateStatsUI();
+      feedbackMsg.textContent = pickRandom(WRONG_MSGS);
+      rocket.classList.remove('shake');
+      void rocket.offsetWidth;
+      rocket.classList.add('shake');
+      setTimeout(function(){ btnEl.classList.remove('wrong'); }, 400);
+
+      if(state.wrongAttempts >= 2){
+        showHint();
+      }
+    }
+  }
+
+  function showHint(){
+    var c = state.current;
+    var terms = [];
+    for(var i=0;i<c.b;i++){ terms.push(c.a); }
+    hintText.textContent = '🔎 Pensalo así: ' + terms.join(' + ') + ' = ' + c.correct + '  (sumar ' + c.a + ', ' + c.b + ' veces)';
+    hintText.classList.remove('hidden');
+  }
+
+  hintBtn.addEventListener('click', function(){
+    if(hintText.classList.contains('hidden')){
+      showHint();
+    } else {
+      hintText.classList.add('hidden');
+    }
+  });
+
+  function launchLevelUp(){
+    state.level++;
+    state.fuel = 0;
+    fuelFill.style.width = '0%';
+    levelDisplay.textContent = state.level;
+    levelUpText.textContent = '¡Nivel ' + state.level + '!';
+    levelUpOverlay.classList.remove('hidden');
+    setTimeout(function(){
+      levelUpOverlay.classList.add('hidden');
+      nextQuestion();
+    }, 1400);
+  }
+
+  function updateStatsUI(){
+    correctTotalEl.textContent = state.correctTotal;
+    rachaActualEl.textContent = state.racha;
+    mejorRachaEl.textContent = state.mejorRacha;
+  }
+
+  function spawnConfetti(){
+    var colors = ['#ffc93c','#4ecdc4','#ff6b6b','#c2b6ff'];
+    for(var i=0;i<14;i++){
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = (10 + Math.random()*80) + '%';
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.animationDelay = (Math.random()*0.15) + 's';
+      questionCard.appendChild(piece);
+      (function(p){ setTimeout(function(){ p.remove(); }, 1100); })(piece);
+    }
+  }
+
+  buildPlanets();
+  updateStatsUI();
+})();
+</script>
+</body>
+</html>

@@ -6,8 +6,8 @@ const PRECIO_SUSCRIPCION = "$ 10.000";
 const MONEDA             = "ARS / mes";
 const DURACION_DIAS      = 30;
 const LINKS_PAGO = {
-    "basico-mp":  "https://mpago.li/2VeUpTC",     // Plan Básico $7.000
-    "premium-mp": "https://mpago.li/1dLanPi",     // Plan Premium $12.000
+    "basico-mp":  "https://mpago.li/2VeUpTC",     // Plan Básico — link fijo viejo de $7.000 (no se usa: el pago se genera con crear-preferencia a $8.000)
+    "premium-mp": "https://mpago.li/1dLanPi",     // Plan Premium (link viejo $12.000 — revisar, ahora es $16.000)
 };
 
 const SEG = { SESION_TIMEOUT_MIN: 30, PASS_MIN_LENGTH: 6 };
@@ -195,6 +195,14 @@ function nivelPermite(nivelUsuario, nivelRequerido) {
 }
 // "¿tiene algún plan pago activo?" (básico o premium) — se usa para mensajes generales
 function esPremiumActivo(p) { return nivelDe(p) !== "gratis"; }
+// Plan a Medida: perfiles.modulos = { "algebra": "2026-11-13T...", "pizarra": "..." }
+function moduloActivo(p, modulo) {
+    const h = p?.modulos?.[modulo];
+    return !!h && new Date(h).getTime() > Date.now();
+}
+function modulosActivos(p) {
+    return Object.entries(p?.modulos || {}).filter(([, h]) => new Date(h).getTime() > Date.now()).map(([id, hasta]) => ({ id, hasta }));
+}
 
 // Verificación server-side del plan
 async function verificarPremiumServer() {
@@ -336,14 +344,16 @@ function actualizarNavbar() {
     const navMisArchivos = document.getElementById("nav-mis-archivos-link");
     const navHistorias = document.getElementById("nav-historias-link");
 
-    if (lbl) lbl.textContent = p ? (p.username || "Mi cuenta") : "Ingresar";
-    if (navAdmin)  navAdmin.style.display  = (p?.rol === "admin") ? "inline" : "none";
-    if (navSalir)  navSalir.style.display  = p ? "inline" : "none";
-    if (navPerfil) navPerfil.style.display = p ? "inline" : "none";
-    if (navMisArchivos) navMisArchivos.style.display = p ? "inline" : "none";
-    if (navHistorias) navHistorias.style.display = p ? "inline" : "none";
+    if (lbl) lbl.textContent = p ? ("👤 " + (p.username || "Mi cuenta")) : "Ingresar";
+    // "" = deja que el CSS decida (dentro del menú desplegable de la cuenta)
+    if (navAdmin)  navAdmin.style.display  = (p?.rol === "admin") ? "" : "none";
+    if (navSalir)  navSalir.style.display  = p ? "" : "none";
+    if (navPerfil) navPerfil.style.display = p ? "" : "none";
+    if (navMisArchivos) navMisArchivos.style.display = "none";
+    if (navHistorias) navHistorias.style.display = p ? "" : "none";
+    document.getElementById("nav-cuenta")?.classList.toggle("con-sesion", !!p);
     const navDiag = document.getElementById("nav-diagnostico-link");
-    if (navDiag) navDiag.style.display = "inline"; // siempre visible
+    if (navDiag) navDiag.style.display = ""; // siempre visible
     const diagSection = document.getElementById("diagnostico");
     if (diagSection) diagSection.style.display = "block"; // siempre visible
     if (navPuntos) {
@@ -727,6 +737,8 @@ async function subirContenido() {
 }
 
 async function subirMiArchivo() {
+    // Desactivado: solo el admin sube archivos (desde el panel de administración).
+    return;
     mostrarError("mu-error",""); mostrarExito("mu-success","");
     if (!appState.perfilActual) return mostrarError("mu-error","Necesitás iniciar sesión.");
     await _subirArchivoComun({
@@ -996,6 +1008,7 @@ async function usuarioVerArchivo(id) {
     const requerido = a.plan_minimo || (a.seccion === "premium" ? "premium" : "gratis");
     if (requerido !== "gratis") {
         if (nivelPermite(nivelDe(appState.perfilActual), requerido)) return verContenido(id);
+        if (a.materia && moduloActivo(appState.perfilActual, a.materia)) return verContenido(id);
         const vistos = appState.perfilActual.vistos || [];
         if (vistos.includes(id)) return verContenido(id);
         if (vistos.length >= MAX_ARCHIVOS_GRATIS) return abrirModalPago();
@@ -1051,6 +1064,12 @@ function renderSeccionPremium() {
             <h3 style="color:#fde68a;margin:0 0 6px">⭐ Sos usuario ${nombreNivel}</h3>
             <p style="color:rgba(255,255,255,.9);margin:0">Te quedan <strong>${diasRestantes(p)} días</strong> de acceso ${nivel === "premium" ? "completo" : "Básico"} (hasta ${formatearFecha(p.plan_hasta)}).</p>
         </div>`;
+    } else if (modulosActivos(p).length) {
+        const nombres = modulosActivos(p).map(m => (window.MA_PLANES?.MODULOS.find(x => x.id === m.id)?.nombre || m.id) + " (hasta " + formatearFecha(m.hasta) + ")");
+        banner = `<div class="premium-banner-estado banner-activo">
+            <h3 style="color:#5eead4;margin:0 0 6px">🧩 Tenés un Plan a Medida</h3>
+            <p style="color:rgba(255,255,255,.9);margin:0">${nombres.join(" · ")}</p>
+        </div>`;
     } else {
         const v = (p.vistos||[]).length;
         banner = `<div class="premium-banner-estado banner-gratis">
@@ -1059,53 +1078,15 @@ function renderSeccionPremium() {
         </div>`;
     }
 
-    // === Cards de los 3 planes (siempre visibles en la home) ===
+    // === Cards de los 4 planes + Plan a Medida (planes.js) ===
     const planesHtml = `
-    <div class="planes-grid planes-home">
-        <div class="plan-card">
-            <div class="plan-tag" style="background:#94a3b8">GRATIS</div>
-            <h3>Plan Gratis</h3>
-            <p class="plan-precio">$ 0</p>
-            <p class="plan-sub">Para siempre</p>
-            <ul class="plan-features">
-                <li>✅ 3 archivos públicos por semana</li>
-                <li>✅ 3 usos de calculadora/graficadora por semana</li>
-                <li>✅ Acceso al ranking</li>
-                <li>⏱️ Renovación cada 7 días</li>
-                <li>❌ Sin archivos premium</li>
-                <li>❌ Sin subir archivos personales</li>
-            </ul>
-            <button type="button" class="plan-btn plan-btn-gratis" disabled>Plan por defecto</button>
+    ${window.MA_PLANES ? window.MA_PLANES.tarjetasHtml("home") : ""}
+    <div class="plan-calc-suelta" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:2px dashed #2563eb;border-radius:12px;padding:16px;margin:16px 0">
+        <div>
+            <h4 style="margin:0 0 4px;font-size:16px">🧮 Calculadora paso a paso — 7 días</h4>
+            <p style="margin:0;font-size:13px;color:#64748b">Ilimitada por 7 días, sin cambiar tu plan. $ 5.000 (gratis: 3 ejercicios por día).</p>
         </div>
-        <div class="plan-card plan-card-popular">
-            <div class="plan-tag" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">BÁSICO</div>
-            <h3>Plan Básico</h3>
-            <p class="plan-precio">$ 7.000</p>
-            <p class="plan-sub">23 días de acceso</p>
-            <p class="plan-contexto">Menos que una clase particular</p>
-            <ul class="plan-features">
-                <li>✅ <strong>Acceso ilimitado</strong> a archivos premium</li>
-                <li>✅ <strong>Calculadora/graficadora sin límite</strong></li>
-                <li>✅ Sistema de puntos y ranking</li>
-                <li>❌ No podés subir archivos personales</li>
-            </ul>
-            <button type="button" class="plan-btn plan-btn-basico" onclick="iniciarPagoMP('basico', this)">💳 Pagar con MercadoPago</button>
-        </div>
-        <div class="plan-card plan-card-premium">
-            <div class="plan-tag" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">⭐ PREMIUM</div>
-            <h3>Plan Premium</h3>
-            <p class="plan-precio">$ 12.000</p>
-            <p class="plan-sub">30 días de acceso completo</p>
-            <p class="plan-contexto">Menos de $400 por día</p>
-            <ul class="plan-features">
-                <li>✅ <strong>Todo lo del plan Básico</strong></li>
-                <li>✅ <strong>30 días</strong> (vs 23 del básico)</li>
-                <li>✅ <strong>Cargar tus propios PDFs y videos</strong></li>
-                <li>✅ Carpeta personal ilimitada</li>
-                <li class="feature-destacada">✅ <strong>Soporte personalizado</strong> — consultás dudas directamente con el profe</li>
-            </ul>
-            <button type="button" class="plan-btn plan-btn-premium" onclick="iniciarPagoMP('premium', this)">💳 Pagar con MercadoPago</button>
-        </div>
+        <button type="button" class="plan-btn plan-btn-basico" style="max-width:260px" onclick="iniciarPagoMP('calculadora', this)">💳 Comprar por $ 5.000</button>
     </div>
     <div class="pago-timeline">
         <div class="pago-step"><span class="pago-step-icon">💳</span><span class="pago-step-text">Pagás</span></div>
@@ -1117,6 +1098,7 @@ function renderSeccionPremium() {
     `;
 
     info.innerHTML = banner + planesHtml;
+    if (window.pmInit) window.pmInit("home");
 
     // === Grid de contenido premium (solo si hay) ===
     const premium = appState.archivosPublicos.filter(a => (a.plan_minimo || "gratis") !== "gratis");
@@ -1418,7 +1400,7 @@ document.addEventListener("contextmenu", function(e){
 }, true);
 
 
-async function iniciarPagoMP(plan, btn) {
+async function iniciarPagoMP(plan, btn, modulos) {
     // Verificar que el usuario está logueado
     if (!appState.perfilActual) {
         mostrarToast("Iniciá sesión primero para poder pagar", "warn");
@@ -1431,7 +1413,7 @@ async function iniciarPagoMP(plan, btn) {
 
     try {
         // Intentar generar link dinámico (asocia pago → usuario automáticamente)
-        const res = await window.MA_SUPABASE.sbCrearPreferencia(plan);
+        const res = await window.MA_SUPABASE.sbCrearPreferencia(plan, modulos);
 
         if (res.init_point) {
             window.open(res.init_point, "_blank", "noopener");
