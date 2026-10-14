@@ -154,7 +154,14 @@
     var r = await sb.auth.signUp({
       email: email, password: pass,
       options: {
-        data: { username: nombre, nombre_completo: nombre, origen: "calculadora" },
+        data: (function () {
+          var d = { username: nombre, nombre_completo: nombre, origen: "calculadora" };
+          try {   // código de quien lo invitó (link matematicasactivas.com/?ref=CODIGO)
+            var r = JSON.parse(localStorage.getItem("ma-ref") || "null");
+            if (r && r.c && Date.now() - r.t < 30 * 86400000) d.ref = r.c;
+          } catch (e) {}
+          return d;
+        })(),
         emailRedirectTo: destino
       }
     });

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"><script src="errores.js?v=1"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matemáticas Activas — Plataforma educativa de matemáticas</title>
     <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios, juegos y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos.">
@@ -104,6 +104,7 @@
     <link rel="stylesheet" href="styles.css?v=15">
     <link rel="stylesheet" href="planes.css?v=3">
     <link rel="stylesheet" href="nav.css?v=2">
+    <link rel="stylesheet" href="cuenta-extra.css?v=1">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -619,6 +620,9 @@
                 <button type="button" class="admin-tab" onclick="adminTab('subir')">⬆️ Subir</button>
                 <button type="button" class="admin-tab" onclick="adminTab('ejercicios')">🎯 Ejercicios</button>
                 <button type="button" class="admin-tab" onclick="adminTab('estadisticas')">📊 Estadísticas</button>
+                <button type="button" class="admin-tab" onclick="adminTab('errores')">🐞 Errores</button>
+                <button type="button" class="admin-tab" onclick="adminTab('cupones')">🎟️ Cupones</button>
+                <button type="button" class="admin-tab" onclick="adminTab('correos')">✉️ Correos</button>
             </div>
             <div id="admin-tab-archivos">
                 <div class="tab-toolbar">
@@ -652,6 +656,9 @@
             </div>
             <div id="admin-tab-ejercicios" style="display:none"><div id="admin-ejercicios-lista"></div></div>
             <div id="admin-tab-estadisticas" style="display:none"><div id="admin-estadisticas-cont"><p style="text-align:center;color:#64748b;padding:24px">Cargando...</p></div></div>
+            <div id="admin-tab-errores" style="display:none"><div id="admin-errores-cont"></div></div>
+            <div id="admin-tab-cupones" style="display:none"><div id="admin-cupones-cont"></div></div>
+            <div id="admin-tab-correos" style="display:none"><div id="admin-correos-cont"></div></div>
         </div>
     </div>
 
@@ -760,10 +767,12 @@
     });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=13"></script>
+    <script src="supabase-config.js?v=14"></script>
     <script src="nav.js?v=1"></script>
     <script src="planes.js?v=3"></script>
-    <script src="scripts.js?v=17"></script>
+    <script src="scripts.js?v=18"></script>
+    <script src="cuenta-extra.js?v=1"></script>
+    <script src="admin-extra.js?v=1"></script>
     <script>
       (function(){ var c=document.getElementById("modal-planes"); if(c && window.MA_PLANES){ c.innerHTML=window.MA_PLANES.tarjetasHtml("modal"); window.pmInit("modal"); } })();
     </script>

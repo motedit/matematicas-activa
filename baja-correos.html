@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><script src="errores.js?v=1"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Darse de baja — Matemáticas Activas</title>
+    <link rel="icon" href="img/descarga.png" type="image/png">
+    <style>
+      :root{--tinta:#0f172a;--gris:#475569;--azul:#2563eb;--fondo:#f1f5f9;--tarjeta:#fff;--linea:#e2e8f0}
+      @media (prefers-color-scheme:dark){:root{--tinta:#e2e8f0;--gris:#94a3b8;--azul:#60a5fa;--fondo:#0b1220;--tarjeta:#111b2e;--linea:#1e293b}}
+      *{box-sizing:border-box}
+      body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--fondo);color:var(--tinta);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6}
+      .tarjeta{width:100%;max-width:460px;background:var(--tarjeta);border:1px solid var(--linea);border-radius:18px;padding:32px 28px;text-align:center;box-shadow:0 10px 30px #0f172a14}
+      .icono{font-size:44px;line-height:1;margin-bottom:12px}
+      h1{font-size:22px;margin:0 0 10px}
+      p{margin:0 0 14px;color:var(--gris);font-size:15px}
+      a.boton,button{display:inline-block;border:0;cursor:pointer;background:var(--azul);color:#fff;font:inherit;font-weight:700;padding:12px 22px;border-radius:12px;text-decoration:none;margin:6px 4px 0}
+      button.secundario{background:transparent;color:var(--azul);border:1px solid var(--linea)}
+      [hidden]{display:none!important}
+    </style>
+</head>
+<body>
+<main class="tarjeta" aria-live="polite">
+    <div id="paso-confirmar">
+        <div class="icono" aria-hidden="true">✉️</div>
+        <h1>¿Dejar de recibir novedades?</h1>
+        <p>No te vamos a mandar más correos con novedades ni promociones. Los avisos importantes de tu cuenta (por ejemplo, cuando está por vencer un plan que pagaste) te siguen llegando.</p>
+        <button type="button" id="confirmar">Sí, darme de baja</button>
+        <a class="boton" href="index.html" style="background:transparent;color:var(--azul);border:1px solid var(--linea)">Mejor no</a>
+    </div>
+    <div id="paso-listo" hidden>
+        <div class="icono" aria-hidden="true">✅</div>
+        <h1>Listo, te dimos de baja</h1>
+        <p>Ya no vas a recibir correos de novedades. Si cambiás de idea, podés volver a activarlos desde <b>Mi perfil</b>.</p>
+        <a class="boton" href="index.html">Ir a Matemáticas Activas</a>
+    </div>
+    <div id="paso-error" hidden>
+        <div class="icono" aria-hidden="true">⚠️</div>
+        <h1>No pudimos darte de baja</h1>
+        <p id="texto-error">El link no es válido o está incompleto. Podés desactivar los correos desde <b>Mi perfil → Correos</b>.</p>
+        <a class="boton" href="index.html">Ir a Matemáticas Activas</a>
+    </div>
+</main>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var u = q.get("u") || "", t = q.get("t") || "";
+  function mostrar(id) {
+    ["paso-confirmar", "paso-listo", "paso-error"].forEach(function (x) { document.getElementById(x).hidden = x !== id; });
+  }
+  if (!/^[0-9a-f-]{36}$/i.test(u) || !t) { mostrar("paso-error"); return; }
+  document.getElementById("confirmar").addEventListener("click", function () {
+    var b = this; b.disabled = true; b.textContent = "Un momento…";
+    fetch("https://yidrpuizgtqpswefwdaa.supabase.co/functions/v1/correos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accion: "baja", u: u, t: t })
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok && d.ok }; }); })
+      .then(function (r) { mostrar(r.ok ? "paso-listo" : "paso-error"); })
+      .catch(function () {
+        document.getElementById("texto-error").textContent = "No hay conexión. Probá de nuevo en un rato.";
+        mostrar("paso-error");
+      });
+  });
+})();
+</script>
+</body>
+</html>

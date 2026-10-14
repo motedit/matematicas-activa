@@ -1,0 +1,52 @@
+# Revisión automática de Matemáticas Activas.
+# Cada vez que se sube algo a "main" revisa el sitio. Si encuentra un error grave
+# (motores públicos, claves secretas, archivos faltantes, JSON/JS rotos) marca la
+# publicación en rojo y te llega un mail de GitHub.
+# Cuando la variable del repositorio PUBLICAR_CON_REVISION vale "si", además el sitio
+# solo se publica si la revisión salió bien (si falla, queda online la versión anterior).
+name: Revisar y publicar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    name: Revisar el sitio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Revisión
+        run: node .github/revision/revisar-sitio.mjs
+
+  publicar:
+    name: Publicar en matematicasactivas.com
+    needs: revisar
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PUBLICAR_CON_REVISION == 'si'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -18,7 +18,9 @@ async function sbRegistro({ email, password, username, nombreCompleto }) {
     const { data, error } = await sb.auth.signUp({
         email, password,
         options: {
-            data: { username, nombre_completo: nombreCompleto || null },
+            // ref = código de quien lo invitó (link matematicasactivas.com/?ref=CODIGO)
+            data: Object.assign({ username, nombre_completo: nombreCompleto || null },
+                (window.MA_REF && window.MA_REF()) ? { ref: window.MA_REF() } : {}),
             emailRedirectTo: window.location.origin + window.location.pathname
         }
     });
@@ -655,7 +657,7 @@ async function sbObtenerProgresoMateria(materia) {
 }
 
 // ===================== PAGOS MERCADOPAGO =========================
-async function sbCrearPreferencia(plan, modulos) {
+async function sbCrearPreferencia(plan, modulos, cupon) {
     const session = await sbSesion();
     if (!session?.access_token) return { error: "No autenticado" };
     try {
@@ -666,7 +668,7 @@ async function sbCrearPreferencia(plan, modulos) {
                 "Authorization": "Bearer " + session.access_token,
                 "apikey": SUPABASE_ANON_KEY,
             },
-            body: JSON.stringify(modulos && modulos.length ? { plan, modulos } : { plan }),
+            body: JSON.stringify(Object.assign({ plan }, modulos && modulos.length ? { modulos } : {}, cupon ? { cupon } : {})),
         });
         const data = await res.json();
         if (!res.ok) return { error: data.error || "Error creando preferencia" };

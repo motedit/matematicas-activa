@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"><script src="errores.js?v=1"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Política de Privacidad — Matemáticas Activas</title>
     <meta name="description" content="Política de privacidad de Matemáticas Activas, plataforma educativa argentina conforme a la Ley 25.326.">
@@ -26,7 +26,7 @@
 <div class="legal-wrap">
     <a href="index.html" class="legal-back">← Volver al inicio</a>
     <h1>Política de Privacidad</h1>
-    <p class="meta">Última actualización: 19 de mayo de 2026 · Vigente</p>
+    <p class="meta">Última actualización: 14 de octubre de 2026 · Vigente</p>
 
     <div class="alert">
         <p><strong>Resumen rápido:</strong> Guardamos solo los datos mínimos para que la plataforma funcione (email, nombre de usuario y contraseña cifrada). No vendemos ni compartimos tus datos. Podés eliminar tu cuenta cuando quieras.</p>
@@ -45,6 +45,9 @@
         <li><strong>Contraseña:</strong> almacenada únicamente como hash criptográfico (bcrypt) en los servidores de Supabase. Nadie, ni siquiera nosotros, puede recuperarla en texto plano.</li>
         <li><strong>Datos de uso:</strong> archivos vistos, puntos acumulados, racha de visitas, fecha de último login.</li>
         <li><strong>Comentarios:</strong> los textos que publiques son visibles para otros usuarios autenticados.</li>
+        <li><strong>Pagos:</strong> fecha, plan, monto, número de operación de MercadoPago y, si usaste uno, el cupón de descuento. Podés ver tu historial en <em>Mi perfil</em>.</li>
+        <li><strong>Invitaciones:</strong> si te registraste con el link de un amigo, guardamos quién te invitó para aplicarte el descuento y darle su premio.</li>
+        <li><strong>Errores técnicos:</strong> si algo falla en la página, se registra automáticamente el mensaje de error, la página y el tipo de navegador, para poder arreglarlo. No incluye lo que escribís ni datos personales, y se borra a los 30 días.</li>
     </ul>
 
     <h3>Datos que NO recabamos</h3>
@@ -61,9 +64,11 @@
         <li>Permitirte iniciar sesión y mantener tu cuenta.</li>
         <li>Gestionar tu suscripción premium si la contratás.</li>
         <li>Mostrarte tu progreso, puntos y posición en el ranking.</li>
-        <li>Enviarte emails operativos (recuperación de contraseña).</li>
+        <li>Enviarte emails operativos: recuperación de contraseña y aviso cuando tu plan está por vencer.</li>
+        <li>Enviarte, unos días después de registrarte y de vez en cuando, novedades y descuentos de Matemáticas Activas. <strong>Podés darte de baja con un clic</strong> desde el link que figura en cada correo o en <em>Mi perfil → Notificaciones por email</em>.</li>
+        <li>Detectar y corregir errores del sitio.</li>
     </ul>
-    <p><strong>No utilizamos tus datos para publicidad, marketing externo ni venta a terceros.</strong></p>
+    <p><strong>No vendemos tus datos ni los usamos para publicidad de terceros.</strong></p>
 
     <h2>5. Conservación de los datos</h2>
     <p>Tus datos se mantienen activos mientras tu cuenta exista. Si solicitás la eliminación de tu cuenta (escribiéndonos a <a href="mailto:marcos_diaz_97@hotmail.com">marcos_diaz_97@hotmail.com</a> o a través del botón "Eliminar cuenta" cuando esté disponible), todos tus datos personales son borrados en un plazo máximo de 30 días, salvo los registros contables que la ley argentina obliga a conservar.</p>
@@ -87,7 +92,7 @@
         <li>Conexión HTTPS obligatoria.</li>
         <li>Tokens de sesión JWT con expiración automática y renovación.</li>
         <li>Políticas de Row Level Security (RLS) a nivel de base de datos: cada usuario solo puede ver y modificar sus propios datos.</li>
-        <li>Backups diarios automatizados.</li>
+        <li>Copias de seguridad semanales de la base de datos, cifradas.</li>
         <li>Bloqueo de sesión por inactividad.</li>
     </ul>
     <p>A pesar de estas medidas, ningún sistema es 100% seguro. En caso de incidente de seguridad notificaremos a los usuarios afectados y a la AAIP dentro de los plazos legales.</p>
@@ -98,6 +103,7 @@
         <li><strong>Supabase Inc.</strong> (Estados Unidos / Brasil) — base de datos y autenticación. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Política de privacidad</a></li>
         <li><strong>GitHub Inc.</strong> (Estados Unidos) — hosting del frontend estático. <a href="https://docs.github.com/es/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Política de privacidad</a></li>
         <li><strong>MercadoPago / Naranja X</strong> — procesan los pagos. Sus políticas de privacidad se aplican al momento del pago.</li>
+        <li><strong>Resend Inc.</strong> (Estados Unidos) — envío de los correos (avisos y novedades). Solo recibe tu email, tu nombre y el contenido del correo. <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">Política de privacidad</a></li>
     </ul>
 
     <h2>9. Menores de edad</h2>

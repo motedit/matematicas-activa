@@ -1080,6 +1080,7 @@ function renderSeccionPremium() {
 
     // === Cards de los 4 planes + Plan a Medida (planes.js) ===
     const planesHtml = `
+    ${window.MA_cajaCuponHtml ? window.MA_cajaCuponHtml() : ""}
     ${window.MA_PLANES ? window.MA_PLANES.tarjetasHtml("home") : ""}
     <div class="plan-calc-suelta" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:2px dashed #2563eb;border-radius:12px;padding:16px;margin:16px 0">
         <div>
@@ -1099,6 +1100,7 @@ function renderSeccionPremium() {
 
     info.innerHTML = banner + planesHtml;
     if (window.pmInit) window.pmInit("home");
+    if (window.MA_pintarCupones) window.MA_pintarCupones();
 
     // === Grid de contenido premium (solo si hay) ===
     const premium = appState.archivosPublicos.filter(a => (a.plan_minimo || "gratis") !== "gratis");
@@ -1409,18 +1411,23 @@ async function iniciarPagoMP(plan, btn, modulos) {
     }
 
     // Deshabilitar botón mientras se genera el link
+    const textoBoton = btn ? btn.textContent : "";
     if (btn) { btn.disabled = true; btn.textContent = "⏳ Generando link de pago..."; }
 
     try {
         // Intentar generar link dinámico (asocia pago → usuario automáticamente)
-        const res = await window.MA_SUPABASE.sbCrearPreferencia(plan, modulos);
+        const cupon = window.MA_cuponPara ? window.MA_cuponPara(plan) : null;
+        const res = await window.MA_SUPABASE.sbCrearPreferencia(plan, modulos, cupon);
 
         if (res.init_point) {
             window.open(res.init_point, "_blank", "noopener");
-            mostrarToast("Tu plan se activará automáticamente cuando se confirme el pago ✅", "ok");
+            const ahorro = res.descuento ? ` Pagás ${"$ " + Number(res.precio).toLocaleString("es-AR")} (−${res.descuento}%).` : "";
+            mostrarToast("Tu plan se activará automáticamente cuando se confirme el pago ✅" + ahorro, "ok");
         } else {
             console.warn("Preferencia fallida:", res.error);
-            mostrarToast("Error generando el link de pago. Probá de nuevo.", "warn");
+            const esCupon = /cup[oó]n/i.test(res.error || "");
+            mostrarToast(esCupon ? res.error : "Error generando el link de pago. Probá de nuevo.", "warn");
+            if (esCupon && window.MA_quitarCupon) window.MA_quitarCupon();
         }
     } catch (err) {
         console.error("Error en pago:", err);
@@ -1428,7 +1435,7 @@ async function iniciarPagoMP(plan, btn, modulos) {
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.textContent = "💳 Pagar con MercadoPago";
+            btn.textContent = textoBoton || "💳 Pagar con MercadoPago";
         }
     }
 }
