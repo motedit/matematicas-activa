@@ -86,7 +86,19 @@ a{color:inherit}
 .pie{background:var(--navy);color:rgba(255,255,255,.7);text-align:center;padding:28px 20px;font-size:14px}
 .pie a{color:#fff;margin:0 8px}
 
-@media(max-width:900px){.herr,.plan{grid-template-columns:1fr}.pasos,.recursos{grid-template-columns:1fr}}
+.rec-tit{font-size:16px;margin:18px 0 10px;color:var(--ink)}
+.micurso{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center;background:linear-gradient(135deg,#0f172a,#134e4a);color:#fff;border-radius:22px;padding:32px}
+.micurso h2{text-align:left;color:#fff;margin:8px 0 10px}
+.micurso p{color:rgba(255,255,255,.85);margin-bottom:10px}
+.micurso ul{margin:0 0 12px 18px;color:rgba(255,255,255,.85);font-size:14.5px;display:flex;flex-direction:column;gap:4px}
+.mc-tag{display:inline-block;background:#facc15;color:#422006;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
+.mc-demo{background:#fff;color:var(--ink);border-radius:16px;padding:14px;box-shadow:0 16px 40px rgba(0,0,0,.3)}
+.mc-fila{display:grid;grid-template-columns:1.4fr .8fr 1.3fr;gap:8px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
+.mc-fila span:nth-child(2){text-align:center}
+.mc-fila i{display:inline-block;height:8px;border-radius:99px;margin-right:6px;vertical-align:middle;max-width:60px}
+.mc-cab{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft);font-weight:700}
+.mc-nota{font-size:11.5px;color:var(--muted,#94a3b8);text-align:right;margin-top:6px}
+@media(max-width:900px){.herr,.plan,.micurso{grid-template-columns:1fr}.pasos,.recursos{grid-template-columns:1fr}.micurso{padding:22px}}
 @media(max-width:480px){.hero{padding:44px 16px 52px}.seccion{padding:44px 16px}.h-card,.plan{padding:20px}}
 </style>
 </head>
@@ -98,6 +110,7 @@ a{color:inherit}
     <nav aria-label="Navegación">
       <a class="volver" href="../index.html">← Inicio</a>
       <a href="#herramientas">Herramientas</a>
+      <a href="mi-curso.html">Mi curso</a>
       <a href="#recursos">Recursos</a>
       <a class="cta" href="#plan">Plan docente</a>
     </nav>
@@ -165,6 +178,30 @@ a{color:inherit}
   </div>
 </section>
 
+<section class="seccion" id="mi-curso" style="padding-top:0">
+  <div class="micurso">
+    <div class="mc-txt">
+      <span class="mc-tag">NUEVO</span>
+      <h2>📊 Mi curso: mirá el progreso de tus alumnos</h2>
+      <p>Creá tu curso, compartí el enlace por WhatsApp o el aula virtual y mirá qué temas practicó cada alumno en la Calculadora Inteligente: ejercicios resueltos, respuestas comprobadas y porcentaje de aciertos por tema.</p>
+      <ul>
+        <li>Los alumnos no necesitan crear cuenta: abren tu enlace y escriben su nombre.</li>
+        <li>Vista por alumno, por tema y última actividad. Descargá todo en CSV.</li>
+        <li>Detectá rápido qué temas hay que reforzar antes de la evaluación.</li>
+      </ul>
+      <a class="btn btn-teal" href="mi-curso.html" style="width:auto;margin-top:6px">Crear mi curso →</a>
+    </div>
+    <div class="mc-demo" aria-hidden="true">
+      <div class="mc-fila mc-cab"><span>Alumno</span><span>Resueltos</span><span>Aciertos</span></div>
+      <div class="mc-fila"><span>Camila S.</span><span>18</span><span><i style="width:85%;background:#16a34a"></i>85%</span></div>
+      <div class="mc-fila"><span>Lucas M.</span><span>12</span><span><i style="width:62%;background:#d97706"></i>62%</span></div>
+      <div class="mc-fila"><span>Valentina R.</span><span>9</span><span><i style="width:90%;background:#16a34a"></i>90%</span></div>
+      <div class="mc-fila"><span>Tomás G.</span><span>5</span><span><i style="width:35%;background:#dc2626"></i>35%</span></div>
+      <p class="mc-nota">Ejemplo ilustrativo</p>
+    </div>
+  </div>
+</section>
+
 <section class="seccion" style="padding-top:10px">
   <h2>Una clase en 3 pasos</h2>
   <p class="sub">Así podés usar las herramientas juntas.</p>
@@ -177,8 +214,16 @@ a{color:inherit}
 
 <section class="seccion" id="recursos" style="padding-top:10px">
   <h2>Recursos para descargar</h2>
-  <p class="sub">Material gratuito para usar en el aula.</p>
+  <p class="sub">Material gratuito para planificar y usar en el aula. Los documentos de Word se pueden editar.</p>
+  <h3 class="rec-tit">📘 Planificaciones</h3>
   <div class="recursos">
+    <a class="rec" href="recursos/planificaciones/Plantilla-Secuencia-Didactica.docx" download><span class="ri">🗂️</span><span><b>Plantilla de secuencia didáctica</b><small>Word editable · 11 secciones con guía de uso</small></span></a>
+    <a class="rec" href="recursos/planificaciones/Secuencia-Sistemas-de-Ecuaciones-3er-anio.docx" download><span class="ri">🧩</span><span><b>Ejemplo: Sistemas de ecuaciones</b><small>3.er año · 4 clases · Álgebra y funciones</small></span></a>
+    <a class="rec" href="recursos/planificaciones/Secuencia-Funcion-Exponencial-4to-5to-anio.docx" download><span class="ri">📈</span><span><b>Ejemplo: Función exponencial</b><small>4.° / 5.° año · 4 clases · Álgebra y funciones</small></span></a>
+  </div>
+  <h3 class="rec-tit">🧰 Para el aula</h3>
+  <div class="recursos">
+    <a class="rec" href="recursos/Plantilla-Seguimiento-Alumnos.xlsx" download><span class="ri">📊</span><span><b>Planilla de seguimiento de alumnos</b><small>Excel · notas, promedio y niveles de Bloom</small></span></a>
     <a class="rec" href="recursos/hoja_milimetrada_A4.pdf" download><span class="ri">📄</span><span><b>Hoja milimetrada A4</b><small>PDF listo para imprimir · gratis</small></span></a>
     <a class="rec" href="../calculadora/temas/index.html"><span class="ri">📝</span><span><b>Ejercicios por tema</b><small>Para armar guías y tareas</small></span></a>
     <a class="rec" href="https://wa.me/5493827654154?text=Hola%21%20Soy%20docente%20y%20quiero%20consultar%20por%20Matem%C3%A1ticas%20Activas." target="_blank" rel="noopener"><span class="ri">💬</span><span><b>¿Sos institución?</b><small>Consultanos por precios para escuelas</small></span></a>

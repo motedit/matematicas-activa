@@ -10,7 +10,7 @@ const LINKS_PAGO = {
     "premium-mp": "https://mpago.li/1dLanPi",     // Plan Premium (link viejo $12.000 — revisar, ahora es $16.000)
 };
 
-const SEG = { SESION_TIMEOUT_MIN: 30, PASS_MIN_LENGTH: 6 };
+const SEG = { SESION_TIMEOUT_MIN: 60, PASS_MIN_LENGTH: 6 };  // cierre de sesión tras 1 hora sin actividad
 const MAX_ARCHIVOS_GRATIS  = 3;  // Por semana (7 días), se reinicia cada lunes
 const PERIODO_GRATIS_DIAS   = 7;   // días antes de reiniciar la cuota
 const MAX_FILE_SIZE       = 2 * 1024 * 1024 * 1024; // 2 GB (requiere Supabase Pro)

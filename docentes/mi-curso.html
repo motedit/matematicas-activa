@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi curso · Matemáticas Activas</title>
+<meta name="description" content="Panel para docentes: creá tus cursos, compartí el código con tus alumnos y mirá qué temas practicaron en la Calculadora Inteligente.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://matematicasactivas.com/docentes/mi-curso.html">
+<link rel="icon" href="../img/descarga.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0f172a;--ink:#0f172a;--soft:#475569;--muted:#94a3b8;--line:#e2e8f0;--bg:#f8fafc;--card:#fff;--teal:#0d9488;--teal2:#0e7490;--tealbg:#f0fdfa;--ok:#16a34a;--mid:#d97706;--bad:#dc2626}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;min-height:100vh}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+.barra{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff}
+.barra-in{max-width:1180px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:12px}
+.marca{display:flex;align-items:center;gap:8px;font-family:Poppins,sans-serif;font-weight:600;font-size:16px;text-decoration:none;color:#fff;white-space:nowrap}
+.marca .sig{font-size:22px;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.marca strong{color:#60a5fa}
+.barra nav{margin-left:auto;display:flex;gap:4px;align-items:center}
+.barra nav a,.barra nav button{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:7px 12px;border-radius:8px;background:none;border:0;white-space:nowrap}
+.barra nav a:hover,.barra nav button:hover{background:rgba(255,255,255,.1);color:#fff}
+#quien{font-size:13px;color:#5eead4}
+@media(max-width:640px){.marca span:last-child{display:none}#quien{display:none}}
+
+main{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+h1{font-family:Poppins,sans-serif;font-size:clamp(24px,4vw,32px);margin-bottom:4px}
+.sub{color:var(--soft);margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;border:0;font-weight:600;font-size:14px;text-decoration:none}
+.btn-teal{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff}
+.btn-claro{background:#f1f5f9;color:var(--ink)}
+.btn-borde{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-rojo{background:#fef2f2;color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+input,select{font:inherit;width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+input:focus,select:focus{outline:none;border-color:var(--teal)}
+label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--soft)}
+.msg{font-size:13.5px;margin-top:10px;min-height:1.2em}
+.msg.error{color:var(--bad)}.msg.ok{color:var(--ok)}
+[hidden]{display:none!important}
+
+/* ingreso */
+.ingreso{max-width:440px;margin:30px auto}
+.ingreso form{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+
+/* lista de cursos */
+.layout{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.cursos-lista{display:flex;flex-direction:column;gap:8px;margin:12px 0 16px}
+.curso-item{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+.curso-item:hover{border-color:#5eead4}
+.curso-item.activo{border-color:var(--teal);background:var(--tealbg)}
+.curso-item b{font-size:15px}
+.curso-item small{color:var(--soft);font-size:12.5px}
+.codigo{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:.5px;background:#0f172a;color:#5eead4;padding:2px 8px;border-radius:6px;font-size:12.5px}
+.vacio{color:var(--muted);font-size:14px;text-align:center;padding:16px 8px}
+.nuevo form{display:flex;flex-direction:column;gap:10px}
+.nuevo h3{font-size:15px;margin-bottom:8px}
+
+/* detalle */
+.det-cab{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}
+.det-cab h2{font-family:Poppins,sans-serif;font-size:22px}
+.det-cab .esc{color:var(--soft);font-size:14px}
+.compartir{background:var(--tealbg);border:1px solid #99f6e4;border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.compartir p{font-size:14px;color:#134e4a;margin-bottom:8px}
+.fila-link{display:flex;gap:8px;flex-wrap:wrap}
+.fila-link input{flex:1;min-width:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:#fff}
+.pasos-alumno{font-size:13px;color:#134e4a;margin:8px 0 0 18px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.kpi span{display:block;font-size:12.5px;color:var(--soft)}
+.kpi b{font-family:Poppins,sans-serif;font-size:26px}
+.herram{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.herram select{width:auto}
+.tabs{display:flex;gap:6px;background:#f1f5f9;padding:4px;border-radius:12px;width:max-content;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:none;padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;color:var(--soft);white-space:nowrap}
+.tabs button[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(15,23,42,.1)}
+.tabla-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:#f8fafc;font-size:12.5px;color:var(--soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.barra-pct{display:inline-block;width:70px;height:8px;border-radius:99px;background:#e2e8f0;vertical-align:middle;margin-right:8px;overflow:hidden}
+.barra-pct i{display:block;height:100%;border-radius:99px}
+.chip{display:inline-block;background:#f1f5f9;border-radius:99px;padding:2px 9px;font-size:12px;margin:1px 2px;color:var(--soft)}
+.nota{font-size:12.5px;color:var(--muted);margin-top:10px}
+.confirmar{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-top:12px;font-size:14px}
+.confirmar .fila-link{margin-top:8px}
+.pie{text-align:center;color:var(--muted);font-size:13px;padding:24px}
+.pie a{color:var(--soft)}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <div class="barra-in">
+    <a class="marca" href="../index.html"><span class="sig" aria-hidden="true">∑</span><span>Matemáticas<strong>Activas</strong></span></a>
+    <nav aria-label="Navegación">
+      <a href="index.html">← Para docentes</a>
+      <span id="quien"></span>
+      <button type="button" id="salir" hidden>Salir</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>👩‍🏫 Mi curso</h1>
+  <p class="sub">Creá un curso, compartí el código con tus alumnos y mirá qué temas practicaron en la Calculadora Inteligente.</p>
+
+  <!-- Cargando -->
+  <div id="vCargando" class="card vacio">Cargando…</div>
+
+  <!-- Sin sesión -->
+  <section id="vIngreso" class="ingreso card" hidden>
+    <h2 style="font-family:Poppins,sans-serif;font-size:20px">Ingresá con tu cuenta</h2>
+    <p class="sub" style="margin:4px 0 0;font-size:14px">Es la misma cuenta de Matemáticas Activas. ¿No tenés? <a href="../index.html">Creala gratis en la página principal</a>.</p>
+    <form id="formIngreso">
+      <label>Correo<input type="email" id="ingEmail" autocomplete="email" required></label>
+      <label>Contraseña<input type="password" id="ingPass" autocomplete="current-password" required></label>
+      <button type="submit" class="btn btn-teal">Ingresar</button>
+    </form>
+    <p class="msg" id="ingMsg" role="status"></p>
+  </section>
+
+  <!-- Panel -->
+  <section id="vPanel" class="layout" hidden>
+    <aside>
+      <div class="card">
+        <h3 style="font-size:15px">Mis cursos</h3>
+        <div class="cursos-lista" id="listaCursos"></div>
+        <div class="nuevo">
+          <h3>➕ Crear un curso</h3>
+          <form id="formCurso">
+            <label>Nombre del curso<input id="cNombre" maxlength="80" placeholder="Ej.: 3.° B · Matemática" required></label>
+            <label>Escuela (opcional)<input id="cEscuela" maxlength="120" placeholder="Ej.: Escuela N.° 123"></label>
+            <button type="submit" class="btn btn-teal" id="btnCrear">Crear curso</button>
+          </form>
+          <p class="msg" id="cursoMsg" role="status"></p>
+        </div>
+      </div>
+    </aside>
+
+    <div>
+      <div id="sinCurso" class="card vacio">Creá tu primer curso o elegí uno de la lista para ver el progreso de tus alumnos.</div>
+
+      <div id="detalle" hidden>
+        <div class="det-cab">
+          <div>
+            <h2 id="dNombre"></h2>
+            <div class="esc"><span id="dEscuela"></span> · Código <span class="codigo" id="dCodigo"></span></div>
+          </div>
+          <div class="fila-link">
+            <button type="button" class="btn btn-borde" id="btnActualizar">↻ Actualizar</button>
+            <button type="button" class="btn btn-borde" id="btnCsv">⬇ Descargar CSV</button>
+          </div>
+        </div>
+
+        <div class="compartir">
+          <p><b>Compartí este enlace con tus alumnos</b> (por WhatsApp o el aula virtual). Al abrirlo, la calculadora ya queda conectada a tu curso:</p>
+          <div class="fila-link">
+            <input id="dLink" readonly aria-label="Enlace para los alumnos">
+            <button type="button" class="btn btn-teal" id="btnCopiar">Copiar enlace</button>
+          </div>
+          <ol class="pasos-alumno">
+            <li>El alumno abre el enlace y escribe su nombre en <b>“Mi progreso”</b> (abajo, en la calculadora).</li>
+            <li>Cada ejercicio que resuelve aparece acá. Si tiene la calculadora completa, también ves si lo comprobó bien o mal.</li>
+            <li>También puede escribir el código <b id="dCodigo2"></b> a mano en “Mi progreso”.</li>
+          </ol>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><span>Alumnos activos</span><b id="kAlumnos">0</b></div>
+          <div class="kpi"><span>Ejercicios resueltos</span><b id="kResueltos">0</b></div>
+          <div class="kpi"><span>Respuestas comprobadas</span><b id="kComprobados">0</b></div>
+          <div class="kpi"><span>Aciertos</span><b id="kAciertos">–</b></div>
+        </div>
+
+        <div class="herram">
+          <div class="tabs" role="tablist">
+            <button type="button" role="tab" data-vista="alumnos" aria-selected="true">Por alumno</button>
+            <button type="button" role="tab" data-vista="temas" aria-selected="false">Por tema</button>
+            <button type="button" role="tab" data-vista="actividad" aria-selected="false">Última actividad</button>
+          </div>
+          <select id="periodo" aria-label="Período">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="0">Todo</option>
+          </select>
+        </div>
+
+        <div class="tabla-wrap"><table id="tabla"></table></div>
+        <p class="nota">“Aciertos” cuenta solo las respuestas comprobadas con el botón “Comprobar” de la calculadora.</p>
+
+        <div style="margin-top:22px">
+          <button type="button" class="btn btn-rojo" id="btnBorrar">Borrar este curso</button>
+          <div class="confirmar" id="confirmarBorrar" hidden>
+            ¿Seguro? Se borra el curso y <b>todo el progreso</b> que enviaron los alumnos. No se puede deshacer.
+            <div class="fila-link"><button type="button" class="btn btn-rojo" id="btnBorrarSi">Sí, borrar</button><button type="button" class="btn btn-claro" id="btnBorrarNo">Cancelar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<p class="pie"><a href="index.html">Para docentes</a> · <a href="../index.html">Matemáticas Activas</a> · <a href="../politica-privacidad.html">Privacidad</a></p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  "use strict";
+  var URL_API = "https://yidrpuizgtqpswefwdaa.supabase.co";
+  var CLAVE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZHJwdWl6Z3RxcHN3ZWZ3ZGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzk4MTcsImV4cCI6MjA5NDYxNTgxN30.kRuZoCIkvXhDNdlfumkWY7JK2qsU1nObr6eegBboFds";
+  var AREAS = { arit: "Aritmética", alg: "Álgebra", geo: "Geometría analítica", trig: "Geometría y trigonometría", calc: "Cálculo diferencial", integ: "Cálculo integral", est: "Estadística" };
+  var $ = function (id) { return document.getElementById(id); };
+  var sb = null, usuario = null, cursos = [], cursoActual = null, filas = [], vista = "alumnos";
+
+  function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function mostrar(v) { ["vCargando", "vIngreso", "vPanel"].forEach(function (x) { $(x).hidden = x !== v; }); }
+  function msg(el, t, tipo) { el.textContent = t || ""; el.className = "msg" + (tipo ? " " + tipo : ""); }
+  function fecha(ts) {
+    var d = new Date(ts), hoy = new Date();
+    var mismoDia = d.toDateString() === hoy.toDateString();
+    return mismoDia ? "hoy " + d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+                    : d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  }
+  function linkAlumnos(c) { return "https://matematicasactivas.com/calculadora/?curso=" + encodeURIComponent(c.id); }
+  function generarCodigo(nombre) {
+    var base = (nombre || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4) || "CURS";
+    var letras = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = "";
+    for (var i = 0; i < 5; i++) r += letras[Math.floor(Math.random() * letras.length)];
+    return base + "-" + r;
+  }
+
+  // ---------- Sesión ----------
+  async function iniciar() {
+    if (!window.supabase || !window.supabase.createClient) { $("vCargando").textContent = "No se pudo conectar. Revisá tu internet y recargá la página."; return; }
+    sb = window.supabase.createClient(URL_API, CLAVE, { auth: { persistSession: true, autoRefreshToken: true } });
+    var ses = (await sb.auth.getSession()).data.session;
+    if (!ses) { mostrar("vIngreso"); return; }
+    usuario = ses.user;
+    $("quien").textContent = usuario.email;
+    $("salir").hidden = false;
+    mostrar("vPanel");
+    await cargarCursos();
+  }
+
+  $("formIngreso").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    msg($("ingMsg"), "Ingresando…");
+    var r = await sb.auth.signInWithPassword({ email: $("ingEmail").value.trim(), password: $("ingPass").value });
+    if (r.error) { msg($("ingMsg"), /Invalid login/i.test(r.error.message) ? "El correo o la contraseña no son correctos." : r.error.message, "error"); return; }
+    $("ingPass").value = "";
+    usuario = r.data.user;
+    $("quien").textContent = usuario.email; $("salir").hidden = false;
+    mostrar("vPanel");
+    await cargarCursos();
+  });
+  $("salir").addEventListener("click", async function () { await sb.auth.signOut(); location.reload(); });
+
+  // ---------- Cursos ----------
+  async function cargarCursos(seleccionar) {
+    var r = await sb.from("cursos").select("id, nombre, escuela, creado_en").order("creado_en", { ascending: false });
+    if (r.error) { $("listaCursos").innerHTML = '<p class="vacio">No se pudieron cargar los cursos.</p>'; console.warn(r.error); return; }
+    cursos = r.data || [];
+    pintarCursos();
+    var elegido = seleccionar || (cursoActual && cursoActual.id) || (cursos[0] && cursos[0].id);
+    if (elegido) elegirCurso(elegido); else { $("detalle").hidden = true; $("sinCurso").hidden = false; }
+  }
+  function pintarCursos() {
+    $("listaCursos").innerHTML = cursos.length ? cursos.map(function (c) {
+      return '<button type="button" class="curso-item' + (cursoActual && cursoActual.id === c.id ? " activo" : "") + '" data-id="' + esc(c.id) + '"><b>' + esc(c.nombre) + "</b><small>" + (c.escuela ? esc(c.escuela) + " · " : "") + '<span class="codigo">' + esc(c.id) + "</span></small></button>";
+    }).join("") : '<p class="vacio">Todavía no creaste cursos.</p>';
+  }
+  $("listaCursos").addEventListener("click", function (e) { var b = e.target.closest(".curso-item"); if (b) elegirCurso(b.dataset.id); });
+
+  $("formCurso").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var nombre = $("cNombre").value.trim(), escuela = $("cEscuela").value.trim();
+    if (!nombre) return;
+    $("btnCrear").disabled = true; msg($("cursoMsg"), "Creando…");
+    var r, codigo;
+    for (var i = 0; i < 4; i++) {
+      codigo = generarCodigo(nombre);
+      r = await sb.from("cursos").insert({ id: codigo, nombre: nombre, escuela: escuela || null });
+      if (!r.error || !/duplicate|unique/i.test(r.error.message)) break;
+    }
+    $("btnCrear").disabled = false;
+    if (r.error) { msg($("cursoMsg"), /máximo/.test(r.error.message) ? r.error.message : "No se pudo crear el curso. Probá de nuevo.", "error"); console.warn(r.error); return; }
+    $("cNombre").value = ""; $("cEscuela").value = "";
+    msg($("cursoMsg"), "¡Curso creado! Compartí el enlace con tus alumnos.", "ok");
+    await cargarCursos(codigo);
+  });
+
+  async function elegirCurso(id) {
+    cursoActual = cursos.find(function (c) { return c.id === id; }) || null;
+    pintarCursos();
+    if (!cursoActual) return;
+    $("sinCurso").hidden = true; $("detalle").hidden = false;
+    $("confirmarBorrar").hidden = true;
+    $("dNombre").textContent = cursoActual.nombre;
+    $("dEscuela").textContent = cursoActual.escuela || "Sin escuela";
+    $("dCodigo").textContent = cursoActual.id; $("dCodigo2").textContent = cursoActual.id;
+    $("dLink").value = linkAlumnos(cursoActual);
+    await cargarProgreso();
+  }
+
+  // ---------- Progreso ----------
+  async function cargarProgreso() {
+    $("tabla").innerHTML = '<tr><td class="vacio">Cargando…</td></tr>';
+    var q = sb.from("progreso").select("alumno_nombre, alumno_codigo, area, tema, nombre_tema, ejercicio, correcto, practica, tipo, creado_en")
+      .eq("curso_id", cursoActual.id).order("creado_en", { ascending: false }).limit(5000);
+    var dias = parseInt($("periodo").value, 10);
+    if (dias) q = q.gte("creado_en", new Date(Date.now() - dias * 86400000).toISOString());
+    var r = await q;
+    if (r.error) { $("tabla").innerHTML = '<tr><td class="vacio">No se pudo cargar el progreso.</td></tr>'; console.warn(r.error); return; }
+    filas = r.data || [];
+    pintar();
+  }
+  function nombreAlumno(f) { return (f.alumno_nombre || "").trim() || "Sin nombre"; }
+  function nombreTema(f) { return f.nombre_tema || f.tema || "Sin tema"; }
+  function pct(ok, n) { return n ? Math.round(ok * 100 / n) : null; }
+  function barra(p) {
+    if (p == null) return '<span style="color:var(--muted)">–</span>';
+    var col = p >= 70 ? "var(--ok)" : p >= 40 ? "var(--mid)" : "var(--bad)";
+    return '<span class="barra-pct"><i style="width:' + p + "%;background:" + col + '"></i></span>' + p + "%";
+  }
+
+  function agrupar(clave) {
+    var g = {};
+    filas.forEach(function (f) {
+      var k = clave(f);
+      var x = g[k] = g[k] || { k: k, res: 0, comp: 0, ok: 0, temas: {}, areas: {}, alumnos: {}, ult: 0 };
+      if (f.tipo === "comprobado") { x.comp++; if (f.correcto) x.ok++; } else { x.res++; }
+      x.temas[nombreTema(f)] = (x.temas[nombreTema(f)] || 0) + 1;
+      if (f.area) x.areas[AREAS[f.area] || f.area] = 1;
+      x.alumnos[nombreAlumno(f)] = 1;
+      x.ult = Math.max(x.ult, new Date(f.creado_en).getTime());
+    });
+    return Object.values(g);
+  }
+
+  function pintar() {
+    var alumnos = agrupar(nombreAlumno);
+    var comp = filas.filter(function (f) { return f.tipo === "comprobado"; });
+    var oks = comp.filter(function (f) { return f.correcto; }).length;
+    $("kAlumnos").textContent = alumnos.length;
+    $("kResueltos").textContent = filas.filter(function (f) { return f.tipo !== "comprobado"; }).length;
+    $("kComprobados").textContent = comp.length;
+    $("kAciertos").textContent = comp.length ? pct(oks, comp.length) + "%" : "–";
+
+    if (!filas.length) {
+      $("tabla").innerHTML = '<tr><td class="vacio" style="white-space:normal">Todavía no hay actividad en este período. Cuando tus alumnos usen la calculadora con el enlace del curso, la vas a ver acá.</td></tr>';
+      return;
+    }
+    var h = "";
+    if (vista === "alumnos") {
+      alumnos.sort(function (a, b) { return b.ult - a.ult; });
+      h = "<thead><tr><th>Alumno</th><th class=num>Resueltos</th><th class=num>Comprobados</th><th>Aciertos</th><th>Temas más trabajados</th><th>Última actividad</th></tr></thead><tbody>" +
+        alumnos.map(function (a) {
+          var top = Object.entries(a.temas).sort(function (x, y) { return y[1] - x[1]; }).slice(0, 3).map(function (t) { return '<span class="chip">' + esc(t[0]) + "</span>"; }).join("");
+          return "<tr><td><b>" + esc(a.k) + "</b></td><td class=num>" + a.res + "</td><td class=num>" + a.comp + "</td><td>" + barra(pct(a.ok, a.comp)) + "</td><td>" + top + "</td><td>" + fecha(a.ult) + "</td></tr>";
+        }).join("") + "</tbody>";
+    } else if (vista === "temas") {
+      var temas = agrupar(nombreTema).sort(function (a, b) { return (b.res + b.comp) - (a.res + a.comp); });
+      h = "<thead><tr><th>Tema</th><th>Área</th><th class=num>Alumnos</th><th class=num>Resueltos</th><th class=num>Comprobados</th><th>Aciertos</th></tr></thead><tbody>" +
+        temas.map(function (t) {
+          return "<tr><td><b>" + esc(t.k) + "</b></td><td>" + esc(Object.keys(t.areas).join(", ")) + "</td><td class=num>" + Object.keys(t.alumnos).length + "</td><td class=num>" + t.res + "</td><td class=num>" + t.comp + "</td><td>" + barra(pct(t.ok, t.comp)) + "</td></tr>";
+        }).join("") + "</tbody>";
+    } else {
+      h = "<thead><tr><th>Cuándo</th><th>Alumno</th><th>Tema</th><th>Ejercicio</th><th>Resultado</th></tr></thead><tbody>" +
+        filas.slice(0, 200).map(function (f) {
+          var res = f.tipo === "comprobado" ? (f.correcto ? '<span style="color:var(--ok);font-weight:600">✓ Bien</span>' : '<span style="color:var(--bad);font-weight:600">✗ A revisar</span>') : '<span style="color:var(--soft)">Resuelto</span>';
+          return "<tr><td>" + fecha(f.creado_en) + "</td><td>" + esc(nombreAlumno(f)) + "</td><td>" + esc(nombreTema(f)) + '</td><td style="white-space:normal;min-width:180px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px">' + esc(f.ejercicio || "") + "</td><td>" + res + (f.practica ? ' <span class="chip">práctica</span>' : "") + "</td></tr>";
+        }).join("") + "</tbody>";
+    }
+    $("tabla").innerHTML = h;
+  }
+
+  document.querySelector(".tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-vista]"); if (!b) return;
+    vista = b.dataset.vista;
+    document.querySelectorAll(".tabs button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+    pintar();
+  });
+  $("periodo").addEventListener("change", cargarProgreso);
+  $("btnActualizar").addEventListener("click", cargarProgreso);
+
+  $("btnCopiar").addEventListener("click", function () {
+    var t = $("dLink").value;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      $("btnCopiar").textContent = "¡Copiado!"; setTimeout(function () { $("btnCopiar").textContent = "Copiar enlace"; }, 1800);
+    }).catch(function () { $("dLink").select(); });
+  });
+
+  $("btnCsv").addEventListener("click", function () {
+    var enc = ["fecha", "alumno", "area", "tema", "ejercicio", "tipo", "correcto", "practica"];
+    var lineas = [enc.join(";")].concat(filas.map(function (f) {
+      return [new Date(f.creado_en).toLocaleString("es-AR"), nombreAlumno(f), AREAS[f.area] || f.area || "", nombreTema(f), (f.ejercicio || "").replace(/[\r\n;]+/g, " "),
+              f.tipo, f.tipo === "comprobado" ? (f.correcto ? "sí" : "no") : "", f.practica ? "sí" : "no"].map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(";");
+    }));
+    var blob = new Blob(["﻿" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "progreso-" + cursoActual.id + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  $("btnBorrar").addEventListener("click", function () { $("confirmarBorrar").hidden = false; });
+  $("btnBorrarNo").addEventListener("click", function () { $("confirmarBorrar").hidden = true; });
+  $("btnBorrarSi").addEventListener("click", async function () {
+    var r = await sb.from("cursos").delete().eq("id", cursoActual.id);
+    if (r.error) { alertaSimple("No se pudo borrar el curso."); return; }
+    cursoActual = null;
+    await cargarCursos();
+  });
+  function alertaSimple(t) { msg($("cursoMsg"), t, "error"); }
+
+  iniciar();
+})();
+</script>
+</body>
+</html>

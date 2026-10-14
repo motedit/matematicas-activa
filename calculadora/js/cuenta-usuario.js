@@ -216,11 +216,59 @@
       }
     });
 
+    instalarRegistroCurso();
+
     esperarSdk(50).then(function () {
       if (!iniciarCliente()) return;
       sb.auth.onAuthStateChange(function (_evento, session) { actualizarBarra(session); });
       sb.auth.getSession().then(function (r) { actualizarBarra(r.data.session); });
     });
+  }
+
+  /* ---------- Panel "Mi curso": cada ejercicio resuelto se envía al curso del alumno ----------
+     La calculadora ya envía las respuestas "comprobadas" (plan completo). Esto suma los ejercicios
+     resueltos por cualquier alumno, también con la versión gratis, para que el docente vea la actividad. */
+  var ultimosEnviados = {};
+  function cursoDelAlumno() {
+    var q = new URLSearchParams(location.search), al = {};
+    try { al = JSON.parse(localStorage.getItem("mpp-alumno") || "{}") || {}; } catch (e) {}
+    return {
+      curso: String(q.get("curso") || al.curso || "").trim().toUpperCase(),
+      nombre: q.get("nombre") || al.nombre || null,
+      codigo: q.get("alumno") || al.codigo || null
+    };
+  }
+  function enviarResuelto(r, opciones) {
+    var cfg = (window.DATOS_PLATAFORMA || {}).nube || {};
+    if (!cfg.url || !cfg.clave || !r) return;
+    var al = cursoDelAlumno();
+    if (!al.curso) return;
+    var areaActual = null, entrada = "", nombreTema = null;
+    try { areaActual = area; } catch (e) {}
+    try { entrada = String(ultimaEntrada || ""); } catch (e) {}
+    try { nombreTema = (temasArea()[r.tema]) || r.tema || null; } catch (e) { nombreTema = r.tema || null; }
+    var clave = areaActual + "|" + entrada;
+    if (ultimosEnviados[clave] && Date.now() - ultimosEnviados[clave] < 120000) return;  // evita repetir el mismo ejercicio
+    ultimosEnviados[clave] = Date.now();
+    fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/progreso", {
+      method: "POST",
+      headers: { apikey: cfg.clave, Authorization: "Bearer " + cfg.clave, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify([{
+        curso_id: al.curso, alumno_codigo: al.codigo, alumno_nombre: al.nombre ? String(al.nombre).slice(0, 60) : null,
+        area: areaActual, tema: r.tema ? String(r.tema).slice(0, 40) : null,
+        nombre_tema: nombreTema ? String(nombreTema).slice(0, 120) : null,
+        ejercicio: entrada.slice(0, 300), correcto: null, practica: !!(opciones && opciones.practica), tipo: "resuelto"
+      }])
+    }).catch(function () {});
+  }
+  function instalarRegistroCurso() {
+    var original = window.mostrarResolucion;
+    if (typeof original !== "function") return;
+    window.mostrarResolucion = function (r, opciones) {
+      var salida = original.apply(this, arguments);
+      try { enviarResuelto(r, opciones); } catch (e) {}
+      return salida;
+    };
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", conectar);

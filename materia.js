@@ -21,7 +21,7 @@
     const MA = () => window.MA_SUPABASE;
 
     // ---- Timeout (mismo patrón que scripts.js) ----
-    const TIMEOUT_MS = 30 * 60 * 1000;
+    const TIMEOUT_MS = 60 * 60 * 1000;   // 1 hora sin actividad
     const WARN_MS    = TIMEOUT_MS - 15000;
     let _sesTimer = null, _warnTimer = null, _warnInterval = null;
 
@@ -1635,6 +1635,14 @@
         renderPremium();
         await renderEjercicios();
         initBuscador();
+        // Enlace directo a un tema: materia.html#tema=<id> (lo usa "Ver la clase de este tema" de la calculadora)
+        try {
+            const mt = (location.hash || "").match(/^#tema=([0-9a-f-]{36})$/i);
+            if (mt) {
+                const t = temasMateria.find(x => x.id === mt[1]);
+                if (t) abrirSubtema(t.id, t.nombre);
+            }
+        } catch (e) { console.warn("No se pudo abrir el tema del enlace:", e); }
         if (perfilActual) iniciarTimer();
         MA()?.sb?.auth.onAuthStateChange(async (event) => {
             if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
