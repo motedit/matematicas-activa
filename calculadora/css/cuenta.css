@@ -25,3 +25,36 @@
 .cuenta-perfil b{font-size:1.05rem}
 .cuenta-plan{display:inline-block;background:var(--resalte);color:var(--brass-texto);font-weight:700;font-size:.78rem;padding:4px 10px;border-radius:20px}
 .cuenta-perfil .acciones{justify-content:center;margin-top:10px;flex-wrap:wrap}
+
+/* ---- Barra superior en tablet: solo íconos para que entre todo en una fila ---- */
+@media (min-width:641px) and (max-width:1280px){
+  .topbar{gap:10px}
+  .topbar .chip{display:none}
+  .topbar .boton-barra span:not(.aa){display:none}
+  .topbar .boton-barra{padding:8px 10px}
+  .topbar .brand small{white-space:nowrap}
+}
+
+/* ---- Barra superior en celular: dos filas, sin superposiciones (14/10/2026) ---- */
+@media (max-width:640px){
+  .topbar{flex-wrap:wrap;gap:6px 6px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px}
+  .topbar .boton-inicio{order:0;margin-right:0}
+  .topbar .brand{order:1;flex:1 1 calc(100% - 60px);min-width:0;margin-right:0;gap:9px}
+  .topbar .brand .mark{width:32px;height:32px;border-radius:9px}
+  .topbar .brand .mark svg{width:18px;height:18px}
+  .topbar .brand>div:last-child{min-width:0}
+  .topbar .brand b{font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .brand small{font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* segunda fila: todas las acciones, alineadas y sin cortarse */
+  .topbar>button,.topbar>.opciones-wrap{order:2}
+  .topbar>.opciones-wrap{display:flex}
+  .topbar #botonGraficador{margin-left:0}
+  .topbar .chip-plan{order:3;margin-left:auto;padding:6px 10px;font-size:.72rem;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .topbar .boton-barra{padding:8px 10px;flex:0 0 auto}
+  .areas-wrap{top:calc(var(--alto-barra,100px) + env(safe-area-inset-top,0px))}
+}
+/* Textos de la barra en una sola línea; la frase decorativa solo en pantallas anchas */
+.topbar .boton-barra,.topbar .chip-plan{white-space:nowrap;flex-shrink:0}
+@media (max-width:1500px){.topbar .chip{display:none}}
+@media (max-width:640px){.topbar .chip-plan{flex-shrink:1}}
+.topbar .brand small{white-space:nowrap}

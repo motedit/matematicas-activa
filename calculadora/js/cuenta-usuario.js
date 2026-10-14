@@ -274,3 +274,17 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", conectar);
   else conectar();
 })();
+
+/* Altura real de la barra superior (en celular ocupa dos filas) para que la fila de áreas quede pegada debajo */
+(function () {
+  function medir() {
+    var barra = document.querySelector(".topbar");
+    if (!barra) return;
+    var alto = Math.round(barra.getBoundingClientRect().height);
+    if (alto > 0) document.documentElement.style.setProperty("--alto-barra", alto + "px");
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", medir); else medir();
+  window.addEventListener("resize", medir);
+  window.addEventListener("load", medir);
+  try { new ResizeObserver(medir).observe(document.querySelector(".topbar")); } catch (e) {}
+})();
