@@ -1650,6 +1650,8 @@ async function renderLogrosEnPerfil() {
 }
 
 async function cargarNotifConfig() {
+    // Las casillas viejas se reemplazaron por "Novedades, ofertas y cupones" (cuenta-extra.js)
+    if (!document.getElementById("notif-inactividad")) return;
     const config = await MA().sbObtenerNotifConfig();
     if (config) {
         document.getElementById("notif-inactividad").checked = config.email_inactividad;
@@ -1659,6 +1661,7 @@ async function cargarNotifConfig() {
 }
 
 async function guardarNotifConfig() {
+    if (!document.getElementById("notif-inactividad")) return;
     const config = {
         email_inactividad: document.getElementById("notif-inactividad").checked,
         email_logros: document.getElementById("notif-logros").checked,
