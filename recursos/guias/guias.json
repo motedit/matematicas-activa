@@ -70,5 +70,71 @@
   "ejercicios": 16,
   "pdf": "recursos/guias/algebra/logica-proposicional.pdf",
   "materia": "algebra"
+ },
+ "f7f6511b-7958-4456-8cca-f73bee6a5caa": {
+  "titulo": "Números naturales",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/numeros-naturales.pdf",
+  "materia": "aritmetica"
+ },
+ "c8452b79-51fe-441b-b513-5fed83238eb1": {
+  "titulo": "Números enteros",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/numeros-enteros.pdf",
+  "materia": "aritmetica"
+ },
+ "e6330300-5b2e-47b8-9a66-66b563f2256d": {
+  "titulo": "Números racionales",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/numeros-racionales.pdf",
+  "materia": "aritmetica"
+ },
+ "5c69f6ef-81c6-4ba7-84d9-0942873edf13": {
+  "titulo": "Números irracionales y reales",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/numeros-reales.pdf",
+  "materia": "aritmetica"
+ },
+ "dcbd5610-8161-4a5b-846d-5b49049e97f2": {
+  "titulo": "Cálculo mental y estimación",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/calculo-mental.pdf",
+  "materia": "aritmetica"
+ },
+ "4385dea7-419d-40f6-88b6-a80a68f57dcf": {
+  "titulo": "Teoría de números",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/teoria-de-numeros.pdf",
+  "materia": "aritmetica"
+ },
+ "5ce197cd-e431-448c-a437-f47f5fa1dc52": {
+  "titulo": "Números complejos",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/numeros-complejos.pdf",
+  "materia": "aritmetica"
+ },
+ "ed1559cc-d348-4359-b9b1-2e8242ac1ed0": {
+  "titulo": "Aritmética modular",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/aritmetica-modular.pdf",
+  "materia": "aritmetica"
+ },
+ "354e591b-69e8-45df-886f-05484357e5ff": {
+  "titulo": "Sucesiones y series",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/sucesiones-y-series.pdf",
+  "materia": "aritmetica"
+ },
+ "eec6776b-807c-48a6-b64b-ae84ef3f239d": {
+  "titulo": "Sistemas de numeración",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/sistemas-de-numeracion.pdf",
+  "materia": "aritmetica"
+ },
+ "22f576bf-9e17-45aa-b6ad-5791a8230ca5": {
+  "titulo": "Inducción matemática",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/aritmetica/induccion-matematica.pdf",
+  "materia": "aritmetica"
  }
 }
