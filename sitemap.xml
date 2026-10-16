@@ -20,9 +20,15 @@
   </url>
   <url>
     <loc>https://matematicasactivas.com/docentes/</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://matematicasactivas.com/docentes/mapa-curricular.html</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://matematicasactivas.com/materias/Juegos/Juegos.html</loc>

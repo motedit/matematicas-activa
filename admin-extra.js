@@ -196,6 +196,35 @@
 
   // ── 📈 Visitas (estadísticas propias, sin datos personales) ──────
   var _diasVisitas = 30;
+  var INICIO_SITIO = "2026-05-17";          // primer alumno registrado = nacimiento de la página
+  var INICIO_CONTADOR = "2026-10-16";       // desde acá se cuentan también las visitas anónimas
+  function diaAR(ts) { return new Date(ts).toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }); }
+  function diasDesde(ini) { return Math.round((Date.parse(diaAR(Date.now())) - Date.parse(ini)) / 86400000) + 1; }
+  function sumarDia(d, n) { var t = new Date(Date.parse(d) + n * 86400000); return t.toISOString().slice(0, 10); }
+  async function traerTodo(tabla, campos, desde) {
+    var filas = [], paso = 1000;
+    for (var i = 0; i < 100; i++) {
+      var r = await sb().from(tabla).select(campos).gte("creado_en", desde).order("creado_en").range(i * paso, i * paso + paso - 1);
+      if (r.error) throw r.error;
+      filas = filas.concat(r.data || []);
+      if (!r.data || r.data.length < paso) break;
+    }
+    return filas;
+  }
+  // Historia por día armada con lo que se guardó desde el inicio: registros, alumnos activos y pagos
+  async function historia(dias, porDiaVisitas) {
+    var hoy = diaAR(Date.now()), ini = sumarDia(hoy, -(dias - 1));
+    var desdeTs = new Date(Date.parse(ini) + 3 * 3600000).toISOString();   // 00:00 hora Argentina
+    var res = await Promise.all([traerTodo("perfiles", "creado_en", desdeTs), traerTodo("eventos_uso", "usuario_id, creado_en", desdeTs),
+      traerTodo("historial_pagos", "creado_en", desdeTs)]);
+    var mapa = {};
+    for (var i = 0; i < dias; i++) { var d = sumarDia(ini, i); mapa[d] = { dia: d, visitantes: null, registros: 0, activos: {}, pagos: 0 }; }
+    res[0].forEach(function (f) { var m = mapa[diaAR(f.creado_en)]; if (m) m.registros++; });
+    res[1].forEach(function (f) { var m = mapa[diaAR(f.creado_en)]; if (m && f.usuario_id) m.activos[f.usuario_id] = 1; });
+    res[2].forEach(function (f) { var m = mapa[diaAR(f.creado_en)]; if (m) m.pagos++; });
+    (porDiaVisitas || []).forEach(function (v) { if (mapa[v.dia] && v.dia >= INICIO_CONTADOR) mapa[v.dia].visitantes = v.visitantes; });
+    return Object.keys(mapa).sort().map(function (k) { var m = mapa[k]; m.activos = Object.keys(m.activos).length; return m; });
+  }
   var NOMBRE_MATERIA = { algebra: "Álgebra", aritmetica: "Aritmética", geometria: "Geometría", trigonometria: "Trigonometría",
     calculo: "Cálculo", estadistica: "Estadística", razonamiento: "Razonamiento" };
   function nombrePagina(p) {
@@ -221,7 +250,7 @@
     var W = Math.max(300, Math.min(900, anchoCaja || 640)), H = 170, izq = 30, abajo = 22, arriba = 10, n = datos.length;
     var max = Math.max.apply(null, datos.map(function (d) { return d[campo]; }));
     var tope = max <= 5 ? 5 : Math.ceil(max / 5) * 5;
-    var ancho = (W - izq) / n, barra = Math.max(2, ancho - 2);
+    var ancho = Math.min((W - izq) / n, 34), barra = Math.max(2, ancho - 2);
     var y = function (v) { return arriba + (H - arriba - abajo) * (1 - v / tope); };
     var svg = '<svg class="vx-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Gráfico de ' + esc(unidad) + '">';
     [0, tope / 2, tope].forEach(function (v) {
@@ -268,14 +297,16 @@
     c.innerHTML =
       '<div class="ax-acciones vx-periodo" role="group" aria-label="Período">' + [7, 30, 90].map(function (n) {
         return '<button type="button" class="ax-btn' + (n === _diasVisitas ? " ax-principal" : "") + '" onclick="MA_adminVisitasDias(' + n + ')">Últimos ' + n + " días</button>";
-      }).join("") + "</div>" +
+      }).join("") + '<button type="button" class="ax-btn' + (_diasVisitas === diasDesde(INICIO_SITIO) ? " ax-principal" : "") + '" onclick="MA_adminVisitasDias(0)">Desde el inicio (17/05)</button></div>' +
       '<div class="ax-resumen vx-4"><div><b>' + fmt((d.hoy || {}).visitantes) + "</b><span>visitantes hoy<br><small>ayer: " + fmt((d.ayer || {}).visitantes) + "</small></span></div>" +
       "<div><b>" + fmt(per.visitantes) + "</b><span>visitantes en " + d.dias + " días<br><small>" + fmt(per.nuevos) + " nuevos</small></span></div>" +
       "<div><b>" + fmt(per.visitas) + "</b><span>páginas vistas</span></div>" +
       "<div><b>" + fmt(per.temas_abiertos) + "</b><span>temas leídos</span></div></div>" +
       '<p class="ax-nota vx-embudo">De <b>' + fmt(per.visitantes) + "</b> visitantes, <b>" + fmt(d.registros) + "</b> se registraron (" + pct(d.registros || 0, per.visitantes) +
       ") y hubo <b>" + fmt(d.pagos) + "</b> pagos (" + pct(d.pagos || 0, per.visitantes) + ").</p>" +
-      "<h4>Visitantes por día</h4>" + grafico(d.por_dia || [], "visitantes", function (x) { return fechaCorta(x.dia); }, "visitantes", c.clientWidth) +
+      "<h4>Visitantes por día</h4>" + ((d.por_dia || []).some(function (x) { return x.dia < INICIO_CONTADOR; }) ?
+        '<p class="ax-nota">El contador de visitas anónimas empezó el 16/10/2026: antes de esa fecha no hay forma de saber cuántas personas entraron sin registrarse. Lo que sí está guardado desde el primer día está en “Historia desde el inicio”, más abajo.</p>' : "") +
+      grafico((d.por_dia || []).filter(function (x) { return x.dia >= INICIO_CONTADOR; }), "visitantes", function (x) { return fechaCorta(x.dia); }, "visitantes", c.clientWidth) +
       "<h4>¿A qué hora entran?</h4>" + grafico(d.por_hora || [], "visitas", function (x, largo) { return largo ? x.hora + ":00 a " + x.hora + ":59" : x.hora + "h"; }, "páginas vistas", c.clientWidth) +
       '<div class="vx-cols"><section><h4>Temas más leídos</h4>' + barras(d.temas, "visitantes", function (x) { return x.nombre + (x.materia ? " · " + (NOMBRE_MATERIA[x.materia] || x.materia) : ""); }) + "</section>" +
       "<section><h4>De dónde llegan</h4>" + barras(d.origenes, "visitantes", function (x) { return x.nombre; }) + "</section>" +
@@ -284,11 +315,31 @@
         var v = disp[k[0]] || 0;
         return "<li><span class=\"vx-nom\">" + k[1] + '</span><span class="vx-pista"><i style="width:' + Math.max(2, Math.round(v * 100 / totDisp)) + '%"></i></span><b>' + pct(v, totDisp) + "</b></li>";
       }).join("") + "</ul>" : '<p class="ax-nota">Todavía no hay datos.</p>') + "</section></div>" +
+      '<div id="vx-historia"><h4>Historia desde el inicio</h4><p class="ax-cargando">Cargando registros, alumnos activos y pagos día por día…</p></div>' +
       '<label class="ax-check vx-excluir"><input type="checkbox" ' + (excluido ? "checked" : "") + ' onchange="MA_adminNoContarme(this.checked)"> No contar mis propias visitas desde este aparato</label>' +
       '<p class="ax-nota">“Visitante” = un navegador distinto (sin datos personales: no se guarda IP, nombre ni correo). Se cuentan solo las visitas al sitio real, no a tu compu ni a los robots de Google.</p>';
     activarTooltips(c);
+    pintarHistoria(c, d.por_dia);
   }
-  window.MA_adminVisitasDias = function (n) { _diasVisitas = n; renderVisitas(); };
+  async function pintarHistoria(c, porDia) {
+    var h = document.getElementById("vx-historia"); if (!h) return;
+    var filas;
+    try { filas = await historia(_diasVisitas, porDia); } catch (e) { h.innerHTML = '<h4>Historia desde el inicio</h4><p class="ax-aviso">' + esc(e.message) + "</p>"; return; }
+    var t = filas.reduce(function (a, f) { a.r += f.registros; a.p += f.pagos; a.dias += f.activos ? 1 : 0; return a; }, { r: 0, p: 0, dias: 0 });
+    h.innerHTML = "<h4>Historia día por día (" + fechaCorta(filas[0].dia) + " al " + fechaCorta(filas[filas.length - 1].dia) + ")</h4>" +
+      '<p class="ax-nota">En estos ' + filas.length + " días: <b>" + fmt(t.r) + "</b> alumnos nuevos registrados, <b>" + fmt(t.p) + "</b> pagos y <b>" + fmt(t.dias) +
+      "</b> días con alumnos usando la página. (Los alumnos activos se registran desde el 24/07/2026, cuando se agregó ese contador).</p>" +
+      "<h4>Alumnos nuevos registrados por día</h4>" + grafico(filas, "registros", function (x) { return fechaCorta(x.dia); }, "registros", c.clientWidth) +
+      "<h4>Alumnos con cuenta que usaron la página, por día</h4>" + grafico(filas, "activos", function (x) { return fechaCorta(x.dia); }, "alumnos activos", c.clientWidth) +
+      '<details class="vx-tabla"><summary>📅 Ver la tabla completa, día por día</summary><div class="vx-tabla-scroll"><table><thead><tr><th>Día</th><th>Visitantes</th><th>Registros</th><th>Alumnos activos</th><th>Pagos</th></tr></thead><tbody>' +
+      filas.slice().reverse().map(function (f) {
+        var x = f.dia.split("-");
+        return "<tr><td>" + x[2] + "/" + x[1] + "/" + x[0] + "</td><td>" + (f.visitantes == null ? '<span title="Antes del 16/10/2026 no se contaban">–</span>' : fmt(f.visitantes)) +
+          "</td><td>" + (f.registros || "") + "</td><td>" + (f.activos || "") + "</td><td>" + (f.pagos || "") + "</td></tr>";
+      }).join("") + "</tbody></table></div></details>";
+    activarTooltips(h);
+  }
+  window.MA_adminVisitasDias = function (n) { _diasVisitas = n || diasDesde(INICIO_SITIO); renderVisitas(); };
   window.MA_adminNoContarme = function (si) {
     if (window.MA_VISITA) window.MA_VISITA.noContarme(si);
     toast(si ? "Listo: tus visitas desde este aparato ya no se cuentan." : "Tus visitas desde este aparato se vuelven a contar.", "ok");
