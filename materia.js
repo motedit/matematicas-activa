@@ -1114,6 +1114,16 @@
         }
     }
 
+    let _guiasCache = null;
+    async function _guiasPractica() {
+        if (_guiasCache) return _guiasCache;
+        try {
+            const r = await fetch("../../recursos/guias/guias.json", { cache: "no-cache" });
+            _guiasCache = r.ok ? await r.json() : {};
+        } catch (e) { _guiasCache = {}; }
+        return _guiasCache;
+    }
+
     async function abrirSubtema(temaId, nombre){
         const ov = _asegurarOverlay();
         const tema = temasMateria.find(t => t.id === temaId);
@@ -1176,6 +1186,20 @@
         const cont = document.getElementById("subtema-archivos-cont");
 
         let htmlArchivos = "";
+
+        // Guía de práctica en PDF (recursos/guias/guias.json)
+        const guia = (await _guiasPractica())[temaId];
+        if (guia) {
+            htmlArchivos += `<a class="subtema-archivo disponible subtema-guia" href="../../${guia.pdf}" target="_blank" rel="noopener" download
+                    onclick="window.MA_SUPABASE?.sbRegistrarEvento?.('guia_descarga', { materia: '${MATERIA_ID}', temaId: '${temaId}' })">
+                <div class="subtema-archivo-icon">📝</div>
+                <div class="subtema-archivo-body">
+                    <p class="subtema-archivo-titulo">Guía de práctica (PDF)</p>
+                    <p class="subtema-archivo-sub">${guia.ejercicios} ejercicios con soluciones, listos para imprimir</p>
+                </div>
+                <span class="subtema-archivo-cta abrir">Descargar ↓</span>
+            </a>`;
+        }
 
         const archivosPublicos = archivos.filter(a => a.tema_id === temaId && (a.plan_minimo || "gratis") === "gratis");
         if (archivosPublicos.length > 0) {

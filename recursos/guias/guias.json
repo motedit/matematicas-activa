@@ -1,0 +1,74 @@
+{
+ "c04b8862-1296-4b36-a12d-0d1e1ef82935": {
+  "titulo": "Expresiones algebraicas",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/expresiones-algebraicas.pdf",
+  "materia": "algebra"
+ },
+ "34496671-eb79-444f-a1a9-921518631834": {
+  "titulo": "Ecuaciones e inecuaciones lineales",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/ecuaciones-inecuaciones-lineales.pdf",
+  "materia": "algebra"
+ },
+ "a4d1e911-03dc-4167-88a7-294e9efb3179": {
+  "titulo": "Función lineal y cuadrática",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/funcion-lineal-cuadratica.pdf",
+  "materia": "algebra"
+ },
+ "9b78f926-4a41-418c-8cdb-99077e1a9e33": {
+  "titulo": "Función exponencial y logarítmica",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/funcion-exponencial-logaritmica.pdf",
+  "materia": "algebra"
+ },
+ "277d745c-a117-4cd1-b83f-a3fc6ecafe89": {
+  "titulo": "Combinatoria básica",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/combinatoria.pdf",
+  "materia": "algebra"
+ },
+ "a9519e27-9a5e-463b-8f0f-a8de36abe473": {
+  "titulo": "Teoría de conjuntos",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/teoria-de-conjuntos.pdf",
+  "materia": "algebra"
+ },
+ "96fcc58a-fdea-42f0-bd2b-4dcef720a509": {
+  "titulo": "Sucesiones numéricas",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/sucesiones.pdf",
+  "materia": "algebra"
+ },
+ "88e75af3-89ea-4a59-9c6b-48ee977efead": {
+  "titulo": "Álgebra lineal",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/algebra-lineal.pdf",
+  "materia": "algebra"
+ },
+ "13ad497c-9797-4f00-8e23-851c62c2337c": {
+  "titulo": "Polinomios y teoría de ecuaciones",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/polinomios.pdf",
+  "materia": "algebra"
+ },
+ "552cde97-bba7-4b00-8f65-8a48f7427092": {
+  "titulo": "Funciones avanzadas",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/funciones-avanzadas.pdf",
+  "materia": "algebra"
+ },
+ "dd06e33b-1d07-42e6-b463-acd99145ebdc": {
+  "titulo": "Programación lineal",
+  "ejercicios": 15,
+  "pdf": "recursos/guias/algebra/programacion-lineal.pdf",
+  "materia": "algebra"
+ },
+ "c66d91eb-38a2-4f31-816f-c44a2c313b2b": {
+  "titulo": "Lógica proposicional",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/logica-proposicional.pdf",
+  "materia": "algebra"
+ }
+}

@@ -562,3 +562,6 @@ body.dark .subtema-editor-toggle:hover{background:var(--gray200);}
 .busq-historial .busq-hist-icon{color:var(--gray400);font-size:14px;flex-shrink:0;}
 .busq-limpiar{justify-content:center;padding:8px 16px !important;}
 .mat-buscador-resultados{max-height:400px;overflow-y:auto;}
+.subtema-guia{text-decoration:none;color:inherit;border-color:#c4b5fd;background:linear-gradient(135deg,#f5f3ff,#eef2ff)}
+.subtema-guia .subtema-archivo-icon{background:#ede9fe}
+body.dark .subtema-guia{background:#1e1b4b;border-color:#4c1d95}
