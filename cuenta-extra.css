@@ -83,3 +83,26 @@ body.dark .cupon-msj.error{color:#f87171}
 .ax-lista li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--gray200);font-size:13px}
 .ax-lista small{color:var(--gray600);white-space:nowrap}
 @media (max-width:560px){.ax-grid{grid-template-columns:1fr}.ax-resumen b{font-size:18px}}
+
+/* 📈 Visitas (panel admin) */
+.ax-resumen.vx-4{grid-template-columns:repeat(4,1fr)}
+.ax-resumen small{color:var(--gray600);font-size:11px}
+.vx-embudo{margin:0 0 14px}
+#admin-visitas-cont h4{margin:16px 0 6px;font-size:14px;color:var(--gray800)}
+.vx-graf{position:relative}
+.vx-svg{display:block;width:100%;height:auto}
+.vx-grilla{stroke:var(--gray200);stroke-width:1}
+.vx-eje{font-size:10px;fill:var(--gray600);font-family:Inter,system-ui,sans-serif}
+.vx-barra{fill:#2563eb}
+.vx-hit{fill:transparent;cursor:pointer}
+.vx-hit.on{fill:rgba(37,99,235,.08)}
+.vx-tip{position:absolute;top:-6px;background:var(--gray800);color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none}
+.vx-cols{display:grid;grid-template-columns:1fr 1fr;gap:4px 22px}
+.vx-barras{list-style:none;margin:0;padding:0}
+.vx-barras li{display:grid;grid-template-columns:minmax(0,1.3fr) 1fr auto;gap:8px;align-items:center;font-size:13px;padding:3px 0}
+.vx-nom{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray800)}
+.vx-pista{height:8px;background:var(--gray100);border-radius:4px;overflow:hidden}
+.vx-pista i{display:block;height:100%;background:#2563eb;border-radius:4px}
+.vx-barras b{font-size:12px;color:var(--gray800);min-width:34px;text-align:right}
+.vx-excluir{margin-top:16px}
+@media (max-width:640px){.ax-resumen.vx-4{grid-template-columns:repeat(2,1fr)}.vx-cols{grid-template-columns:1fr}}

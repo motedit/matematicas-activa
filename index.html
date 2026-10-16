@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><script src="errores.js?v=2"></script>
+    <meta charset="UTF-8"><script src="errores.js?v=2"></script><script src="visitas.js?v=1" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matemáticas Activas — Plataforma educativa de matemáticas</title>
     <meta name="description" content="Plataforma educativa de matemáticas con videos, ejercicios, juegos y PDFs de Álgebra, Aritmética, Geometría, Estadística, Trigonometría, Cálculo, Razonamiento y Juegos.">
@@ -104,7 +104,7 @@
     <link rel="stylesheet" href="styles.css?v=15">
     <link rel="stylesheet" href="planes.css?v=3">
     <link rel="stylesheet" href="nav.css?v=2">
-    <link rel="stylesheet" href="cuenta-extra.css?v=1">
+    <link rel="stylesheet" href="cuenta-extra.css?v=2">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -623,6 +623,7 @@
                 <button type="button" class="admin-tab" onclick="adminTab('errores')">🐞 Errores</button>
                 <button type="button" class="admin-tab" onclick="adminTab('cupones')">🎟️ Cupones</button>
                 <button type="button" class="admin-tab" onclick="adminTab('correos')">✉️ Correos</button>
+                <button type="button" class="admin-tab" onclick="adminTab('visitas')">📈 Visitas</button>
             </div>
             <div id="admin-tab-archivos">
                 <div class="tab-toolbar">
@@ -659,6 +660,7 @@
             <div id="admin-tab-errores" style="display:none"><div id="admin-errores-cont"></div></div>
             <div id="admin-tab-cupones" style="display:none"><div id="admin-cupones-cont"></div></div>
             <div id="admin-tab-correos" style="display:none"><div id="admin-correos-cont"></div></div>
+            <div id="admin-tab-visitas" style="display:none"><div id="admin-visitas-cont"></div></div>
         </div>
     </div>
 
@@ -772,7 +774,7 @@
     <script src="planes.js?v=3"></script>
     <script src="scripts.js?v=19"></script>
     <script src="cuenta-extra.js?v=1"></script>
-    <script src="admin-extra.js?v=1"></script>
+    <script src="admin-extra.js?v=2"></script>
     <script>
       (function(){ var c=document.getElementById("modal-planes"); if(c && window.MA_PLANES){ c.innerHTML=window.MA_PLANES.tarjetasHtml("modal"); window.pmInit("modal"); } })();
     </script>

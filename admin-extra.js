@@ -1,7 +1,8 @@
 /* Matemáticas Activas — pestañas nuevas del Panel de admin:
    🐞 Errores (lo que falla en los navegadores de los alumnos)
    🎟️ Cupones (crear, pausar y borrar cupones de descuento)
-   ✉️ Correos (estado de Resend, vista previa, pruebas y envío manual) */
+   ✉️ Correos (estado de Resend, vista previa, pruebas y envío manual)
+   📈 Visitas (estadísticas propias: cuántos entran, qué leen, de dónde vienen) */
 (function () {
   "use strict";
   var URL_FN = "https://yidrpuizgtqpswefwdaa.supabase.co/functions/v1/correos";
@@ -192,8 +193,109 @@
     } catch (e) { toast(e.message, "error"); btn.disabled = false; }
   };
 
+
+  // ── 📈 Visitas (estadísticas propias, sin datos personales) ──────
+  var _diasVisitas = 30;
+  var NOMBRE_MATERIA = { algebra: "Álgebra", aritmetica: "Aritmética", geometria: "Geometría", trigonometria: "Trigonometría",
+    calculo: "Cálculo", estadistica: "Estadística", razonamiento: "Razonamiento" };
+  function nombrePagina(p) {
+    if (!p || p === "/") return "Inicio";
+    if (/^\/calculadora/.test(p)) return "Calculadora paso a paso";
+    if (/^\/docentes\/?$/.test(p)) return "Docentes (biblioteca)";
+    var m = p.match(/^\/materias\/([^/]+)\//); if (m) return "Materia: " + (NOMBRE_MATERIA[m[1].toLowerCase()] || m[1]);
+    var ult = p.split("/").filter(Boolean).pop() || p;
+    return ult.replace(/\.html$/, "").replace(/[-_]/g, " ");
+  }
+  function fechaCorta(d) { var x = String(d).split("-"); return x[2] + "/" + x[1]; }
+  function fmt(n) { return Number(n || 0).toLocaleString("es-AR"); }
+  function pct(a, b) { return b ? (Math.round(a * 1000 / b) / 10).toLocaleString("es-AR") + " %" : "–"; }
+  function barras(lista, campo, etiqueta) {
+    if (!lista || !lista.length) return '<p class="ax-nota">Todavía no hay datos.</p>';
+    var max = Math.max.apply(null, lista.map(function (x) { return x[campo]; })) || 1;
+    return '<ul class="vx-barras">' + lista.map(function (x) {
+      return '<li><span class="vx-nom" title="' + esc(etiqueta(x)) + '">' + esc(etiqueta(x)) + '</span><span class="vx-pista"><i style="width:' +
+        Math.max(2, Math.round(x[campo] * 100 / max)) + '%"></i></span><b>' + fmt(x[campo]) + "</b></li>";
+    }).join("") + "</ul>";
+  }
+  function grafico(datos, campo, etiquetaX, unidad, anchoCaja) {
+    var W = Math.max(300, Math.min(900, anchoCaja || 640)), H = 170, izq = 30, abajo = 22, arriba = 10, n = datos.length;
+    var max = Math.max.apply(null, datos.map(function (d) { return d[campo]; }));
+    var tope = max <= 5 ? 5 : Math.ceil(max / 5) * 5;
+    var ancho = (W - izq) / n, barra = Math.max(2, ancho - 2);
+    var y = function (v) { return arriba + (H - arriba - abajo) * (1 - v / tope); };
+    var svg = '<svg class="vx-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Gráfico de ' + esc(unidad) + '">';
+    [0, tope / 2, tope].forEach(function (v) {
+      svg += '<line x1="' + izq + '" x2="' + W + '" y1="' + y(v) + '" y2="' + y(v) + '" class="vx-grilla"/><text x="' + (izq - 5) + '" y="' + (y(v) + 4) + '" class="vx-eje" text-anchor="end">' + v + "</text>";
+    });
+    datos.forEach(function (d, i) {
+      var x = izq + i * ancho + 1, v = d[campo], top = y(v), alto = (H - abajo) - top;
+      if (v > 0) svg += '<path class="vx-barra" d="M' + x + "," + (H - abajo) + "V" + (top + Math.min(4, alto)) + "q0,-" + Math.min(4, alto) + " " + Math.min(4, alto) + ",-" + Math.min(4, alto) +
+        "H" + (x + barra - Math.min(4, alto)) + "q" + Math.min(4, alto) + ",0 " + Math.min(4, alto) + "," + Math.min(4, alto) + "V" + (H - abajo) + 'Z"/>';
+      svg += '<rect class="vx-hit" x="' + (izq + i * ancho) + '" y="0" width="' + ancho + '" height="' + (H - abajo) + '" data-t="' + esc(etiquetaX(d, true) + ": " + fmt(v) + " " + unidad) + '"/>';
+      var cada = Math.ceil(n / Math.max(3, Math.floor(W / 80)));
+      if (i % cada === 0 || (i === n - 1 && (n - 1) % cada >= cada / 2)) svg += '<text x="' + (i === n - 1 ? x + barra : x + barra / 2) + '" y="' + (H - 6) + '" class="vx-eje" text-anchor="' + (i === n - 1 ? "end" : i === 0 ? "start" : "middle") + '">' + esc(etiquetaX(d)) + "</text>";
+    });
+    return '<div class="vx-graf">' + svg + '</svg><div class="vx-tip" hidden></div></div>';
+  }
+  function activarTooltips(c) {
+    c.querySelectorAll(".vx-graf").forEach(function (g) {
+      var tip = g.querySelector(".vx-tip");
+      g.querySelectorAll(".vx-hit").forEach(function (r) {
+        function mostrar() {
+          g.querySelectorAll(".vx-hit.on").forEach(function (o) { o.classList.remove("on"); });
+          r.classList.add("on"); tip.textContent = r.getAttribute("data-t"); tip.hidden = false;
+          var gb = g.getBoundingClientRect(), rb = r.getBoundingClientRect();
+          tip.style.left = Math.min(Math.max(0, rb.left - gb.left + rb.width / 2 - tip.offsetWidth / 2), gb.width - tip.offsetWidth) + "px";
+        }
+        r.addEventListener("mouseenter", mostrar); r.addEventListener("click", mostrar);
+      });
+      g.addEventListener("mouseleave", function () { tip.hidden = true; g.querySelectorAll(".vx-hit.on").forEach(function (o) { o.classList.remove("on"); }); });
+    });
+  }
+  async function renderVisitas() {
+    var c = document.getElementById("admin-visitas-cont"); if (!c) return;
+    c.innerHTML = '<p class="ax-cargando">Cargando…</p>';
+    var r = await sb().rpc("estadisticas_visitas", { p_dias: _diasVisitas });
+    if (r.error) {
+      c.innerHTML = /does not exist|schema cache|Could not find/i.test(r.error.message || "") ?
+        '<p class="ax-aviso">Falta correr el archivo <b>APLICAR-VISITAS-16-10-EN-SUPABASE.sql</b> en Supabase.</p>' :
+        '<p class="ax-aviso">' + esc(r.error.message) + "</p>";
+      return;
+    }
+    var d = r.data || {}, per = d.periodo || {}, disp = d.dispositivos || {};
+    var totDisp = (disp.movil || 0) + (disp.tablet || 0) + (disp.pc || 0) + (disp.otro || 0);
+    var excluido = window.MA_VISITA && window.MA_VISITA.excluido();
+    c.innerHTML =
+      '<div class="ax-acciones vx-periodo" role="group" aria-label="Período">' + [7, 30, 90].map(function (n) {
+        return '<button type="button" class="ax-btn' + (n === _diasVisitas ? " ax-principal" : "") + '" onclick="MA_adminVisitasDias(' + n + ')">Últimos ' + n + " días</button>";
+      }).join("") + "</div>" +
+      '<div class="ax-resumen vx-4"><div><b>' + fmt((d.hoy || {}).visitantes) + "</b><span>visitantes hoy<br><small>ayer: " + fmt((d.ayer || {}).visitantes) + "</small></span></div>" +
+      "<div><b>" + fmt(per.visitantes) + "</b><span>visitantes en " + d.dias + " días<br><small>" + fmt(per.nuevos) + " nuevos</small></span></div>" +
+      "<div><b>" + fmt(per.visitas) + "</b><span>páginas vistas</span></div>" +
+      "<div><b>" + fmt(per.temas_abiertos) + "</b><span>temas leídos</span></div></div>" +
+      '<p class="ax-nota vx-embudo">De <b>' + fmt(per.visitantes) + "</b> visitantes, <b>" + fmt(d.registros) + "</b> se registraron (" + pct(d.registros || 0, per.visitantes) +
+      ") y hubo <b>" + fmt(d.pagos) + "</b> pagos (" + pct(d.pagos || 0, per.visitantes) + ").</p>" +
+      "<h4>Visitantes por día</h4>" + grafico(d.por_dia || [], "visitantes", function (x) { return fechaCorta(x.dia); }, "visitantes", c.clientWidth) +
+      "<h4>¿A qué hora entran?</h4>" + grafico(d.por_hora || [], "visitas", function (x, largo) { return largo ? x.hora + ":00 a " + x.hora + ":59" : x.hora + "h"; }, "páginas vistas", c.clientWidth) +
+      '<div class="vx-cols"><section><h4>Temas más leídos</h4>' + barras(d.temas, "visitantes", function (x) { return x.nombre + (x.materia ? " · " + (NOMBRE_MATERIA[x.materia] || x.materia) : ""); }) + "</section>" +
+      "<section><h4>De dónde llegan</h4>" + barras(d.origenes, "visitantes", function (x) { return x.nombre; }) + "</section>" +
+      "<section><h4>Páginas más vistas</h4>" + barras(d.paginas, "visitas", function (x) { return nombrePagina(x.nombre); }) + "</section>" +
+      "<section><h4>Desde qué aparato</h4>" + (totDisp ? '<ul class="vx-barras">' + [["movil", "📱 Celular"], ["pc", "💻 Computadora"], ["tablet", "📟 Tablet"]].map(function (k) {
+        var v = disp[k[0]] || 0;
+        return "<li><span class=\"vx-nom\">" + k[1] + '</span><span class="vx-pista"><i style="width:' + Math.max(2, Math.round(v * 100 / totDisp)) + '%"></i></span><b>' + pct(v, totDisp) + "</b></li>";
+      }).join("") + "</ul>" : '<p class="ax-nota">Todavía no hay datos.</p>') + "</section></div>" +
+      '<label class="ax-check vx-excluir"><input type="checkbox" ' + (excluido ? "checked" : "") + ' onchange="MA_adminNoContarme(this.checked)"> No contar mis propias visitas desde este aparato</label>' +
+      '<p class="ax-nota">“Visitante” = un navegador distinto (sin datos personales: no se guarda IP, nombre ni correo). Se cuentan solo las visitas al sitio real, no a tu compu ni a los robots de Google.</p>';
+    activarTooltips(c);
+  }
+  window.MA_adminVisitasDias = function (n) { _diasVisitas = n; renderVisitas(); };
+  window.MA_adminNoContarme = function (si) {
+    if (window.MA_VISITA) window.MA_VISITA.noContarme(si);
+    toast(si ? "Listo: tus visitas desde este aparato ya no se cuentan." : "Tus visitas desde este aparato se vuelven a contar.", "ok");
+  };
+
   // ── Integración con adminTab() de scripts.js ───────────────────
-  var EXTRA = { errores: renderErrores, cupones: renderCupones, correos: renderCorreos };
+  var EXTRA = { errores: renderErrores, cupones: renderCupones, correos: renderCorreos, visitas: renderVisitas };
   if (typeof window.adminTab === "function") {
     var original = window.adminTab;
     window.adminTab = function (tab) {

@@ -1150,6 +1150,7 @@
             <div class="subtema-archivos" id="subtema-archivos-cont"><p style="padding:16px;color:#94a3b8;text-align:center">Cargando…</p></div>
         </div>`;
         ov.classList.add("activo");
+        try { window.MA_VISITA && window.MA_VISITA.tema(temaId); } catch (e) {}
         MA()?.sbRegistrarEvento?.('tema_vista', { materia: MATERIA_ID, temaId });
 
         // Cargar contenido de la DB
