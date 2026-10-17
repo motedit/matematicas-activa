@@ -1479,6 +1479,10 @@ function verificarRetornoPago() {
 
 function accesoAdminPorHash() {
     const h = (location.hash||"").toLowerCase();
+    if (h==="#ingresar") {   // link "Iniciar sesión" de los correos
+        if (!appState.perfilActual) { document.getElementById("overlay-auth").style.display="flex"; mostrarForm("form-login"); }
+        return;
+    }
     if (h!=="#admin" && h!=="#panel") return;
     if (appState.perfilActual?.rol==="admin") {
         abrirAdmin();
