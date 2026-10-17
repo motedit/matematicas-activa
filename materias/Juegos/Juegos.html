@@ -99,7 +99,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f1f5f9;c
 }
 </style>
 </head>
-<body>
+<body data-fx-puntos="no">
 <div class="jm-header">
     <h1>🎮 Juegos Matemáticos</h1>
     <a href="../../index.html">← Volver al inicio</a>
@@ -405,12 +405,19 @@ function cmFin(){
 }
 document.getElementById("cm-input").addEventListener("keydown",e=>{
     if(e.key!=="Enter"||!cmActivo) return;
-    const v=+document.getElementById("cm-input").value;
+    const inp=document.getElementById("cm-input");
+    if(inp.value.trim()==="") return;
+    const v=+inp.value, prob=document.getElementById("cm-problema").textContent, msg=document.getElementById("cm-msg");
     if(v===cmResp){
         cmPts++;
         document.getElementById("cm-puntos").textContent="✅ "+cmPts;
+        msg.className="jm-msg"; msg.textContent="";
+        window.JUEGOS_FX && JUEGOS_FX.bien(document.getElementById("cm-problema"));
+    }else{
+        msg.className="jm-msg"; msg.textContent=`❌ ${prob} = ${cmResp}`;
+        window.JUEGOS_FX && JUEGOS_FX.mal(inp);
     }
-    document.getElementById("cm-input").value="";
+    inp.value="";
     cmNuevoProblema();
 });
 
@@ -802,11 +809,12 @@ function frSiguiente(){
     barra+='</div>';
     vis.innerHTML=barra;
     // opciones
-    const ops=new Set([frCorrecta]);
+    const ops=new Set([frCorrecta]), valores=new Set([num/den]);
     while(ops.size<6){
         const d=[2,3,4,5,6,8][Math.floor(Math.random()*6)];
         const n=Math.floor(Math.random()*(d-1))+1;
-        ops.add(n+"/"+d);
+        if(valores.has(n/d)) continue;   // evita opciones equivalentes (1/2 y 2/4) que confunden
+        valores.add(n/d); ops.add(n+"/"+d);
     }
     const arr=[...ops].sort(()=>Math.random()-0.5);
     const cont=document.getElementById("fr-ops");
@@ -832,5 +840,7 @@ function frResponder(o,btn){
     setTimeout(frSiguiente,1200);
 }
 </script>
+<script src="mas/arcade-comun.js?v=1"></script>
+<script src="juegos-fx.js?v=1"></script>
 </body>
 </html>
