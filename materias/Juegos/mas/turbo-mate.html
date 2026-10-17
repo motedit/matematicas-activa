@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../../../errores.js?v=3"></script><script src="../../../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Turbo Mate 🏁 — Juego de cálculo a toda velocidad</title>
+<meta name="description" content="Juego arcade de matemática: corré a toda velocidad y pasá por la puerta con la respuesta correcta. Sumas, tablas, potencias, ecuaciones y porcentajes.">
+<link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/turbo-mate.html">
+<meta name="theme-color" content="#120b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--fondo:#120b2e;--panel:rgba(20,12,52,.86);--borde:rgba(167,139,250,.35);--texto:#f5f3ff;--suave:#c4b5fd;--neon:#22d3ee;--rosa:#f472b6;--oro:#fbbf24;--ok:#34d399;--mal:#fb7185}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--fondo);color:var(--texto);font-family:Nunito,system-ui,sans-serif;overflow:hidden;overscroll-behavior:none}
+#juego{position:fixed;inset:0;touch-action:none}
+canvas{display:block;width:100%;height:100%}
+button{font-family:inherit;cursor:pointer}
+.hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:max(10px,env(safe-area-inset-top)) 12px 0;pointer-events:none;gap:8px}
+.hud .caja{background:var(--panel);border:1px solid var(--borde);border-radius:14px;padding:6px 12px;backdrop-filter:blur(6px);pointer-events:auto}
+.puntaje{font-family:"Baloo 2";font-weight:800;font-size:26px;line-height:1}
+.puntaje small{display:block;font-family:Nunito;font-size:11px;font-weight:700;color:var(--suave);letter-spacing:.5px;text-transform:uppercase}
+.vidas{font-size:20px;letter-spacing:2px}
+.der{display:flex;gap:6px}
+.icono{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--borde);color:var(--texto);font-size:18px;display:grid;place-items:center;pointer-events:auto}
+.pregunta{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 54px);transform:translateX(-50%);background:linear-gradient(135deg,rgba(124,58,237,.92),rgba(219,39,119,.9));border:2px solid rgba(255,255,255,.35);border-radius:18px;padding:8px 22px 6px;font-family:"Baloo 2";font-weight:800;font-size:clamp(26px,6.5vw,44px);text-align:center;box-shadow:0 10px 30px rgba(124,58,237,.45);pointer-events:none;white-space:nowrap;transition:transform .15s}
+.pregunta.pop{transform:translateX(-50%) scale(1.08)}
+.combo{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 122px);transform:translateX(-50%);font-family:"Baloo 2";font-weight:800;font-size:18px;color:var(--oro);text-shadow:0 2px 10px rgba(251,191,36,.6);pointer-events:none;opacity:0;transition:opacity .2s}
+.aviso{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);font-family:"Baloo 2";font-weight:800;font-size:clamp(34px,9vw,64px);color:#fff;text-shadow:0 4px 24px rgba(34,211,238,.8);opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.2,1.6,.4,1);white-space:nowrap}
+.aviso.ver{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.flechas{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:none;justify-content:space-between;padding:0 14px;pointer-events:none}
+.flechas button{pointer-events:auto;width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(20,12,52,.55);color:#fff;font-size:30px;backdrop-filter:blur(4px)}
+.flechas button:active{background:rgba(124,58,237,.7)}
+@media (pointer:coarse){.flechas{display:flex}}
+.pantalla{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,rgba(124,58,237,.35),rgba(18,11,46,.92) 70%);overflow:auto}
+.pantalla.ver{display:flex}
+.tarjeta{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--borde);border-radius:24px;padding:22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
+.logo{font-family:"Baloo 2";font-weight:800;font-size:clamp(40px,11vw,64px);line-height:1;background:linear-gradient(90deg,var(--neon),#a78bfa,var(--rosa));-webkit-background-clip:text;background-clip:text;color:transparent;margin:4px 0 2px}
+.sub{color:var(--suave);font-weight:700;margin:0 0 16px}
+.temas{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.tema{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 10px;color:var(--texto);text-align:center;transition:transform .12s,border-color .12s}
+.tema:hover{transform:translateY(-2px)}
+.tema.sel{border-color:var(--neon);background:rgba(34,211,238,.14);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
+.tema b{display:block;font-family:"Baloo 2";font-size:18px}
+.tema span{font-size:12.5px;color:var(--suave)}
+.tema i{font-style:normal;font-size:26px;display:block}
+.tema em{font-style:normal;display:block;font-size:11.5px;color:var(--oro);margin-top:2px;font-weight:800}
+.btn{border:0;border-radius:16px;padding:14px 26px;font-family:"Baloo 2";font-weight:800;font-size:20px;color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 8px 24px rgba(219,39,119,.4);transition:transform .12s}
+.btn:hover{transform:translateY(-2px)}
+.btn.sec{background:rgba(255,255,255,.1);box-shadow:none;font-size:16px;padding:11px 18px;display:inline-flex;align-items:center;justify-content:center}
+.botones{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.ayuda{font-size:13px;color:var(--suave);margin:14px 0 0;line-height:1.5}
+.kbd{display:inline-block;border:1px solid var(--borde);border-radius:6px;padding:0 6px;font-weight:800;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.stat{background:rgba(255,255,255,.06);border-radius:14px;padding:10px 6px}
+.stat b{display:block;font-family:"Baloo 2";font-size:26px;line-height:1.1}
+.stat span{font-size:12px;color:var(--suave)}
+.record{color:var(--oro);font-weight:800;min-height:22px}
+.repaso{text-align:left;background:rgba(255,255,255,.05);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-size:14.5px}
+.repaso h4{margin:0 0 6px;font-size:14px;color:var(--suave)}
+.repaso li{margin:3px 0}
+.repaso .ok{color:var(--ok);font-weight:800}
+.repaso .mal{color:var(--mal);text-decoration:line-through}
+.cuenta{font-size:13.5px;color:var(--suave);margin:0 0 14px;min-height:20px}
+.cuenta b{color:var(--ok)}
+.volver{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;color:var(--suave);text-decoration:none;font-weight:800;font-size:14px;background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:8px 12px;z-index:2}
+.oculto{display:none!important}
+@media (prefers-reduced-motion:reduce){.aviso,.pregunta{transition:none}}
+</style>
+</head>
+<body>
+<div id="juego">
+  <canvas id="lienzo" aria-label="Pista de Turbo Mate"></canvas>
+
+  <div class="hud oculto" id="hud">
+    <div class="caja"><div class="puntaje"><small>Puntos</small><span id="puntos">0</span></div></div>
+    <div class="der">
+      <div class="caja vidas" id="vidas" aria-label="Vidas">❤️❤️❤️</div>
+      <button class="icono" id="btnSonido" aria-label="Sonido">🔊</button>
+      <button class="icono" id="btnPausa" aria-label="Pausa">⏸</button>
+    </div>
+  </div>
+  <div class="pregunta oculto" id="pregunta" aria-live="polite"></div>
+  <div class="combo" id="combo"></div>
+  <div class="aviso" id="aviso"></div>
+  <div class="flechas oculto" id="flechas">
+    <button id="izq" aria-label="Carril izquierdo">◀</button>
+    <button id="der" aria-label="Carril derecho">▶</button>
+  </div>
+
+  <!-- Inicio -->
+  <div class="pantalla ver" id="inicio">
+    <a class="volver" href="../Juegos.html">← Juegos</a>
+    <div class="tarjeta">
+      <div class="logo">Turbo Mate</div>
+      <p class="sub">Corré a toda velocidad y pasá por la puerta con la respuesta correcta.</p>
+      <div class="temas" id="temas"></div>
+      <button class="btn" id="btnJugar">¡A correr! 🏁</button>
+      <p class="ayuda">Cambiá de carril con <span class="kbd">←</span> <span class="kbd">→</span>, deslizando el dedo o tocando los costados de la pantalla.<br>Cada acierto suma y te da más velocidad. Tenés 3 vidas. Las monedas dan puntos extra.</p>
+    </div>
+  </div>
+
+  <!-- Pausa -->
+  <div class="pantalla" id="pausa">
+    <div class="tarjeta">
+      <div class="logo" style="font-size:44px">Pausa</div>
+      <p class="sub">Respirá hondo… la pista te espera.</p>
+      <div class="botones">
+        <button class="btn" id="btnSeguir">Seguir ▶</button>
+        <button class="btn sec" id="btnSalir">Terminar partida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fin -->
+  <div class="pantalla" id="fin">
+    <div class="tarjeta">
+      <div class="logo" style="font-size:46px" id="finTitulo">¡Buena carrera!</div>
+      <div class="record" id="finRecord"></div>
+      <div class="stats">
+        <div class="stat"><b id="finPuntos">0</b><span>puntos</span></div>
+        <div class="stat"><b id="finAciertos">0</b><span>aciertos</span></div>
+        <div class="stat"><b id="finCombo">0</b><span>mejor racha</span></div>
+      </div>
+      <div class="repaso oculto" id="repaso"><h4>Para repasar</h4><ul id="repasoLista" style="margin:0;padding-left:18px"></ul></div>
+      <p class="cuenta" id="cuenta"></p>
+      <div class="botones">
+        <button class="btn" id="btnOtra">Jugar de nuevo 🔁</button>
+        <button class="btn sec" id="btnTemas">Cambiar tema</button>
+        <a class="btn sec" href="../Juegos.html" style="text-decoration:none">Más juegos</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../supabase-config.js?v=15"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const azar = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const elegir = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const mezclar = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  const MOV_REDUCIDO = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const leer = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+  // ───────────────────────── Temas y generación de cuentas ─────────────────────────
+  const TEMAS = {
+    sumas:      { ico: "➕", nombre: "Sumas y restas", desc: "De 1 a 3 cifras" },
+    tablas:     { ico: "✖️", nombre: "Tablas", desc: "Multiplicar y dividir" },
+    mezcla:     { ico: "🎲", nombre: "Las 4 operaciones", desc: "Un poco de todo" },
+    potencias:  { ico: "🚀", nombre: "Potencias y raíces", desc: "Cuadrados, cubos, √" },
+    ecuaciones: { ico: "🔍", nombre: "Ecuaciones", desc: "¿Cuánto vale x?" },
+    porcentajes:{ ico: "🍕", nombre: "Fracciones y %", desc: "La mitad, el 25 %…" },
+  };
+
+  function distractores(r, extra) {
+    const set = new Set();
+    const cand = [r + 1, r - 1, r + 2, r - 2, r + 10, r - 10, ...(extra || [])];
+    mezclar(cand);
+    for (const c of cand) if (Number.isInteger(c) && c >= 0 && c !== r) set.add(c);
+    while (set.size < 2) { const c = r + azar(-5, 5); if (c >= 0 && c !== r) set.add(c); }
+    return [...set].slice(0, 2);
+  }
+
+  function cuenta(tema, nivel) {
+    const d = Math.min(nivel, 6);
+    const t = tema === "mezcla" ? elegir(["sumas", "tablas", "sumas", "tablas", "division"]) : tema;
+    let txt, r, extra = [];
+    switch (t) {
+      case "sumas": {
+        const max = [0, 20, 50, 100, 200, 500, 999][d];
+        let a = azar(2, max), b = azar(2, max);
+        if (Math.random() < 0.5) { txt = `${a} + ${b}`; r = a + b; extra = [a + b + 10, Math.abs(a - b)]; }
+        else { if (b > a) [a, b] = [b, a]; txt = `${a} − ${b}`; r = a - b; extra = [a + b, r + 10]; }
+        break;
+      }
+      case "tablas": case "division": {
+        const tope = [0, 5, 7, 10, 10, 12, 12][d];
+        const a = azar(2, tope), b = azar(2, 10);
+        if (t === "division" || (d >= 3 && Math.random() < 0.35)) { txt = `${a * b} ÷ ${a}`; r = b; extra = [b + 1, a]; }
+        else { txt = `${a} × ${b}`; r = a * b; extra = [a * (b + 1), a * (b - 1), a + b]; }
+        break;
+      }
+      case "potencias": {
+        const tipo = elegir(d < 2 ? ["cuad", "cuad", "raiz"] : ["cuad", "cubo", "raiz", "pot2", "raiz"]);
+        if (tipo === "cuad") { const a = azar(2, d < 3 ? 10 : 15); txt = `${a}²`; r = a * a; extra = [a * 2, (a + 1) * (a + 1)]; }
+        else if (tipo === "cubo") { const a = azar(2, 6); txt = `${a}³`; r = a ** 3; extra = [a * 3, a * a]; }
+        else if (tipo === "pot2") { const n = azar(3, 8 + d); txt = `2^${n}`; r = 2 ** n; extra = [2 * n, 2 ** (n - 1)]; }
+        else { const a = azar(2, d < 3 ? 10 : 15); txt = `√${a * a}`; r = a; extra = [a * a / 2 | 0, a + 1]; }
+        break;
+      }
+      case "ecuaciones": {
+        const x = azar(1, d < 3 ? 10 : 15);
+        const tipo = elegir(d < 2 ? ["suma", "resta"] : d < 4 ? ["suma", "mult", "resta"] : ["mult", "lineal", "lineal", "suma"]);
+        if (tipo === "suma") { const a = azar(2, 20); txt = `x + ${a} = ${x + a}`; r = x; extra = [x + a + a, x + 1]; }
+        else if (tipo === "resta") { const a = azar(2, 20); txt = `x − ${a} = ${x}`; r = x + a; extra = [x, Math.max(0, x - a), x + a + 1]; }
+        else if (tipo === "mult") { const a = azar(2, 9); txt = `${a}x = ${a * x}`; r = x; extra = [a * x - a, x + a]; }
+        else { const a = azar(2, 6), b = azar(1, 12); txt = `${a}x + ${b} = ${a * x + b}`; r = x; extra = [x + 1, (a * x + b) - b]; }
+        break;
+      }
+      case "porcentajes": {
+        const tipo = elegir(d < 2 ? ["mitad", "cuarto", "p10"] : ["mitad", "cuarto", "p10", "p25", "p50", "tres4", "p20"]);
+        if (tipo === "mitad") { const n = azar(2, 40) * 2; txt = `½ de ${n}`; r = n / 2; extra = [n * 2, n / 2 + 2]; }
+        else if (tipo === "cuarto") { const n = azar(2, 25) * 4; txt = `¼ de ${n}`; r = n / 4; extra = [n / 2, n / 4 + 4]; }
+        else if (tipo === "tres4") { const n = azar(2, 20) * 4; txt = `¾ de ${n}`; r = n * 3 / 4; extra = [n / 4, n * 3 / 4 + 3]; }
+        else if (tipo === "p10") { const n = azar(2, 50) * 10; txt = `10 % de ${n}`; r = n / 10; extra = [n / 100 | 0, n / 10 + 10]; }
+        else if (tipo === "p20") { const n = azar(2, 25) * 10; txt = `20 % de ${n}`; r = n / 5; extra = [n / 10, n / 5 + 5]; }
+        else if (tipo === "p25") { const n = azar(2, 25) * 4; txt = `25 % de ${n}`; r = n / 4; extra = [n / 2, n / 4 + 5]; }
+        else { const n = azar(2, 50) * 2; txt = `50 % de ${n}`; r = n / 2; extra = [n / 5 | 0, n / 2 + 10]; }
+        break;
+      }
+    }
+    const opciones = mezclar([r, ...distractores(r, extra)]);
+    return { txt, r, opciones, correcta: opciones.indexOf(r) };
+  }
+
+  // ───────────────────────── Sonido (sintetizado, sin archivos) ─────────────────────────
+  let ac = null, sonido = leer("turbo_sonido") !== "0";
+  function nota(f, t0, dur, tipo, vol) {
+    if (!sonido) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + t0;
+      o.type = tipo || "sine"; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  const SFX = {
+    bien: () => { nota(660, 0, .12, "triangle"); nota(990, .08, .18, "triangle"); },
+    mal: () => { nota(180, 0, .28, "sawtooth", .12); nota(120, .1, .3, "sawtooth", .1); },
+    moneda: () => { nota(1320, 0, .07, "square", .05); nota(1760, .05, .1, "square", .05); },
+    nivel: () => [523, 659, 784, 1047].forEach((f, i) => nota(f, i * .08, .2, "triangle", .13)),
+    carril: () => nota(420, 0, .05, "sine", .05),
+    fin: () => [392, 330, 262].forEach((f, i) => nota(f, i * .15, .3, "triangle", .12)),
+  };
+  function pintarSonido() { $("btnSonido").textContent = sonido ? "🔊" : "🔇"; }
+  $("btnSonido").onclick = () => { sonido = !sonido; guardar("turbo_sonido", sonido ? "1" : "0"); pintarSonido(); };
+  pintarSonido();
+
+  // ───────────────────────── Lienzo ─────────────────────────
+  const cv = $("lienzo"), cx = cv.getContext("2d");
+  let W = 0, H = 0, DPR = 1;
+  function medir() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", medir); medir();
+
+  // Proyección: z = distancia hacia adelante. El jugador está en Z_JUG.
+  const Z_JUG = 4, Z_LEJOS = 90, ENTRE_PUERTAS = 34;
+  const horizonte = () => H * 0.36;
+  const piso = () => H * 0.9;
+  const anchoCarril = () => Math.min(W / 3.4, 200);
+  const LENTE = 7;   // cuanto más grande, más despacio se achican las cosas a lo lejos
+  const esc = (z) => (Z_JUG + LENTE) / (z + LENTE);
+  const proyY = (z) => horizonte() + (piso() - horizonte()) * esc(z);
+  const proyX = (x, z) => W / 2 + x * anchoCarril() * esc(z);
+
+  // Cerros de fondo (fijos por partida, para que no "tiemblen")
+  const cerros = [];
+  for (let capa = 0; capa < 2; capa++) {
+    const pts = []; let y = 0.5;
+    for (let i = 0; i <= 24; i++) { y = Math.max(0.15, Math.min(1, y + (Math.random() - 0.5) * 0.5)); pts.push(y); }
+    cerros.push(pts);
+  }
+  const estrellas = Array.from({ length: 60 }, () => ({ x: Math.random(), y: Math.random() * 0.7, r: Math.random() * 1.4 + 0.3, f: Math.random() * 6 }));
+
+  // ───────────────────────── Estado ─────────────────────────
+  let tema = leer("turbo_tema") || "tablas";
+  if (!TEMAS[tema]) tema = "tablas";
+  let E = null, ultimo = 0, rafaga = 0, sacudida = 0, destello = null;
+
+  function nuevaPartida() {
+    E = {
+      corriendo: true, pausa: false, t: 0, recorrido: 0,
+      vel: 15, carril: 0, xJug: 0, inclin: 0,
+      puertas: [], monedas: [], particulas: [], textos: [],
+      puntos: 0, vidas: 3, aciertos: 0, total: 0, racha: 0, mejorRacha: 0, nivel: 1,
+      errores: [], proxima: Z_LEJOS * 0.75, invencible: 0,
+    };
+    for (let i = 0; i < 3; i++) agregarPuerta();
+    actualizarHUD();
+  }
+
+  function agregarPuerta() {
+    const z = E.puertas.length ? E.puertas[E.puertas.length - 1].z + ENTRE_PUERTAS : E.proxima;
+    const c = cuenta(tema, E.nivel);
+    E.puertas.push({ z, ...c, resuelta: false, elegida: null });
+    // monedas entre esta puerta y la siguiente, en un carril al azar
+    if (Math.random() < 0.7) {
+      const carril = azar(-1, 1);
+      for (let k = 0; k < 4; k++) E.monedas.push({ z: z + 9 + k * 4, carril, tomada: false });
+    }
+  }
+
+  function puertaActual() { return E.puertas.find((p) => !p.resuelta); }
+
+  // ───────────────────────── Controles ─────────────────────────
+  function mover(dir) {
+    if (!E || !E.corriendo || E.pausa) return;
+    const n = Math.max(-1, Math.min(1, E.carril + dir));
+    if (n !== E.carril) { E.carril = n; E.inclin = dir; SFX.carril(); }
+  }
+  window.addEventListener("keydown", (e) => {
+    if (["ArrowLeft", "a", "A"].includes(e.key)) { mover(-1); e.preventDefault(); }
+    else if (["ArrowRight", "d", "D"].includes(e.key)) { mover(1); e.preventDefault(); }
+    else if (e.key === "Escape" || e.key === "p" || e.key === "P") alternarPausa();
+    else if ((e.key === "Enter" || e.key === " ") && ($("inicio").classList.contains("ver") || $("fin").classList.contains("ver"))) { e.preventDefault(); empezar(); }
+  });
+  let toque = null;
+  cv.addEventListener("pointerdown", (e) => { toque = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+  cv.addEventListener("pointerup", (e) => {
+    if (!toque) return;
+    const dx = e.clientX - toque.x, dy = e.clientY - toque.y;
+    if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) mover(dx > 0 ? 1 : -1);
+    else if (Math.abs(dx) < 12 && Math.abs(dy) < 12) mover(e.clientX < W / 2 ? -1 : 1);
+    toque = null;
+  });
+  $("izq").addEventListener("pointerdown", (e) => { e.preventDefault(); mover(-1); });
+  $("der").addEventListener("pointerdown", (e) => { e.preventDefault(); mover(1); });
+
+  function alternarPausa(forzar) {
+    if (!E || !E.corriendo) return;
+    E.pausa = forzar !== undefined ? forzar : !E.pausa;
+    $("pausa").classList.toggle("ver", E.pausa);
+    $("btnPausa").textContent = E.pausa ? "▶" : "⏸";
+  }
+  $("btnPausa").onclick = () => alternarPausa();
+  $("btnSeguir").onclick = () => alternarPausa(false);
+  $("btnSalir").onclick = () => { alternarPausa(false); terminar(); };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) alternarPausa(true); });
+
+  // ───────────────────────── Pantalla de inicio ─────────────────────────
+  function pintarTemas() {
+    $("temas").innerHTML = Object.entries(TEMAS).map(([k, t]) => {
+      const rec = +leer("turbo_record_" + k) || 0;
+      return `<button class="tema${k === tema ? " sel" : ""}" data-tema="${k}"><i>${t.ico}</i><b>${t.nombre}</b><span>${t.desc}</span>${rec ? `<em>🏆 Récord: ${rec}</em>` : ""}</button>`;
+    }).join("");
+    $("temas").querySelectorAll(".tema").forEach((b) => b.onclick = () => { tema = b.dataset.tema; guardar("turbo_tema", tema); pintarTemas(); });
+  }
+  pintarTemas();
+
+  function empezar() {
+    ["inicio", "fin", "pausa"].forEach((id) => $(id).classList.remove("ver"));
+    ["hud", "pregunta", "flechas"].forEach((id) => $(id).classList.remove("oculto"));
+    nuevaPartida();
+    mostrarAviso("¡Ya!");
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume && ac.resume(); } catch (e) {}
+  }
+  $("btnJugar").onclick = empezar;
+  $("btnOtra").onclick = empezar;
+  $("btnTemas").onclick = () => { $("fin").classList.remove("ver"); pintarTemas(); $("inicio").classList.add("ver"); };
+
+  // ───────────────────────── Lógica ─────────────────────────
+  function mostrarAviso(t) {
+    const a = $("aviso"); a.textContent = t; a.classList.add("ver");
+    clearTimeout(mostrarAviso._t); mostrarAviso._t = setTimeout(() => a.classList.remove("ver"), 900);
+  }
+  function multiplicador() { return E.racha >= 10 ? 4 : E.racha >= 6 ? 3 : E.racha >= 3 ? 2 : 1; }
+
+  function actualizarHUD() {
+    $("puntos").textContent = E.puntos;
+    $("vidas").textContent = "❤️".repeat(E.vidas) + "🖤".repeat(Math.max(0, 3 - E.vidas));
+    const p = puertaActual();
+    if (p) $("pregunta").textContent = p.txt + " = ?";
+    const m = multiplicador(), c = $("combo");
+    c.textContent = m > 1 ? `🔥 Racha ${E.racha} · x${m}` : "";
+    c.style.opacity = m > 1 ? 1 : 0;
+  }
+
+  function explotar(x, y, color, n) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5;
+      E.particulas.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, vida: 1, color, r: 2 + Math.random() * 3 });
+    }
+  }
+  function textoFlotante(t, x, y, color) { E.textos.push({ t, x, y, vida: 1, color }); }
+
+  function resolver(p) {
+    p.resuelta = true; p.elegida = E.carril + 1;
+    E.total++;
+    const yJ = piso() - 40, xJ = proyX(E.xJug * 1.0, Z_JUG);
+    if (p.elegida === p.correcta) {
+      E.aciertos++; E.racha++; E.mejorRacha = Math.max(E.mejorRacha, E.racha);
+      const gan = 10 * multiplicador();
+      E.puntos += gan;
+      E.vel = Math.min(34, E.vel + 0.45);
+      SFX.bien(); explotar(xJ, yJ - 30, "#34d399", 26); textoFlotante("+" + gan, xJ, yJ - 70, "#34d399");
+      destello = { color: "52,211,153", vida: 1 };
+      if (E.racha === 3 || E.racha === 6 || E.racha === 10) mostrarAviso(`🔥 x${multiplicador()}`);
+      if (E.aciertos % 10 === 0) { E.nivel++; SFX.nivel(); mostrarAviso(`¡Nivel ${E.nivel}!`); }
+    } else {
+      E.vidas--; E.racha = 0; E.vel = Math.max(13, E.vel - 2);
+      E.errores.push({ txt: p.txt, r: p.r, elegida: p.opciones[p.elegida] });
+      SFX.mal(); if (!MOV_REDUCIDO) sacudida = 14; explotar(xJ, yJ - 30, "#fb7185", 20);
+      textoFlotante(`${p.txt} = ${p.r}`, xJ, yJ - 80, "#fecdd3");
+      destello = { color: "251,113,133", vida: 1 };
+      if (E.vidas <= 0) { setTimeout(terminar, 650); E.corriendo = false; }
+    }
+    const pr = $("pregunta"); pr.classList.add("pop"); setTimeout(() => pr.classList.remove("pop"), 150);
+    actualizarHUD();
+  }
+
+  function actualizar(dt) {
+    E.t += dt;
+    const avance = E.vel * dt;
+    E.recorrido += avance;
+    for (const p of E.puertas) p.z -= avance;
+    for (const m of E.monedas) m.z -= avance;
+    // jugador: deslizamiento suave entre carriles
+    E.xJug += (E.carril * 1.0 - E.xJug) * Math.min(1, dt * 14);
+    E.inclin *= Math.pow(0.02, dt);
+
+    for (const p of E.puertas) if (!p.resuelta && p.z <= Z_JUG) resolver(p);
+    for (const m of E.monedas) if (!m.tomada && m.z <= Z_JUG && m.z > Z_JUG - 2.5 && m.carril === E.carril) {
+      m.tomada = true; E.puntos += 5; SFX.moneda();
+      explotar(proyX(m.carril, Z_JUG), piso() - 50, "#fbbf24", 8); actualizarHUD();
+    }
+    E.puertas = E.puertas.filter((p) => p.z > Z_JUG * 0.35);
+    E.monedas = E.monedas.filter((m) => m.z > Z_JUG * 0.35 && !m.tomada);
+    while (E.puertas.length < 3 || E.puertas[E.puertas.length - 1].z < Z_LEJOS) agregarPuerta();
+
+    for (const q of E.particulas) { q.x += q.vx; q.y += q.vy; q.vy += 0.25; q.vida -= dt * 1.6; }
+    E.particulas = E.particulas.filter((q) => q.vida > 0);
+    for (const t of E.textos) { t.y -= 40 * dt; t.vida -= dt * 0.9; }
+    E.textos = E.textos.filter((t) => t.vida > 0);
+  }
+
+  // ───────────────────────── Dibujo ─────────────────────────
+  function cielo() {
+    const g = cx.createLinearGradient(0, 0, 0, horizonte());
+    g.addColorStop(0, "#0b0624"); g.addColorStop(0.55, "#3b0f5c"); g.addColorStop(1, "#c2306b");
+    cx.fillStyle = g; cx.fillRect(0, 0, W, horizonte() + 2);
+    const t = E ? E.t : performance.now() / 1000;
+    for (const s of estrellas) {
+      cx.globalAlpha = 0.4 + 0.4 * Math.sin(t * 2 + s.f);
+      cx.fillStyle = "#fff"; cx.beginPath(); cx.arc(s.x * W, s.y * horizonte(), s.r, 0, 7); cx.fill();
+    }
+    cx.globalAlpha = 1;
+    // sol retro con franjas
+    const sr = Math.min(W, H) * 0.16, sx = W / 2, sy = horizonte() - sr * 0.15;
+    const gs = cx.createLinearGradient(0, sy - sr, 0, sy + sr);
+    gs.addColorStop(0, "#fde047"); gs.addColorStop(1, "#f43f5e");
+    cx.save(); cx.beginPath(); cx.arc(sx, sy, sr, 0, 7); cx.clip();
+    cx.fillStyle = gs; cx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2);
+    cx.fillStyle = "#3b0f5c";
+    for (let i = 0; i < 6; i++) { const y = sy + i * sr * 0.16; cx.fillRect(sx - sr, y, sr * 2, 2 + i * 1.6); }
+    cx.restore();
+    // cerros (paralaje leve según el carril)
+    const colores = ["#2a0f4a", "#1a0b35"];
+    cerros.forEach((pts, capa) => {
+      const alto = H * (capa ? 0.09 : 0.14), base = horizonte() + 1, corr = (E ? -E.xJug : 0) * (capa ? 18 : 8);
+      cx.fillStyle = colores[capa]; cx.beginPath(); cx.moveTo(-40, base);
+      pts.forEach((v, i) => cx.lineTo(-40 + i * (W + 80) / (pts.length - 1) + corr, base - v * alto));
+      cx.lineTo(W + 40, base); cx.closePath(); cx.fill();
+    });
+  }
+
+  function pista() {
+    const hy = horizonte();
+    // piso
+    const g = cx.createLinearGradient(0, hy, 0, H);
+    g.addColorStop(0, "#160a33"); g.addColorStop(1, "#05020f");
+    cx.fillStyle = g; cx.fillRect(0, hy, W, H - hy);
+    // ruta
+    const zc = Z_JUG * 0.4, borde = 1.6;
+    cx.fillStyle = "#1e1045";
+    cx.beginPath();
+    cx.moveTo(proyX(-borde, Z_LEJOS), proyY(Z_LEJOS)); cx.lineTo(proyX(borde, Z_LEJOS), proyY(Z_LEJOS));
+    cx.lineTo(proyX(borde, zc), proyY(zc)); cx.lineTo(proyX(-borde, zc), proyY(zc)); cx.closePath(); cx.fill();
+    // grilla de neón que avanza
+    const paso = 6, off = E ? E.recorrido % paso : 0;
+    cx.lineWidth = 1;
+    for (let z = Z_LEJOS - off; z > zc; z -= paso) {
+      const a = Math.min(1, (Z_LEJOS - z) / 30) * 0.5;
+      cx.strokeStyle = `rgba(167,139,250,${a})`;
+      cx.beginPath(); cx.moveTo(0, proyY(z)); cx.lineTo(W, proyY(z)); cx.stroke();
+    }
+    for (let x = -8; x <= 8; x += 1.6) {
+      cx.strokeStyle = "rgba(167,139,250,.18)";
+      cx.beginPath(); cx.moveTo(proyX(x, Z_LEJOS), proyY(Z_LEJOS)); cx.lineTo(proyX(x, zc), proyY(zc)); cx.stroke();
+    }
+    // bordes brillantes
+    [-borde, borde].forEach((x) => {
+      cx.strokeStyle = "#22d3ee"; cx.lineWidth = 3; cx.shadowColor = "#22d3ee"; cx.shadowBlur = 12;
+      cx.beginPath(); cx.moveTo(proyX(x, Z_LEJOS), proyY(Z_LEJOS)); cx.lineTo(proyX(x, zc), proyY(zc)); cx.stroke();
+    });
+    cx.shadowBlur = 0;
+    // líneas de carril punteadas
+    const pasoL = 5, offL = E ? E.recorrido % pasoL : 0;
+    [-0.5, 0.5].forEach((x) => {
+      for (let z = Z_LEJOS - offL; z > zc + 1; z -= pasoL) {
+        const z2 = Math.max(zc, z - pasoL * 0.5);
+        cx.strokeStyle = "rgba(244,114,182,.75)"; cx.lineWidth = Math.max(1, 4 * esc(z));
+        cx.beginPath(); cx.moveTo(proyX(x, z), proyY(z)); cx.lineTo(proyX(x, z2), proyY(z2)); cx.stroke();
+      }
+    });
+  }
+
+  function redondeado(x, y, w, h, r) {
+    cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r);
+    cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath();
+  }
+
+  function puerta(p) {
+    if (p.z > Z_LEJOS) return;
+    const s = esc(p.z), base = proyY(p.z), aw = anchoCarril() * s;
+    const alfa = Math.min(1, (Z_LEJOS - p.z) / 12);
+    cx.globalAlpha = alfa;
+    for (let i = 0; i < 3; i++) {
+      const x = proyX(i - 1, p.z), w = aw * 0.9, h = aw * 0.66;
+      let fondo = "rgba(76,29,149,.82)", borde = "#a78bfa";
+      if (p.resuelta) {
+        if (i === p.correcta) { fondo = "rgba(16,185,129,.85)"; borde = "#6ee7b7"; }
+        else if (i === p.elegida) { fondo = "rgba(225,29,72,.85)"; borde = "#fda4af"; }
+        else cx.globalAlpha = alfa * 0.35;
+      }
+      // postes
+      cx.fillStyle = borde; cx.fillRect(x - w / 2, base - h * 1.55, Math.max(1, 3 * s), h * 1.55);
+      cx.fillRect(x + w / 2 - Math.max(1, 3 * s), base - h * 1.55, Math.max(1, 3 * s), h * 1.55);
+      // cartel
+      cx.shadowColor = borde; cx.shadowBlur = 16 * s;
+      cx.fillStyle = fondo; redondeado(x - w / 2, base - h * 1.55, w, h, 10 * s); cx.fill();
+      cx.lineWidth = Math.max(1, 3 * s); cx.strokeStyle = borde; cx.stroke();
+      cx.shadowBlur = 0;
+      const txt = String(p.opciones[i]);
+      cx.fillStyle = "#fff"; cx.textAlign = "center"; cx.textBaseline = "middle";
+      cx.font = `800 ${Math.max(8, h * (txt.length > 3 ? 0.42 : 0.55))}px "Baloo 2", sans-serif`;
+      cx.fillText(txt, x, base - h * 1.55 + h * 0.54);
+      cx.globalAlpha = alfa;
+    }
+    cx.globalAlpha = 1;
+  }
+
+  function moneda(m) {
+    if (m.z > Z_LEJOS) return;
+    const s = esc(m.z), x = proyX(m.carril, m.z), y = proyY(m.z) - anchoCarril() * 0.18 * s;
+    const r = anchoCarril() * 0.1 * s, giro = Math.abs(Math.cos(E.t * 5 + m.z));
+    cx.fillStyle = "#fbbf24"; cx.shadowColor = "#fbbf24"; cx.shadowBlur = 10 * s;
+    cx.beginPath(); cx.ellipse(x, y, Math.max(0.5, r * giro), r, 0, 0, 7); cx.fill();
+    cx.shadowBlur = 0;
+    cx.fillStyle = "#fde68a"; cx.beginPath(); cx.ellipse(x, y, Math.max(0.3, r * 0.5 * giro), r * 0.5, 0, 0, 7); cx.fill();
+  }
+
+  function jugador() {
+    const x = proyX(E.xJug, Z_JUG), y = piso(), t = E.t;
+    const salto = Math.abs(Math.sin(t * 12)) * 5, aw = anchoCarril();
+    const k = aw / 170;
+    cx.save(); cx.translate(x, y); cx.rotate(E.inclin * 0.18); cx.scale(k, k);
+    // sombra
+    cx.fillStyle = "rgba(0,0,0,.45)"; cx.beginPath(); cx.ellipse(0, 6, 46, 10, 0, 0, 7); cx.fill();
+    // tabla flotante
+    cx.translate(0, -10 - salto * 0.3);
+    const gt = cx.createLinearGradient(-50, 0, 50, 0); gt.addColorStop(0, "#22d3ee"); gt.addColorStop(1, "#a78bfa");
+    cx.fillStyle = gt; cx.shadowColor = "#22d3ee"; cx.shadowBlur = 18;
+    redondeado(-52, -8, 104, 14, 7); cx.fill(); cx.shadowBlur = 0;
+    // propulsores
+    for (const px of [-34, 34]) {
+      const fl = 10 + Math.random() * 10;
+      const gf = cx.createLinearGradient(0, 6, 0, 6 + fl); gf.addColorStop(0, "rgba(253,224,71,.95)"); gf.addColorStop(1, "rgba(244,63,94,0)");
+      cx.fillStyle = gf; cx.beginPath(); cx.moveTo(px - 6, 6); cx.lineTo(px + 6, 6); cx.lineTo(px, 6 + fl); cx.fill();
+    }
+    // cuerpo (piernas, torso, cabeza con casco)
+    cx.translate(0, -salto);
+    cx.strokeStyle = "#1e1b4b"; cx.lineWidth = 9; cx.lineCap = "round";
+    const pz = Math.sin(t * 12) * 6;
+    cx.beginPath(); cx.moveTo(-10, -10); cx.lineTo(-14 - pz * 0.3, -38); cx.moveTo(10, -10); cx.lineTo(14 + pz * 0.3, -38); cx.stroke();
+    cx.fillStyle = "#f472b6"; redondeado(-20, -78, 40, 44, 14); cx.fill();
+    cx.fillStyle = "#fff"; cx.font = '800 20px "Baloo 2", sans-serif'; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText("π", 0, -56);
+    cx.strokeStyle = "#f472b6"; cx.lineWidth = 8;
+    cx.beginPath(); cx.moveTo(-18, -70); cx.lineTo(-32, -50 + pz); cx.moveTo(18, -70); cx.lineTo(32, -50 - pz); cx.stroke();
+    cx.fillStyle = "#fcd9b6"; cx.beginPath(); cx.arc(0, -98, 18, 0, 7); cx.fill();
+    cx.fillStyle = "#7c3aed"; cx.beginPath(); cx.arc(0, -102, 19, Math.PI, 0); cx.fill();
+    cx.fillStyle = "#22d3ee"; redondeado(-16, -104, 32, 9, 4); cx.fill();
+    cx.restore();
+  }
+
+  function efectos() {
+    for (const q of E.particulas) { cx.globalAlpha = Math.max(0, q.vida); cx.fillStyle = q.color; cx.beginPath(); cx.arc(q.x, q.y, q.r, 0, 7); cx.fill(); }
+    cx.globalAlpha = 1;
+    for (const t of E.textos) {
+      cx.globalAlpha = Math.max(0, t.vida); cx.fillStyle = t.color; cx.textAlign = "center";
+      cx.font = '800 26px "Baloo 2", sans-serif'; cx.fillText(t.t, t.x, t.y);
+    }
+    cx.globalAlpha = 1;
+    if (destello) {
+      cx.fillStyle = `rgba(${destello.color},${0.22 * destello.vida})`; cx.fillRect(0, 0, W, H);
+      destello.vida -= 0.06; if (destello.vida <= 0) destello = null;
+    }
+    // líneas de velocidad en los costados
+    if (E.vel > 20 && !MOV_REDUCIDO) {
+      cx.strokeStyle = "rgba(255,255,255,.12)"; cx.lineWidth = 2;
+      for (let i = 0; i < 8; i++) {
+        const lado = i % 2 ? 1 : -1, y = (i * 97 + E.t * 900) % H;
+        const x0 = W / 2 + lado * (W * 0.42 + (i * 13) % 40);
+        cx.beginPath(); cx.moveTo(x0, y); cx.lineTo(x0 + lado * 20, y + 60); cx.stroke();
+      }
+    }
+  }
+
+  function cuadro(ahora) {
+    const dt = Math.min(0.05, (ahora - ultimo) / 1000 || 0); ultimo = ahora;
+    if (E && E.corriendo && !E.pausa) actualizar(dt);
+    cx.save();
+    if (sacudida > 0) { cx.translate((Math.random() - 0.5) * sacudida, (Math.random() - 0.5) * sacudida); sacudida *= 0.85; if (sacudida < 0.5) sacudida = 0; }
+    cielo(); pista();
+    if (E) {
+      const cosas = [...E.puertas.map((p) => ({ z: p.z, f: () => puerta(p) })), ...E.monedas.map((m) => ({ z: m.z, f: () => moneda(m) }))];
+      cosas.sort((a, b) => b.z - a.z).forEach((c) => { if (c.z > Z_JUG) c.f(); });
+      jugador();
+      cosas.filter((c) => c.z <= Z_JUG).forEach((c) => c.f());
+      efectos();
+    }
+    cx.restore();
+    requestAnimationFrame(cuadro);
+  }
+  requestAnimationFrame(cuadro);
+
+  // ───────────────────────── Fin de partida ─────────────────────────
+  async function terminar() {
+    if (!E) return;
+    E.corriendo = false; SFX.fin();
+    ["hud", "pregunta", "flechas"].forEach((id) => $(id).classList.add("oculto"));
+    $("combo").style.opacity = 0;
+    const clave = "turbo_record_" + tema, antes = +leer(clave) || 0;
+    const nuevo = E.puntos > antes;
+    if (nuevo) guardar(clave, E.puntos);
+    $("finTitulo").textContent = E.puntos >= 300 ? "¡Imparable! 🚀" : E.puntos >= 120 ? "¡Muy buena carrera!" : "¡Buena carrera!";
+    $("finRecord").textContent = nuevo && E.puntos > 0 ? "🏆 ¡Nuevo récord en " + TEMAS[tema].nombre + "!" : antes ? `Tu récord: ${antes}` : "";
+    $("finPuntos").textContent = E.puntos;
+    $("finAciertos").textContent = `${E.aciertos}/${E.total}`;
+    $("finCombo").textContent = E.mejorRacha;
+    const rep = $("repaso"), lista = $("repasoLista");
+    if (E.errores.length) {
+      lista.innerHTML = E.errores.slice(-5).map((e) => `<li>${e.txt} = <span class="ok">${e.r}</span> &nbsp;<span class="mal">${e.elegida}</span></li>`).join("");
+      rep.classList.remove("oculto");
+    } else rep.classList.add("oculto");
+    $("fin").classList.add("ver");
+    // Puntos para el ranking (mismo sistema que el resto del sitio; el servidor pone el tope diario)
+    const pts = Math.min(100, Math.round(E.puntos / 10));
+    const c = $("cuenta"); c.textContent = "";
+    try {
+      const api = window.MA_SUPABASE;
+      const u = api && api.sb ? await api.sbUsuario() : null;
+      if (u) {
+        api.sbRegistrarEvento("juego_jugado", { juego: "turbo-mate", tema, puntos: E.puntos, aciertos: E.aciertos, total: E.total });
+        if (pts > 0) { await api.sbSumarPuntos(pts); c.innerHTML = `Sumaste <b>+${pts} puntos</b> al ranking semanal.`; }
+      } else if (api && api.sb) {
+        c.innerHTML = `<a href="../../../index.html" style="color:#a5f3fc;font-weight:800">Iniciá sesión</a> para sumar tus puntos al ranking semanal.`;
+      }
+    } catch (e) {}
+  }
+})();
+</script>
+</body>
+</html>
