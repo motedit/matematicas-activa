@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../errores.js?v=3"></script><script src="../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ver la pizarra en vivo 📡 — Matemáticas Activas</title>
+<meta name="description" content="Mirá en tu celular, en tiempo real, lo que tu profe escribe en la pizarra. Escribí el PIN que aparece en la clase.">
+<link rel="canonical" href="https://matematicasactivas.com/pizarra/ver.html">
+<meta name="theme-color" content="#0f172a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0f172a;color:#fff;font-family:Inter,system-ui,sans-serif}
+body{display:flex;flex-direction:column;min-height:100dvh}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(10px,env(safe-area-inset-top)) 14px 10px;font-weight:700;font-size:14px}
+.top a{color:#94a3b8;text-decoration:none}
+.pill{background:rgba(255,255,255,.1);border-radius:999px;padding:5px 12px;font-size:13px}
+.pill.vivo{background:#dc2626}
+.pill.vivo::before{content:"● ";animation:parpadeo 1.4s infinite}
+@keyframes parpadeo{50%{opacity:.3}}
+#entrar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
+#entrar h1{font:800 clamp(28px,8vw,40px) Sora,sans-serif;margin:0}
+#entrar p{color:#cbd5e1;margin:0}
+.caja{background:#fff;color:#0f172a;border-radius:20px;padding:20px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+#pin{border:2px solid #e2e8f0;border-radius:14px;padding:14px;font:700 32px 'Space Mono',monospace;letter-spacing:.3em;text-align:center;width:100%}
+#pin:focus{outline:none;border-color:#0d9488}
+.btn{border:0;border-radius:14px;padding:14px;font:700 18px Inter,sans-serif;color:#fff;background:#0d9488;cursor:pointer}
+.err{color:#dc2626;font-weight:700;font-size:14px;min-height:18px;margin:0}
+#ver{flex:1;display:none;position:relative;overflow:hidden;background:#1e293b}
+#marco{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6px}
+#lienzo{position:relative;max-width:100%;max-height:100%}
+#lienzo img{display:block;max-width:100%;max-height:calc(100dvh - 70px);width:auto;height:auto;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.4);background:#fff}
+#laser{position:absolute;width:16px;height:16px;border-radius:50%;background:#ef4444;box-shadow:0 0 14px 4px rgba(239,68,68,.75);transform:translate(-50%,-50%);display:none;pointer-events:none;transition:left .06s linear,top .06s linear}
+#cortina{position:absolute;left:0;right:0;bottom:0;display:none;background:repeating-linear-gradient(90deg,#334155 0 22px,#3b4a5f 22px 44px);border-radius:0 0 6px 6px}
+#espera{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#cbd5e1;text-align:center;padding:20px}
+.gira{width:46px;height:46px;border-radius:50%;border:5px solid rgba(255,255,255,.2);border-top-color:#2dd4bf;animation:gira 1s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.pie{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px max(8px,env(safe-area-inset-bottom));font-size:13px;color:#94a3b8}
+.pie button{border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:10px;padding:8px 12px;font:600 13px Inter;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="top"><a href="../index.html">Matemáticas Activas</a><span class="pill" id="estado">Pizarra en vivo</span></div>
+
+<section id="entrar">
+  <h1>📡 Pizarra en vivo</h1>
+  <p>Escribí el PIN que aparece en la pantalla de tu profe.</p>
+  <div class="caja">
+    <input id="pin" inputmode="numeric" maxlength="5" placeholder="PIN" autocomplete="off" aria-label="PIN">
+    <p class="err" id="err"></p>
+    <button class="btn" id="btnEntrar">Ver la pizarra</button>
+  </div>
+  <p style="font-size:13px">No hace falta tener cuenta.</p>
+</section>
+
+<section id="ver">
+  <div id="marco"><div id="lienzo"><img id="img" alt="Pizarra de la clase"><div id="cortina"></div><div id="laser"></div></div></div>
+  <div id="espera"><div class="gira"></div><b id="esperaTit">Conectando con la clase…</b><span id="esperaTxt">En cuanto tu profe escriba, lo vas a ver acá.</span></div>
+</section>
+<div class="pie" id="pie" style="display:none"><span id="hoja">Hoja 1</span><button id="btnPantalla">⛶ Pantalla completa</button></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js?v=15"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  let canal = null, recibio = false, tEspera = null;
+  const qs = new URLSearchParams(location.search);
+  if (/^\d{5}$/.test(qs.get("pin") || "")) $("pin").value = qs.get("pin");
+  $("pin").addEventListener("input", () => { $("pin").value = $("pin").value.replace(/\D/g, "").slice(0, 5); });
+  $("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") entrar(); });
+  $("btnEntrar").onclick = entrar;
+  $("btnPantalla").onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
+  if ($("pin").value.length === 5) setTimeout(entrar, 300);
+
+  function estado(t, vivo) { $("estado").textContent = t; $("estado").classList.toggle("vivo", !!vivo); }
+
+  function entrar() {
+    const pin = $("pin").value.trim();
+    if (!/^\d{5}$/.test(pin)) { $("err").textContent = "El PIN tiene 5 números."; return; }
+    const api = window.MA_SUPABASE;
+    if (!api || !api.sb) { $("err").textContent = "No hay conexión. Revisá internet y probá de nuevo."; return; }
+    $("err").textContent = "";
+    $("entrar").style.display = "none"; $("ver").style.display = "block"; $("pie").style.display = "flex";
+    const id = "v" + Math.random().toString(36).slice(2, 9);
+    canal = api.sb.channel("ma-pizarra-" + pin, { config: { broadcast: { self: false }, presence: { key: id } } });
+    canal
+      .on("broadcast", { event: "hoja" }, ({ payload: d }) => {
+        if (!d || !d.img) return;
+        recibio = true; $("espera").style.display = "none";
+        $("img").src = d.img;
+        $("hoja").textContent = `Hoja ${d.n || 1} de ${d.total || 1}`;
+        ponerCortina(d.cortina); estado("En vivo", true);
+      })
+      .on("broadcast", { event: "laser" }, ({ payload: d }) => {
+        const l = $("laser");
+        if (!d || !d.p) { l.style.display = "none"; return; }
+        l.style.display = "block"; l.style.left = d.p.x * 100 + "%"; l.style.top = d.p.y * 100 + "%";
+      })
+      .on("broadcast", { event: "cortina" }, ({ payload: d }) => ponerCortina(d ? d.y : null))
+      .on("broadcast", { event: "fin" }, () => {
+        estado("Terminó"); $("espera").style.display = "flex"; $("esperaTit").textContent = "La profe terminó la transmisión";
+        $("esperaTxt").textContent = "¡Gracias por seguir la clase! 🙌"; document.querySelector(".gira").style.display = "none";
+      })
+      .on("presence", { event: "sync" }, () => {
+        const hay = Object.keys(canal.presenceState()).includes("docente");
+        if (!hay && !recibio) { $("esperaTit").textContent = "Buscando la clase…"; }
+      })
+      .subscribe(async (s) => {
+        if (s === "SUBSCRIBED") {
+          estado("Conectado"); await canal.track({ rol: "alumno" });
+          canal.send({ type: "broadcast", event: "hola", payload: {} });
+          clearTimeout(tEspera);
+          tEspera = setTimeout(() => { if (!recibio) { $("esperaTit").textContent = "Todavía no llega nada"; $("esperaTxt").textContent = "Fijate que el PIN sea el mismo que ves en la pantalla de tu profe."; } }, 8000);
+        } else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT") estado("Reconectando…");
+      });
+  }
+  function ponerCortina(y) {
+    const c = $("cortina");
+    if (y === null || y === undefined) { c.style.display = "none"; return; }
+    c.style.display = "block"; c.style.top = (y * 100) + "%";
+  }
+  // si la pantalla se apaga y vuelve, pedimos la hoja otra vez
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && canal) canal.send({ type: "broadcast", event: "hola", payload: {} }); });
+})();
+</script>
+</body>
+</html>

@@ -117,13 +117,23 @@
     });
   }
 
+  var cliente = null, usuarioId = null;
+  function obtenerCliente() {
+    if (cliente) return Promise.resolve(cliente);
+    return cargarSdk().then(function (ok) {
+      if (!ok || !window.supabase) return null;
+      cliente = cliente || window.supabase.createClient(URL_API, CLAVE, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+      return cliente;
+    });
+  }
+
   async function verificar() {
-    if (!(await cargarSdk())) return;
+    var sb = await obtenerCliente();
+    if (!sb) return;
     try {
-      var sb = window.supabase.createClient(URL_API, CLAVE, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
       var ses = (await sb.auth.getSession()).data.session;
       if (!ses) return;
-      conSesion = true;
+      conSesion = true; usuarioId = ses.user.id;
       var r = await sb.from("perfiles").select("rol, modulos").eq("id", ses.user.id).single();
       var p = r.data || {};
       var hasta = p.modulos && p.modulos.pizarra;
@@ -131,10 +141,23 @@
     } catch (e) { /* sin conexión: queda en modo prueba */ }
   }
 
+  // Lo que necesitan las otras partes de la pizarra (nube, hojas, en vivo)
+  window.PZ_ACCESO = {
+    get completa() { return completa; },
+    get conSesion() { return conSesion; },
+    get usuarioId() { return usuarioId; },
+    cliente: obtenerCliente,
+    avisar: avisar,
+    URL_API: URL_API,
+  };
+
   function iniciar() {
     instalarCandados();
     crearBanner();
-    verificar().then(actualizarBanner);
+    verificar().then(function () {
+      actualizarBanner();
+      try { window.dispatchEvent(new CustomEvent("pz-acceso", { detail: { completa: completa, usuarioId: usuarioId } })); } catch (e) {}
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar);
