@@ -32,6 +32,7 @@ body{display:flex;flex-direction:column;min-height:100dvh}
 #marco{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6px}
 #lienzo{position:relative;max-width:100%;max-height:100%}
 #lienzo img{display:block;max-width:100%;max-height:calc(100dvh - 70px);width:auto;height:auto;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.4);background:#fff}
+#trazos{position:absolute;left:0;top:0;width:100%;height:100%;display:none;pointer-events:none;background:none!important;box-shadow:none!important}
 #laser{position:absolute;width:16px;height:16px;border-radius:50%;background:#ef4444;box-shadow:0 0 14px 4px rgba(239,68,68,.75);transform:translate(-50%,-50%);display:none;pointer-events:none;transition:left .06s linear,top .06s linear}
 #cortina{position:absolute;left:0;right:0;bottom:0;display:none;background:repeating-linear-gradient(90deg,#334155 0 22px,#3b4a5f 22px 44px);border-radius:0 0 6px 6px}
 #espera{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#cbd5e1;text-align:center;padding:20px}
@@ -56,7 +57,7 @@ body{display:flex;flex-direction:column;min-height:100dvh}
 </section>
 
 <section id="ver">
-  <div id="marco"><div id="lienzo"><img id="img" alt="Pizarra de la clase"><div id="cortina"></div><div id="laser"></div></div></div>
+  <div id="marco"><div id="lienzo"><img id="img" alt="Pizarra de la clase"><img id="trazos" alt=""><div id="cortina"></div><div id="laser"></div></div></div>
   <div id="espera"><div class="gira"></div><b id="esperaTit">Conectando con la clase…</b><span id="esperaTxt">En cuanto tu profe escriba, lo vas a ver acá.</span></div>
 </section>
 <div class="pie" id="pie" style="display:none"><span id="hoja">Hoja 1</span><button id="btnPantalla">⛶ Pantalla completa</button></div>
@@ -67,7 +68,13 @@ body{display:flex;flex-direction:column;min-height:100dvh}
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  let canal = null, recibio = false, tEspera = null;
+  let canal = null, recibio = false, tEspera = null, claveActual = null, pidiendo = 0;
+  const piezas = {};
+  function ponerBase(clave, src) {
+    claveActual = clave;
+    const im = $("img"); im.style.background = "#fff"; im.src = src;
+    recibio = true; $("espera").style.display = "none";
+  }
   const qs = new URLSearchParams(location.search);
   if (/^\d{5}$/.test(qs.get("pin") || "")) $("pin").value = qs.get("pin");
   $("pin").addEventListener("input", () => { $("pin").value = $("pin").value.replace(/\D/g, "").slice(0, 5); });
@@ -88,11 +95,21 @@ body{display:flex;flex-direction:column;min-height:100dvh}
     const id = "v" + Math.random().toString(36).slice(2, 9);
     canal = api.sb.channel("ma-pizarra-" + pin, { config: { broadcast: { self: false }, presence: { key: id } } });
     canal
-      .on("broadcast", { event: "hoja" }, ({ payload: d }) => {
+      .on("broadcast", { event: "base" }, ({ payload: d }) => {
+        if (!d || !d.clave) return;
+        if (d.url) { ponerBase(d.clave, d.url); return; }
+        // llega en pedazos: se arma cuando están todos
+        const b = piezas[d.clave] = piezas[d.clave] || { partes: d.partes, d: [] };
+        b.d[d.i] = d.d;
+        if (b.d.filter(Boolean).length === b.partes) { ponerBase(d.clave, b.d.join("")); delete piezas[d.clave]; }
+      })
+      .on("broadcast", { event: "trazos" }, ({ payload: d }) => {
         if (!d || !d.img) return;
         recibio = true; $("espera").style.display = "none";
-        $("img").src = d.img;
+        const t = $("trazos"); t.src = d.img; t.style.display = "block";
+        if (!$("img").getAttribute("src")) { $("img").src = d.img; }   // todavía no llegó el fondo
         $("hoja").textContent = `Hoja ${d.n || 1} de ${d.total || 1}`;
+        if (d.clave !== claveActual && Date.now() - pidiendo > 3000) { pidiendo = Date.now(); canal.send({ type: "broadcast", event: "hola", payload: {} }); }   // falta el fondo de esta hoja
         ponerCortina(d.cortina); estado("En vivo", true);
       })
       .on("broadcast", { event: "laser" }, ({ payload: d }) => {

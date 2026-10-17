@@ -48,10 +48,10 @@
     V.canal
       .on("presence", { event: "sync" }, () => {
         const n = Object.keys(V.canal.presenceState()).filter((k) => k !== "docente").length;
-        if (n > V.vistos) V.sucio = true;   // alguien entró: le mandamos la hoja actual
+        if (n > V.vistos) { V.sucio = true; V.baseClave = null; }   // alguien entró: le mandamos todo de nuevo
         V.vistos = n; estado(`👀 ${n} alumno${n === 1 ? "" : "s"} mirando`, "#0f766e");
       })
-      .on("broadcast", { event: "hola" }, () => { V.sucio = true; })
+      .on("broadcast", { event: "hola" }, () => { V.sucio = true; V.baseClave = null; })
       .subscribe(async (s) => {
         if (s === "SUBSCRIBED") { await V.canal.track({ rol: "docente" }); estado("✅ Transmitiendo · 0 alumnos mirando", "#0f766e"); V.sucio = true; }
         else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT") estado("⚠️ Se cortó la conexión, reintentando…", "#b45309");
@@ -80,32 +80,79 @@
   });
   window.addEventListener("pz-hoja", marcar); window.addEventListener("pz-fondo", marcar);
 
-  // Imagen liviana de la hoja (menos de ~200 KB)
-  function foto() {
-    const src = document.createElement("canvas"); const full = new Image();
-    return new Promise((ok) => {
-      full.onload = () => {
-        let w = Math.min(1100, full.width), q = 0.62, url;
-        for (let k = 0; k < 4; k++) {
-          const h = Math.round(full.height * w / full.width); src.width = w; src.height = h;
-          src.getContext("2d").drawImage(full, 0, 0, w, h);
-          url = src.toDataURL("image/jpeg", q);
-          if (url.length < 200000) break;
-          w = Math.round(w * 0.8); q = Math.max(0.4, q - 0.08);
-        }
-        ok({ img: url, w: src.width, h: src.height });
-      };
-      full.src = exportComposite();
-    });
+  // Se manda en dos capas, para que en el celular se vea nítido:
+  //  · "base": la cuadrícula y la foto/PDF de fondo, en alta calidad, partida en pedazos. Solo cuando cambia de hoja o de fondo.
+  //  · "trazos": solo lo que escribe el profe (imagen transparente, liviana). Cada vez que cambia.
+  const PEDAZO = 90000;
+  const H = () => window.PZ_HOJAS;
+  function claveBase() {
+    const h = H(), hoja = h && h.hojas[h.i], r = stage.getBoundingClientRect();
+    const f = hoja && hoja.fondo ? hoja.fondo.length + hoja.fondo.slice(-30) : "";
+    return [h ? h.i : 0, bgMode, stage.classList.contains("dark") ? 1 : 0, f, Math.round(r.width), Math.round(r.height)].join("|");
+  }
+  function imagenBase() {
+    const r = stage.getBoundingClientRect(), h = H(), fi = h && h.fondoImg, rf = h && h.rectFondo;
+    const conFoto = !!(rf && fi && fi.naturalWidth && fi.style.display !== "none");
+    // con foto: hasta 2000 px de ancho (lo que haga falta para no perder detalle); sin foto alcanza con menos
+    const ancho = conFoto ? Math.min(2000, Math.max(canvas.width, Math.round(r.width * fi.naturalWidth / rf.w))) : Math.min(1200, canvas.width);
+    const k = ancho / r.width, out = document.createElement("canvas");
+    out.width = Math.round(r.width * k); out.height = Math.round(r.height * k);
+    const o = out.getContext("2d"); o.imageSmoothingQuality = "high";
+    o.fillStyle = stage.classList.contains("dark") ? "#143028" : "#ffffff"; o.fillRect(0, 0, out.width, out.height);
+    o.drawImage(bg, 0, 0, out.width, out.height);
+    if (conFoto) o.drawImage(fi, rf.x * k, rf.y * k, rf.w * k, rf.h * k);
+    return out.toDataURL("image/jpeg", conFoto ? 0.9 : 0.8);
+  }
+  function imagenTrazos() {
+    let w = Math.min(1600, canvas.width), url = "";
+    const out = document.createElement("canvas");
+    for (let k = 0; k < 4; k++) {
+      out.width = w; out.height = Math.round(canvas.height * w / canvas.width);
+      const o = out.getContext("2d"); o.clearRect(0, 0, out.width, out.height); o.imageSmoothingQuality = "high";
+      o.drawImage(canvas, 0, 0, out.width, out.height);
+      url = out.toDataURL("image/png");
+      if (url.length > 180000) { const wp = out.toDataURL("image/webp", 0.85); if (wp.startsWith("data:image/webp") && wp.length < url.length) url = wp; }
+      if (url.length < 180000) break;
+      w = Math.round(w * 0.8);
+    }
+    return url;
+  }
+  // Con la Pizarra comprada y la nube activa, el fondo se sube una vez y a los celulares les llega solo el enlace
+  async function subirBase(dataUrl, n) {
+    const N = window.PZ_NUBE, A = window.PZ_ACCESO;
+    if (!N || !N.activa || !N.sb || !A || !A.completa) return null;
+    const h = H(), hoja = h && h.hojas[h.i];
+    if (!hoja || !hoja.fondo) return null;          // sin foto la base es liviana: va por el canal
+    try {
+      const blob = await (await fetch(dataUrl)).blob(), ruta = `${N.uid}/vivo/hoja-${n}.jpg`;
+      const { error } = await N.sb.storage.from("pizarra").upload(ruta, blob, { contentType: "image/jpeg", upsert: true });
+      if (error) return null;
+      return `${A.URL_API}/storage/v1/object/public/pizarra/${ruta}?v=${Date.now().toString(36)}`;
+    } catch (e) { return null; }
   }
   let enviando = false;
   async function bucle() {
-    if (!V.canal || enviando || !V.sucio || performance.now() - V.ultimoEnvio < 600) return;
+    if (!V.canal || enviando || !V.sucio || performance.now() - V.ultimoEnvio < 500) return;
     V.sucio = false; enviando = true; V.ultimoEnvio = performance.now();
     try {
-      const f = await foto(), H = window.PZ_HOJAS;
-      await V.canal.send({ type: "broadcast", event: "hoja", payload: { ...f, n: H ? H.i + 1 : 1, total: H ? H.hojas.length : 1, cortina: V.cortina } });
-    } catch (e) { V.sucio = true; }
+      const h = H(), info = { n: h ? h.i + 1 : 1, total: h ? h.hojas.length : 1 };
+      const clave = claveBase();
+      if (clave !== V.baseClave) {
+        const d = imagenBase();
+        const url = await subirBase(d, info.n);
+        if (url) await V.canal.send({ type: "broadcast", event: "base", payload: { clave, url } });
+        else {
+          // sin la nube: se manda en pedazos, despacio para no pasar el límite de mensajes
+          const partes = Math.ceil(d.length / PEDAZO);
+          for (let i = 0; i < partes; i++) {
+            await V.canal.send({ type: "broadcast", event: "base", payload: { clave, i, partes, d: d.slice(i * PEDAZO, (i + 1) * PEDAZO) } });
+            if (partes > 1) await new Promise((ok) => setTimeout(ok, 250));
+          }
+        }
+        V.baseClave = clave;
+      }
+      await V.canal.send({ type: "broadcast", event: "trazos", payload: { clave, img: imagenTrazos(), cortina: V.cortina, ...info } });
+    } catch (e) { V.sucio = true; V.baseClave = null; }
     enviando = false;
   }
 

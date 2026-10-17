@@ -32,20 +32,48 @@
     const p = new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = src; });
     H.imgs.set(src, p); return p;
   }
-  const dibujarBgOriginal = window.drawBg;
-  window.drawBg = function () {
-    dibujarBgOriginal();
-    const hoja = H.hojas[H.i]; if (!hoja || !hoja.fondo) return;
-    imagen(hoja.fondo).then((im) => {
-      if (!im || H.hojas[H.i] !== hoja) return;
+  // La foto/PDF va en una <img> propia entre la cuadrícula y el dibujo: el navegador la dibuja desde
+  // su resolución original, así se ve nítida aunque se haga zoom.
+  const fondoImg = document.createElement("img");
+  fondoImg.id = "fondoHoja"; fondoImg.alt = "";
+  fondoImg.style.cssText = "position:absolute;z-index:1;display:none;pointer-events:none;user-select:none;box-shadow:0 4px 18px rgba(0,0,0,.18);image-rendering:auto";
+  bg.after(fondoImg);
+  H.rectFondo = null;   // dónde está la foto, en píxeles de la pizarra
+  function ubicarFondo() {
+    const hoja = H.hojas[H.i];
+    if (!hoja || !hoja.fondo) { fondoImg.style.display = "none"; H.rectFondo = null; return; }
+    const pintar = () => {
+      if (!fondoImg.naturalWidth || H.hojas[H.i] !== hoja) return;
       const r = stage.getBoundingClientRect(), m = 12;
-      const k = Math.min((r.width - 2 * m) / im.width, (r.height - 2 * m) / im.height);
-      const w = im.width * k, h = im.height * k;
-      bgx.save(); bgx.shadowColor = "rgba(0,0,0,.18)"; bgx.shadowBlur = 10;
-      bgx.drawImage(im, (r.width - w) / 2, (r.height - h) / 2, w, h); bgx.restore();
+      const k = Math.min((r.width - 2 * m) / fondoImg.naturalWidth, (r.height - 2 * m) / fondoImg.naturalHeight);
+      const w = fondoImg.naturalWidth * k, h = fondoImg.naturalHeight * k, x = (r.width - w) / 2, y = (r.height - h) / 2;
+      H.rectFondo = { x, y, w, h };
+      Object.assign(fondoImg.style, { display: "block", left: x + "px", top: y + "px", width: w + "px", height: h + "px", transformOrigin: `${-x}px ${-y}px`,
+        transform: H.z === 1 ? "" : `translate(${H.px}px,${H.py}px) scale(${H.z})` });
       window.dispatchEvent(new Event("pz-fondo"));
-    });
-  };
+    };
+    if (fondoImg.dataset.src !== String(hoja.fondo.length) + hoja.fondo.slice(-40)) {
+      fondoImg.dataset.src = String(hoja.fondo.length) + hoja.fondo.slice(-40);
+      fondoImg.onload = pintar; fondoImg.src = hoja.fondo;
+    } else pintar();
+  }
+  const dibujarBgOriginal = window.drawBg;
+  window.drawBg = function () { dibujarBgOriginal(); ubicarFondo(); };
+
+  // Imagen completa de la hoja (cuadrícula + foto + dibujo). "escala" agranda la salida (para el PDF).
+  function componer(escala, tipo, calidad) {
+    escala = escala || 1;
+    const out = document.createElement("canvas"); out.width = Math.round(canvas.width * escala); out.height = Math.round(canvas.height * escala);
+    const o = out.getContext("2d"); o.imageSmoothingQuality = "high";
+    o.fillStyle = stage.classList.contains("dark") ? "#143028" : "#ffffff"; o.fillRect(0, 0, out.width, out.height);
+    o.drawImage(bg, 0, 0, out.width, out.height);
+    const f = H.rectFondo, k = (canvas.width / stage.getBoundingClientRect().width) * escala;
+    if (f && fondoImg.naturalWidth && fondoImg.style.display !== "none") o.drawImage(fondoImg, f.x * k, f.y * k, f.w * k, f.h * k);
+    o.drawImage(canvas, 0, 0, out.width, out.height);
+    return out.toDataURL(tipo || "image/png", calidad);
+  }
+  window.exportComposite = function () { return componer(1); };
+  H.componer = componer; H.fondoImg = fondoImg;
 
   // ── Cambiar de hoja ──
   async function cargar(j) {
@@ -91,11 +119,11 @@
         const n = Math.min(pdf.numPages, 30);
         for (let k = 1; k <= n; k++) {
           const pag = await pdf.getPage(k), vp0 = pag.getViewport({ scale: 1 });
-          const vp = pag.getViewport({ scale: Math.min(2.2, 1600 / vp0.width) });
+          const vp = pag.getViewport({ scale: Math.min(4, 2600 / vp0.width) });   // ~2600 px de ancho: texto nítido con zoom
           const cv = document.createElement("canvas"); cv.width = vp.width; cv.height = vp.height;
           const c2 = cv.getContext("2d"); c2.fillStyle = "#fff"; c2.fillRect(0, 0, cv.width, cv.height);
           await pag.render({ canvasContext: c2, viewport: vp }).promise;
-          nueva(cv.toDataURL("image/jpeg", 0.85));
+          nueva(cv.toDataURL("image/jpeg", 0.93));
         }
         cargar(H.i - n + 1); toast(`Listo: ${n} hoja${n > 1 ? "s" : ""} del PDF${pdf.numPages > 30 ? " (máximo 30)" : ""}`);
       } catch (e) { toast("No se pudo abrir el PDF"); }
@@ -104,12 +132,12 @@
     if (!file.type.startsWith("image/")) { toast("Elegí una foto o un PDF"); return; }
     const url = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file); });
     const im = await imagen(url); if (!im) { toast("No se pudo abrir la imagen"); return; }
-    // se achica a 1800 px de ancho como máximo para que no pese
-    const k = Math.min(1, 1800 / Math.max(im.width, im.height));
+    // se achica a 3000 px como máximo (más que eso no se nota y pesa mucho)
+    const k = Math.min(1, 3000 / Math.max(im.width, im.height));
     const cv = document.createElement("canvas"); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k);
-    cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height);
+    const c3 = cv.getContext("2d"); c3.imageSmoothingQuality = "high"; c3.drawImage(im, 0, 0, cv.width, cv.height);
     const vacia = !H.hojas[H.i].dibujo || esVacia();
-    const datos = cv.toDataURL("image/jpeg", 0.88);
+    const datos = (k === 1 && file.size < 2500000) ? url : cv.toDataURL("image/jpeg", 0.93);   // si ya es chica, se usa la original sin recomprimir
     if (vacia && !H.hojas[H.i].fondo) { H.hojas[H.i].fondo = datos; H.hojas[H.i].bg = "plain"; bgMode = "plain"; drawBg(); persistCanvas(); pintarBarra(); }
     else nueva(datos);
     toast("Foto puesta de fondo: escribí encima");
@@ -124,6 +152,7 @@
     const r = stage.getBoundingClientRect();
     H.px = Math.min(0, Math.max(r.width * (1 - H.z), H.px)); H.py = Math.min(0, Math.max(r.height * (1 - H.z), H.py));
     [bg, canvas].forEach((cv) => { cv.style.transformOrigin = "0 0"; cv.style.transform = H.z === 1 ? "" : `translate(${H.px}px,${H.py}px) scale(${H.z})`; });
+    if (H.rectFondo) fondoImg.style.transform = H.z === 1 ? "" : `translate(${H.px}px,${H.py}px) scale(${H.z})`;
     const z = document.getElementById("hjZoom"); if (z) z.textContent = Math.round(H.z * 100) + "%";
     document.getElementById("hjMover")?.classList.toggle("on", H.mover);
     if (H.z !== 1) document.querySelectorAll(".instrument:not(.hidden)").forEach((el) => { el.classList.add("hidden"); document.querySelector(`.tool-inst[data-inst="${el.id}"]`)?.classList.remove("active"); });
@@ -183,7 +212,7 @@
     for (let k = 0; k < H.hojas.length; k++) {
       await cargar(k); await new Promise((ok) => setTimeout(ok, 120));
       if (k) doc.addPage([r.width * 0.75, r.height * 0.75], orient);
-      doc.addImage(exportComposite(), "PNG", 0, 0, r.width * 0.75, r.height * 0.75, undefined, "FAST");
+      doc.addImage(componer(2, "image/jpeg", 0.9), "JPEG", 0, 0, r.width * 0.75, r.height * 0.75, undefined, "FAST");
     }
     await cargar(volver); H.z = zz; aplicarZoom();
     doc.save(`pizarra-${new Date().toISOString().slice(0, 10)}.pdf`);
