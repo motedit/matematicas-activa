@@ -214,5 +214,239 @@
   "ejercicios": 16,
   "pdf": "recursos/guias/algebra/funciones-parte-entera-y-valor-absoluto.pdf",
   "materia": "algebra"
+ },
+ "5bf32288-ad5c-46f8-8e6a-2889668a4738": {
+  "titulo": "Razones trigonométricas básicas",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/razones-trigonometricas-basicas.pdf",
+  "materia": "trigonometria"
+ },
+ "a5d63c97-4f3e-4089-8a5a-75f95211840e": {
+  "titulo": "Aplicaciones en triángulos",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/aplicaciones-en-triangulos.pdf",
+  "materia": "trigonometria"
+ },
+ "cab6c16a-1626-464f-b09a-97824f648c8c": {
+  "titulo": "Teoremas del seno y del coseno",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/teoremas-del-seno-y-del-coseno.pdf",
+  "materia": "trigonometria"
+ },
+ "3feffed1-82bb-4088-94dc-1ba15a64d8e2": {
+  "titulo": "Razones de ángulos especiales",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/razones-de-angulos-especiales.pdf",
+  "materia": "trigonometria"
+ },
+ "b7b75417-1b45-4d7d-8a98-0d7fc1107a27": {
+  "titulo": "Circunferencia trigonométrica",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/circunferencia-trigonometrica.pdf",
+  "materia": "trigonometria"
+ },
+ "127948a3-0ce0-4f50-ace4-f4846745d3b3": {
+  "titulo": "Funciones trigonométricas",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/funciones-trigonometricas.pdf",
+  "materia": "trigonometria"
+ },
+ "e6ccc7aa-d14d-483c-a68d-87f195abbaad": {
+  "titulo": "Identidades trigonométricas",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/identidades-trigonometricas.pdf",
+  "materia": "trigonometria"
+ },
+ "df8040ea-d811-4dc7-9b28-4d4cc559933a": {
+  "titulo": "Ecuaciones trigonométricas",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/ecuaciones-trigonometricas.pdf",
+  "materia": "trigonometria"
+ },
+ "f766fcb9-727d-4fc6-bb35-19bede62e333": {
+  "titulo": "Funciones trigonométricas inversas",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/trigonometria/funciones-trigonometricas-inversas.pdf",
+  "materia": "trigonometria"
+ },
+ "5a12761a-5e09-4244-90c4-cacb822b2dd6": {
+  "titulo": "Estadística descriptiva",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/estadistica-descriptiva.pdf",
+  "materia": "estadistica"
+ },
+ "cbc124a7-edf2-4e9f-806f-8dbc8d8d9639": {
+  "titulo": "Medidas de posición",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/medidas-de-posicion.pdf",
+  "materia": "estadistica"
+ },
+ "8107b9dc-fddb-43cd-a7ac-2dbec83a2201": {
+  "titulo": "Medidas de dispersión",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/medidas-de-dispersion.pdf",
+  "materia": "estadistica"
+ },
+ "6d4b1e47-2390-4777-bf3b-7a0e881642f5": {
+  "titulo": "Probabilidad básica",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/probabilidad-basica.pdf",
+  "materia": "estadistica"
+ },
+ "16c12ebf-3cce-4feb-893a-ebb7f0342506": {
+  "titulo": "Probabilidad condicionada",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/probabilidad-condicionada.pdf",
+  "materia": "estadistica"
+ },
+ "4446fe35-f289-442d-a00e-c17acc25ba63": {
+  "titulo": "Correlación lineal",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/correlacion-lineal.pdf",
+  "materia": "estadistica"
+ },
+ "b4db4509-69b6-4d15-ad4d-c806392b5ec5": {
+  "titulo": "Distribuciones de probabilidad",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/distribuciones-de-probabilidad.pdf",
+  "materia": "estadistica"
+ },
+ "291793bb-309a-4532-b86b-8a04dad34299": {
+  "titulo": "Inferencia estadística",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/inferencia-estadistica.pdf",
+  "materia": "estadistica"
+ },
+ "1741edf4-b666-4126-a210-8201de78e2fb": {
+  "titulo": "Pruebas de hipótesis",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/pruebas-de-hipotesis.pdf",
+  "materia": "estadistica"
+ },
+ "f9efeb04-7f1e-45dc-a780-f4c01746388b": {
+  "titulo": "Regresión y correlación avanzada",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/regresion-y-correlacion-avanzada.pdf",
+  "materia": "estadistica"
+ },
+ "8a19f7e5-2c2f-48d4-86d3-d53b8bb8bb67": {
+  "titulo": "Variable aleatoria y esperanza",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/variable-aleatoria-y-esperanza.pdf",
+  "materia": "estadistica"
+ },
+ "1a9fbef0-ad58-4496-9367-e4f42939c74c": {
+  "titulo": "Estadística bayesiana (introductoria)",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/estadistica-bayesiana.pdf",
+  "materia": "estadistica"
+ },
+ "8046a087-1905-44d7-9223-3cae80d16a48": {
+  "titulo": "Permutaciones y combinatoria",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/permutaciones-y-combinatoria.pdf",
+  "materia": "estadistica"
+ },
+ "c36e72d8-7e79-4a36-bf35-e25a20623384": {
+  "titulo": "Criptografía y ciencia de datos",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/criptografia-y-ciencia-de-datos.pdf",
+  "materia": "estadistica"
+ },
+ "7c29d355-266e-4402-b951-27bd8c223ab9": {
+  "titulo": "Análisis de varianza (ANOVA)",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/estadistica/anova.pdf",
+  "materia": "estadistica"
+ },
+ "970bf2d2-31f3-4c99-b108-c229365800e1": {
+  "titulo": "Noción de límite",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/nocion-de-limite.pdf",
+  "materia": "calculo"
+ },
+ "d34184ad-da15-40c2-b0da-27877c5f8b79": {
+  "titulo": "Comportamiento de funciones",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/comportamiento-de-funciones.pdf",
+  "materia": "calculo"
+ },
+ "3038b9cf-2995-49b1-8da6-f2e19ba420a5": {
+  "titulo": "Introducción a la derivada",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/introduccion-a-la-derivada.pdf",
+  "materia": "calculo"
+ },
+ "ba68d7e7-3d3a-414b-be60-342d35b36b32": {
+  "titulo": "Límites y continuidad",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/limites-y-continuidad.pdf",
+  "materia": "calculo"
+ },
+ "77a76efb-1007-407d-964a-9a981181c591": {
+  "titulo": "Derivadas",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/derivadas.pdf",
+  "materia": "calculo"
+ },
+ "04f043c6-e47d-42ab-8276-bba3b6e3a4d1": {
+  "titulo": "Aplicaciones de la derivada",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/aplicaciones-de-la-derivada.pdf",
+  "materia": "calculo"
+ },
+ "3c8e2ca5-b553-4601-9af5-7cfe4a49eaa9": {
+  "titulo": "Integral definida e indefinida",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/integral-definida-e-indefinida.pdf",
+  "materia": "calculo"
+ },
+ "3901b237-690c-4408-878f-e7b01aea13f0": {
+  "titulo": "Aplicaciones de la integral",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/aplicaciones-de-la-integral.pdf",
+  "materia": "calculo"
+ },
+ "8ea8327a-1ef2-49da-a2f6-06351e24854c": {
+  "titulo": "Cálculo multivariable (introductorio)",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/calculo/calculo-multivariable.pdf",
+  "materia": "calculo"
+ },
+ "74f4f8b3-5e6c-4940-bb68-819045de9e03": {
+  "titulo": "Sucesiones y patrones numéricos",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/razonamiento/sucesiones-y-patrones.pdf",
+  "materia": "razonamiento"
+ },
+ "36683607-9e4f-4662-9c5b-dcfa39fb2e08": {
+  "titulo": "Matemática en la vida cotidiana",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/razonamiento/matematicas-en-la-vida-cotidiana.pdf",
+  "materia": "razonamiento"
+ },
+ "d611d8e3-9b8e-4701-95ca-2b25f1585ac1": {
+  "titulo": "Razonamiento numérico",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/razonamiento/razonamiento-numerico.pdf",
+  "materia": "razonamiento"
+ },
+ "0b5823b6-80af-444d-a3c8-18615bf14790": {
+  "titulo": "Razonamiento lógico-verbal",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/razonamiento/razonamiento-logico-verbal.pdf",
+  "materia": "razonamiento"
+ },
+ "a0237a33-839b-4ba2-9544-aae11a3a5e88": {
+  "titulo": "Acertijos y desafíos lógicos",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/razonamiento/acertijos-y-desafios-logicos.pdf",
+  "materia": "razonamiento"
+ },
+ "bc32e598-66ed-49e6-b32a-ca9658fa6b97": {
+  "titulo": "Métodos de demostración",
+  "ejercicios": 12,
+  "pdf": "recursos/guias/razonamiento/metodos-de-demostracion.pdf",
+  "materia": "razonamiento"
  }
 }
