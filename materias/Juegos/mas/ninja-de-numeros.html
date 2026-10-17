@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../../../errores.js?v=3"></script><script src="../../../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ninja de Números 🥷 — Cortá los números que cumplen la regla</title>
+<meta name="description" content="Juego de matemática estilo ninja: cortá con el dedo los números pares, múltiplos, primos o las cuentas que dan el resultado pedido, y esquivá los que no cumplen la regla.">
+<link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/ninja-de-numeros.html">
+<meta name="theme-color" content="#0c1222">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="arcade-comun.css?v=1">
+<style>
+:root{--fondo:#0c1222}
+.pregunta{background:linear-gradient(135deg,rgba(234,88,12,.94),rgba(220,38,38,.92));font-size:clamp(20px,5vw,32px);white-space:normal;max-width:92vw;line-height:1.15;padding:8px 18px}
+.logo{background:linear-gradient(90deg,#fdba74,#f87171,#fde047);-webkit-background-clip:text;background-clip:text}
+.tiempo{position:absolute;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));height:10px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;pointer-events:none}
+.tiempo i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#fde047,#f97316);border-radius:99px;transform-origin:left;transition:transform .2s linear}
+.tema.sel{border-color:#fb923c;background:rgba(251,146,60,.14);box-shadow:0 0 0 3px rgba(251,146,60,.18)}
+</style>
+</head>
+<body>
+<div id="juego">
+  <canvas id="lienzo" aria-label="Dojo de Ninja de Números"></canvas>
+  <div class="hud oculto" id="hud">
+    <div class="caja"><div class="puntaje"><small>Puntos</small><span id="puntos">0</span></div></div>
+    <div class="der">
+      <div class="caja vidas" id="vidas" aria-label="Vidas">❤️❤️❤️</div>
+      <button class="icono" id="btnSonido" aria-label="Sonido">🔊</button>
+      <button class="icono" id="btnPausa" aria-label="Pausa">⏸</button>
+    </div>
+  </div>
+  <div class="pregunta oculto" id="pregunta" aria-live="polite"></div>
+  <div class="combo" id="combo"></div>
+  <div class="aviso" id="aviso"></div>
+  <div class="tiempo oculto" id="tiempo"><i id="barra"></i></div>
+
+  <div class="pantalla ver" id="inicio">
+    <a class="volver" href="../Juegos.html">← Juegos</a>
+    <div class="tarjeta">
+      <div class="logo">Ninja de Números</div>
+      <p class="sub">Los números saltan por el aire. Cortá solo los que cumplen la regla. ¡Tenés 75 segundos!</p>
+      <div class="temas" id="temas"></div>
+      <button class="btn" id="btnJugar" style="background:linear-gradient(135deg,#ea580c,#dc2626)">¡A cortar! 🥷</button>
+      <p class="ayuda">Deslizá el dedo (o arrastrá el mouse con el botón apretado) sobre los números para cortarlos.<br>Si cortás uno que <b>no</b> cumple la regla, perdés una vida. Cortar varios correctos de un solo tajo da bonus.</p>
+    </div>
+  </div>
+
+  <div class="pantalla" id="pausa">
+    <div class="tarjeta">
+      <div class="logo" style="font-size:44px">Pausa</div>
+      <p class="sub">El ninja medita…</p>
+      <div class="botones"><button class="btn" id="btnSeguir">Seguir ▶</button><button class="btn sec" id="btnSalir">Terminar partida</button></div>
+    </div>
+  </div>
+
+  <div class="pantalla" id="fin">
+    <div class="tarjeta">
+      <div class="logo" style="font-size:46px" id="finTitulo">¡Buen corte!</div>
+      <div class="record" id="finRecord"></div>
+      <div class="stats">
+        <div class="stat"><b id="finPuntos">0</b><span>puntos</span></div>
+        <div class="stat"><b id="finAciertos">0</b><span>cortes buenos</span></div>
+        <div class="stat"><b id="finCombo">0</b><span>mejor racha</span></div>
+      </div>
+      <div class="repaso oculto" id="repaso"><h4>Para repasar</h4><ul id="repasoLista" style="margin:0;padding-left:18px"></ul></div>
+      <p class="cuenta" id="cuenta"></p>
+      <div class="botones">
+        <button class="btn" id="btnOtra" style="background:linear-gradient(135deg,#ea580c,#dc2626)">Jugar de nuevo 🔁</button>
+        <button class="btn sec" id="btnTemas">Cambiar nivel</button>
+        <a class="btn sec" href="../Juegos.html" style="text-decoration:none">Más juegos</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../supabase-config.js?v=15"></script>
+<script src="arcade-comun.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const A = window.ARCADE, { SFX, azar, elegir, mezclar } = A;
+  const MOV_REDUCIDO = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  A.botonSonido($("btnSonido"));
+  const corte = () => { A.nota(1800 + Math.random() * 400, 0, .06, "sawtooth", .035); A.nota(900, .02, .08, "triangle", .05); };
+  const DURACION = 75;
+
+  // ── Reglas ──  Cada regla: texto, prueba(valor), y cómo generar candidatos (que cumplen y que no).
+  const esPrimo = (n) => { if (n < 2) return false; for (let i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; };
+  const numeros = (min, max) => () => ({ v: azar(min, max) });
+  function reglaMultiplo(k, max) { return { txt: `Múltiplos de ${k}`, ok: (o) => o.v % k === 0, gen: numeros(1, max), explica: (o) => `${o.v} ${o.v % k === 0 ? "sí" : "no"} es múltiplo de ${k}` }; }
+  function reglaResultado(objetivo) {
+    // cuentas que dan (o no) el objetivo
+    const gen = () => {
+      const quiere = Math.random() < 0.45, meta = quiere ? objetivo : objetivo + elegir([-3, -2, -1, 1, 2, 3, 4, -4]);
+      if (meta < 1) return { v: objetivo, t: `${objetivo}` };
+      const formas = [];
+      for (let a = 1; a < meta; a++) formas.push([`${a} + ${meta - a}`, meta]);
+      for (let a = 2; a <= meta; a++) if (meta % a === 0 && meta / a > 1) formas.push([`${a} × ${meta / a}`, meta]);
+      for (let b = 1; b <= 9; b++) formas.push([`${meta + b} − ${b}`, meta]);
+      const [t, v] = elegir(formas); return { v, t };
+    };
+    return { txt: `Las cuentas que dan ${objetivo}`, ok: (o) => o.v === objetivo, gen, explica: (o) => `${o.t} = ${o.v}` };
+  }
+  function reglaFraccion() {
+    const gen = () => {
+      if (Math.random() < 0.45) { const k = azar(1, 8); return { v: 0.5, t: `${k}/${2 * k}` }; }
+      const den = azar(3, 12);
+      let num = azar(1, den - 1); if (num * 2 === den) num = num + 1 < den ? num + 1 : num - 1;
+      return { v: num / den, t: `${num}/${den}` };
+    };
+    return { txt: "Fracciones iguales a ½", ok: (o) => o.v === 0.5, gen, explica: (o) => `${o.t} ${o.v === 0.5 ? "=" : "≠"} ½` };
+  }
+  const NIVELES = {
+    basico: { ico: "🥋", nombre: "Cinturón blanco", desc: "Pares, impares, múltiplos de 5 y 10",
+      reglas: () => [
+        { txt: "Números pares", ok: (o) => o.v % 2 === 0, gen: numeros(1, 60), explica: (o) => `${o.v} es ${o.v % 2 ? "impar" : "par"}` },
+        { txt: "Números impares", ok: (o) => o.v % 2 === 1, gen: numeros(1, 60), explica: (o) => `${o.v} es ${o.v % 2 ? "impar" : "par"}` },
+        reglaMultiplo(5, 60), reglaMultiplo(10, 100),
+        { txt: "Mayores que 50", ok: (o) => o.v > 50, gen: numeros(20, 90), explica: (o) => `${o.v} ${o.v > 50 ? ">" : "≤"} 50` },
+      ] },
+    medio: { ico: "🥷", nombre: "Cinturón verde", desc: "Múltiplos de 3, 4, 6, 9 y cuadrados",
+      reglas: () => [
+        reglaMultiplo(3, 60), reglaMultiplo(4, 60), reglaMultiplo(6, 72), reglaMultiplo(9, 90),
+        { txt: "Cuadrados perfectos", ok: (o) => Number.isInteger(Math.sqrt(o.v)), gen: () => ({ v: Math.random() < 0.45 ? azar(1, 12) ** 2 : azar(2, 140) }), explica: (o) => Number.isInteger(Math.sqrt(o.v)) ? `${o.v} = ${Math.sqrt(o.v)}²` : `${o.v} no es un cuadrado perfecto` },
+        reglaResultado(azar(10, 24)),
+      ] },
+    avanzado: { ico: "🐉", nombre: "Cinturón negro", desc: "Primos, divisores, fracciones y cuentas",
+      reglas: () => [
+        { txt: "Números primos", ok: (o) => esPrimo(o.v), gen: numeros(2, 60), explica: (o) => esPrimo(o.v) ? `${o.v} es primo` : `${o.v} no es primo` },
+        { txt: "Divisores de 36", ok: (o) => 36 % o.v === 0, gen: () => ({ v: Math.random() < 0.45 ? elegir([1, 2, 3, 4, 6, 9, 12, 18, 36]) : azar(1, 40) }), explica: (o) => `${o.v} ${36 % o.v === 0 ? "sí" : "no"} divide a 36` },
+        reglaResultado(azar(18, 36)), reglaFraccion(), reglaMultiplo(7, 84),
+      ] },
+  };
+
+  // ── Lienzo ──
+  const cv = $("lienzo"), cx = cv.getContext("2d");
+  let W = 0, H = 0;
+  function medir() { const d = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; cx.setTransform(d, 0, 0, d, 0, 0); }
+  addEventListener("resize", medir); medir();
+  const COLORES = [["#f97316", "#fdba74"], ["#22c55e", "#86efac"], ["#3b82f6", "#93c5fd"], ["#a855f7", "#d8b4fe"], ["#ec4899", "#f9a8d4"], ["#eab308", "#fde047"], ["#06b6d4", "#67e8f9"]];
+  const radio = () => Math.max(30, Math.min(48, W / 12));
+  const hojas = Array.from({ length: 18 }, () => ({ x: Math.random(), y: Math.random(), r: 2 + Math.random() * 4, v: 10 + Math.random() * 20, f: Math.random() * 6 }));
+
+  // ── Estado ──
+  let nivel = A.leer("ninja_nivel") || "basico"; if (!NIVELES[nivel]) nivel = "basico";
+  let E = null, ultimo = 0, sacudida = 0, destello = null;
+
+  function nuevaPartida() {
+    const reglas = mezclar(NIVELES[nivel].reglas());
+    E = { corriendo: true, pausa: false, t: 0, resto: DURACION, puntos: 0, vidas: 3, aciertos: 0, racha: 0, mejorRacha: 0,
+      reglas, iRegla: 0, regla: reglas[0], cambio: 15, bichos: [], mitades: [], particulas: [], textos: [], estela: [], errores: [], lanzar: 0.4 };
+    actualizarHUD();
+  }
+
+  function lanzar() {
+    const n = Math.random() < 0.35 ? 2 : 1;
+    for (let k = 0; k < n; k++) {
+      let o, intentos = 0;
+      // garantizar ~50% de objetos que cumplen la regla
+      const quiere = Math.random() < 0.5;
+      do { o = E.regla.gen(); intentos++; } while (E.regla.ok(o) !== quiere && intentos < 40);
+      const r = radio(), x = r + Math.random() * (W - 2 * r);
+      const altura = H * (0.55 + Math.random() * 0.3), g = H * 1.1;
+      const vy = -Math.sqrt(2 * g * altura), destino = W / 2 + (Math.random() - 0.5) * W * 0.5;
+      const tvuelo = (2 * -vy) / g, vx = (destino - x) / tvuelo;
+      const color = elegir(COLORES);
+      E.bichos.push({ o, x, y: H + r, vx, vy, g, r, rot: 0, vr: (Math.random() - 0.5) * 3, color, vivo: true, cumple: E.regla.ok(o) });
+    }
+  }
+
+  // ── Corte con el dedo/mouse ──
+  let apretado = false;
+  function punto(e) {
+    if (!E || !E.corriendo || E.pausa) return;
+    const p = { x: e.clientX, y: e.clientY, t: performance.now() };
+    const prev = E.estela[E.estela.length - 1];
+    E.estela.push(p);
+    if (prev && performance.now() - prev.t < 120) cortarSegmento(prev, p);
+  }
+  cv.addEventListener("pointerdown", (e) => { apretado = true; cv.setPointerCapture && cv.setPointerCapture(e.pointerId); if (E) E.estela = []; E && (E.tajo = []); punto(e); });
+  cv.addEventListener("pointermove", (e) => { if (apretado || e.pointerType === "touch") punto(e); });
+  const soltar = () => { apretado = false; if (E && E.tajo && E.tajo.length >= 2) { const b = E.tajo.length * 5; E.puntos += b; texto(`¡Combo x${E.tajo.length}! +${b}`, W / 2, H * 0.45, "#fde047"); A.nota(1047, 0, .2, "triangle", .12); actualizarHUD(); } if (E) E.tajo = []; };
+  cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
+
+  function distSeg(px, py, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / l));
+    return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
+  }
+  function cortarSegmento(a, b) {
+    if (Math.hypot(b.x - a.x, b.y - a.y) < 4) return;
+    for (const z of E.bichos) if (z.vivo && distSeg(z.x, z.y, a, b) < z.r * 0.95) cortar(z, Math.atan2(b.y - a.y, b.x - a.x));
+  }
+  function texto(t, x, y, color) { E.textos.push({ t, x: Math.min(W - 80, Math.max(80, x)), y, vida: 1.2, color }); }
+  const multi = () => (E.racha >= 12 ? 4 : E.racha >= 7 ? 3 : E.racha >= 3 ? 2 : 1);
+
+  function cortar(z, ang) {
+    z.vivo = false; corte();
+    E.mitades.push({ ...z, lado: -1, ang, vx: z.vx - Math.cos(ang + 1.57) * 120, vy: z.vy * 0.3 - 60, rot2: 0 }, { ...z, lado: 1, ang, vx: z.vx + Math.cos(ang + 1.57) * 120, vy: z.vy * 0.3 - 60, rot2: 0 });
+    for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28, v = 1 + Math.random() * 4; E.particulas.push({ x: z.x, y: z.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vida: 1, color: z.color[1], r: 2 + Math.random() * 3 }); }
+    if (z.cumple) {
+      E.aciertos++; E.racha++; E.mejorRacha = Math.max(E.mejorRacha, E.racha);
+      const gan = 10 * multi(); E.puntos += gan; texto("+" + gan, z.x, z.y - z.r, "#86efac"); SFX.bien();
+      if (E.tajo) E.tajo.push(z);
+      if ([3, 7, 12].includes(E.racha)) aviso(`🔥 x${multi()}`);
+    } else {
+      E.vidas--; E.racha = 0; SFX.mal(); if (!MOV_REDUCIDO) sacudida = 14;
+      destello = { c: "248,113,113", v: 1 };
+      E.errores.push(`${E.regla.txt}: ${E.regla.explica(z.o)}`);
+      texto(E.regla.explica(z.o), z.x, z.y - z.r - 10, "#fecaca");
+      if (E.vidas <= 0) { E.corriendo = false; setTimeout(terminar, 800); }
+    }
+    actualizarHUD();
+  }
+
+  function alternarPausa(forzar) {
+    if (!E || !E.corriendo) return;
+    E.pausa = forzar !== undefined ? forzar : !E.pausa;
+    $("pausa").classList.toggle("ver", E.pausa); $("btnPausa").textContent = E.pausa ? "▶" : "⏸";
+  }
+  $("btnPausa").onclick = () => alternarPausa();
+  $("btnSeguir").onclick = () => alternarPausa(false);
+  $("btnSalir").onclick = () => { alternarPausa(false); terminar(); };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) alternarPausa(true); });
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape" || e.key === "p" || e.key === "P") alternarPausa();
+    else if ((e.key === "Enter" || e.key === " ") && ($("inicio").classList.contains("ver") || $("fin").classList.contains("ver"))) { e.preventDefault(); empezar(); }
+  });
+
+  function pintarNiveles() {
+    $("temas").innerHTML = Object.entries(NIVELES).map(([k, t]) => {
+      const rec = A.verRecord("ninja", k);
+      return `<button class="tema${k === nivel ? " sel" : ""}" data-n="${k}"><i>${t.ico}</i><b>${t.nombre}</b><span>${t.desc}</span>${rec ? `<em>🏆 Récord: ${rec}</em>` : ""}</button>`;
+    }).join("");
+    $("temas").querySelectorAll(".tema").forEach((b) => b.onclick = () => { nivel = b.dataset.n; A.guardar("ninja_nivel", nivel); pintarNiveles(); });
+  }
+  pintarNiveles();
+
+  function empezar() {
+    ["inicio", "fin", "pausa"].forEach((id) => $(id).classList.remove("ver"));
+    ["hud", "pregunta", "tiempo"].forEach((id) => $(id).classList.remove("oculto"));
+    nuevaPartida(); A.activarAudio(); aviso("¡Cortá!");
+  }
+  $("btnJugar").onclick = empezar; $("btnOtra").onclick = empezar;
+  $("btnTemas").onclick = () => { $("fin").classList.remove("ver"); pintarNiveles(); $("inicio").classList.add("ver"); };
+
+  function aviso(t) { const a = $("aviso"); a.textContent = t; a.classList.add("ver"); clearTimeout(aviso._t); aviso._t = setTimeout(() => a.classList.remove("ver"), 1000); }
+  function actualizarHUD() {
+    $("puntos").textContent = E.puntos;
+    $("vidas").textContent = "❤️".repeat(Math.max(0, E.vidas)) + "🖤".repeat(Math.max(0, 3 - E.vidas));
+    $("pregunta").textContent = "✂️ " + E.regla.txt;
+    const m = multi(), c = $("combo"); c.textContent = m > 1 ? `🔥 Racha ${E.racha} · x${m}` : ""; c.style.opacity = m > 1 ? 1 : 0;
+    $("barra").style.transform = `scaleX(${Math.max(0, E.resto / DURACION)})`;
+  }
+
+  function actualizar(dt) {
+    E.t += dt; E.resto -= dt;
+    if (E.resto <= 0) { E.resto = 0; E.corriendo = false; aviso("¡Tiempo!"); setTimeout(terminar, 700); }
+    E.cambio -= dt;
+    if (E.cambio <= 0) {
+      E.iRegla = (E.iRegla + 1) % E.reglas.length; E.regla = E.reglas[E.iRegla]; E.cambio = 15;
+      for (const z of E.bichos) z.cumple = E.regla.ok(z.o);
+      SFX.nivel(); aviso("¡Nueva regla!"); const p = $("pregunta"); p.classList.add("pop"); setTimeout(() => p.classList.remove("pop"), 200);
+    }
+    E.lanzar -= dt;
+    const ritmo = Math.max(0.55, 1.15 - E.t * 0.008);
+    if (E.lanzar <= 0) { lanzar(); E.lanzar = ritmo * (0.7 + Math.random() * 0.6); }
+    for (const z of E.bichos) { z.vy += z.g * dt; z.x += z.vx * dt; z.y += z.vy * dt; z.rot += z.vr * dt; }
+    E.bichos = E.bichos.filter((z) => z.vivo && z.y < H + z.r * 2);
+    for (const m of E.mitades) { m.vy += m.g * dt; m.x += m.vx * dt; m.y += m.vy * dt; m.rot2 += m.lado * 4 * dt; }
+    E.mitades = E.mitades.filter((m) => m.y < H + m.r * 3);
+    for (const q of E.particulas) { q.x += q.vx; q.y += q.vy; q.vy += 0.2; q.vida -= dt * 1.5; }
+    E.particulas = E.particulas.filter((q) => q.vida > 0);
+    for (const t of E.textos) { t.y -= 28 * dt; t.vida -= dt * 0.8; } E.textos = E.textos.filter((t) => t.vida > 0);
+    const ahora = performance.now(); E.estela = E.estela.filter((p) => ahora - p.t < 160);
+    if (Math.floor(E.resto) !== Math.floor(E.resto + dt)) actualizarHUD();
+  }
+
+  // ── Dibujo ──
+  function fondo(t) {
+    const g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0c1222"); g.addColorStop(0.6, "#1c1531"); g.addColorStop(1, "#3b1d2e");
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    // luna
+    const lr = Math.min(W, H) * 0.13; cx.fillStyle = "rgba(254,243,199,.9)"; cx.shadowColor = "#fef3c7"; cx.shadowBlur = 40;
+    cx.beginPath(); cx.arc(W * 0.8, H * 0.28, lr, 0, 7); cx.fill(); cx.shadowBlur = 0;
+    // bambúes
+    for (let i = 0; i < 7; i++) {
+      const x = (i / 6) * W + (i % 2 ? 18 : -10), w = 10 + (i % 3) * 4; cx.fillStyle = i % 2 ? "rgba(21,128,61,.35)" : "rgba(22,101,52,.5)";
+      cx.fillRect(x, 0, w, H); cx.fillStyle = "rgba(0,0,0,.25)"; for (let y = 40 + i * 13; y < H; y += 90) cx.fillRect(x, y, w, 3);
+    }
+    // pétalos que caen
+    cx.fillStyle = "rgba(251,207,232,.7)";
+    for (const h of hojas) { const y = (h.y * H + t * h.v) % H, x = h.x * W + Math.sin(t + h.f) * 20; cx.beginPath(); cx.ellipse(x, y, h.r, h.r * 0.6, t + h.f, 0, 7); cx.fill(); }
+  }
+  function bola(z, recorte) {
+    cx.save(); cx.translate(z.x, z.y);
+    if (recorte) { cx.rotate(z.ang); cx.beginPath(); cx.rect(-z.r * 2, z.lado < 0 ? -z.r * 2 : 0, z.r * 4, z.r * 2); cx.clip(); cx.rotate(-z.ang); cx.rotate(z.rot2); }
+    const g = cx.createRadialGradient(-z.r * 0.35, -z.r * 0.35, z.r * 0.1, 0, 0, z.r);
+    g.addColorStop(0, z.color[1]); g.addColorStop(1, z.color[0]);
+    cx.fillStyle = g; cx.shadowColor = z.color[0]; cx.shadowBlur = 18; cx.beginPath(); cx.arc(0, 0, z.r, 0, 7); cx.fill(); cx.shadowBlur = 0;
+    cx.fillStyle = "rgba(255,255,255,.35)"; cx.beginPath(); cx.ellipse(-z.r * 0.35, -z.r * 0.45, z.r * 0.3, z.r * 0.16, -0.6, 0, 7); cx.fill();
+    const txt = z.o.t || String(z.o.v);
+    cx.font = `800 ${z.r * (txt.length > 4 ? 0.48 : txt.length > 2 ? 0.62 : 0.8)}px "Baloo 2", sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle";
+    cx.lineWidth = 4; cx.strokeStyle = "rgba(15,23,42,.75)"; cx.strokeText(txt, 0, 2); cx.fillStyle = "#fff"; cx.fillText(txt, 0, 2);
+    cx.restore();
+  }
+  function efectos() {
+    // estela de la espada
+    if (E.estela.length > 1) {
+      const ahora = performance.now();
+      for (let i = 1; i < E.estela.length; i++) {
+        const a = E.estela[i - 1], b = E.estela[i], vida = 1 - (ahora - b.t) / 160;
+        cx.strokeStyle = `rgba(255,255,255,${vida})`; cx.lineWidth = 2 + 8 * vida * (i / E.estela.length); cx.lineCap = "round";
+        cx.shadowColor = "#fde047"; cx.shadowBlur = 14; cx.beginPath(); cx.moveTo(a.x, a.y); cx.lineTo(b.x, b.y); cx.stroke();
+      }
+      cx.shadowBlur = 0;
+    }
+    for (const q of E.particulas) { cx.globalAlpha = Math.max(0, q.vida); cx.fillStyle = q.color; cx.beginPath(); cx.arc(q.x, q.y, q.r, 0, 7); cx.fill(); }
+    cx.globalAlpha = 1;
+    for (const t of E.textos) { cx.globalAlpha = Math.max(0, Math.min(1, t.vida)); cx.fillStyle = t.color; cx.textAlign = "center"; cx.font = '800 22px "Baloo 2", sans-serif'; cx.fillText(t.t, t.x, t.y); }
+    cx.globalAlpha = 1;
+    if (destello) { cx.fillStyle = `rgba(${destello.c},${0.22 * destello.v})`; cx.fillRect(0, 0, W, H); destello.v -= 0.06; if (destello.v <= 0) destello = null; }
+  }
+  function cuadro(ahora) {
+    const dt = Math.min(0.05, (ahora - ultimo) / 1000 || 0); ultimo = ahora;
+    if (E && E.corriendo && !E.pausa) actualizar(dt);
+    cx.save();
+    if (sacudida > 0) { cx.translate((Math.random() - 0.5) * sacudida, (Math.random() - 0.5) * sacudida); sacudida *= 0.85; if (sacudida < 0.5) sacudida = 0; }
+    fondo(ahora / 1000);
+    if (E) { E.mitades.forEach((m) => bola(m, true)); E.bichos.forEach((z) => bola(z)); efectos(); }
+    cx.restore();
+    requestAnimationFrame(cuadro);
+  }
+  requestAnimationFrame(cuadro);
+
+  function terminar() {
+    if (!E || $("fin").classList.contains("ver")) return;
+    E.corriendo = false; SFX.fin();
+    ["hud", "pregunta", "tiempo"].forEach((id) => $(id).classList.add("oculto")); $("combo").style.opacity = 0;
+    const { antes, nuevo } = A.record("ninja", nivel, E.puntos);
+    $("finTitulo").textContent = E.vidas <= 0 ? "¡Uy, te quedaste sin vidas!" : E.puntos >= 400 ? "¡Maestro ninja! 🐉" : E.puntos >= 180 ? "¡Gran corte!" : "¡Buen corte!";
+    $("finRecord").textContent = nuevo ? `🏆 ¡Nuevo récord en ${NIVELES[nivel].nombre}!` : antes ? `Tu récord: ${antes}` : "";
+    $("finPuntos").textContent = E.puntos; $("finAciertos").textContent = E.aciertos; $("finCombo").textContent = E.mejorRacha;
+    const rep = $("repaso");
+    if (E.errores.length) { $("repasoLista").innerHTML = [...new Set(E.errores)].slice(-5).map((t) => `<li>${t}</li>`).join(""); rep.classList.remove("oculto"); }
+    else rep.classList.add("oculto");
+    $("fin").classList.add("ver");
+    A.enviarPuntos("ninja-de-numeros", E.puntos, { nivel, aciertos: E.aciertos }, $("cuenta"));
+  }
+})();
+</script>
+</body>
+</html>

@@ -10,64 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--fondo:#120b2e;--panel:rgba(20,12,52,.86);--borde:rgba(167,139,250,.35);--texto:#f5f3ff;--suave:#c4b5fd;--neon:#22d3ee;--rosa:#f472b6;--oro:#fbbf24;--ok:#34d399;--mal:#fb7185}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--fondo);color:var(--texto);font-family:Nunito,system-ui,sans-serif;overflow:hidden;overscroll-behavior:none}
-#juego{position:fixed;inset:0;touch-action:none}
-canvas{display:block;width:100%;height:100%}
-button{font-family:inherit;cursor:pointer}
-.hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:max(10px,env(safe-area-inset-top)) 12px 0;pointer-events:none;gap:8px}
-.hud .caja{background:var(--panel);border:1px solid var(--borde);border-radius:14px;padding:6px 12px;backdrop-filter:blur(6px);pointer-events:auto}
-.puntaje{font-family:"Baloo 2";font-weight:800;font-size:26px;line-height:1}
-.puntaje small{display:block;font-family:Nunito;font-size:11px;font-weight:700;color:var(--suave);letter-spacing:.5px;text-transform:uppercase}
-.vidas{font-size:20px;letter-spacing:2px}
-.der{display:flex;gap:6px}
-.icono{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--borde);color:var(--texto);font-size:18px;display:grid;place-items:center;pointer-events:auto}
-.pregunta{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 54px);transform:translateX(-50%);background:linear-gradient(135deg,rgba(124,58,237,.92),rgba(219,39,119,.9));border:2px solid rgba(255,255,255,.35);border-radius:18px;padding:8px 22px 6px;font-family:"Baloo 2";font-weight:800;font-size:clamp(26px,6.5vw,44px);text-align:center;box-shadow:0 10px 30px rgba(124,58,237,.45);pointer-events:none;white-space:nowrap;transition:transform .15s}
-.pregunta.pop{transform:translateX(-50%) scale(1.08)}
-.combo{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 122px);transform:translateX(-50%);font-family:"Baloo 2";font-weight:800;font-size:18px;color:var(--oro);text-shadow:0 2px 10px rgba(251,191,36,.6);pointer-events:none;opacity:0;transition:opacity .2s}
-.aviso{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);font-family:"Baloo 2";font-weight:800;font-size:clamp(34px,9vw,64px);color:#fff;text-shadow:0 4px 24px rgba(34,211,238,.8);opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.2,1.6,.4,1);white-space:nowrap}
-.aviso.ver{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.flechas{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:none;justify-content:space-between;padding:0 14px;pointer-events:none}
-.flechas button{pointer-events:auto;width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(20,12,52,.55);color:#fff;font-size:30px;backdrop-filter:blur(4px)}
-.flechas button:active{background:rgba(124,58,237,.7)}
-@media (pointer:coarse){.flechas{display:flex}}
-.pantalla{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,rgba(124,58,237,.35),rgba(18,11,46,.92) 70%);overflow:auto}
-.pantalla.ver{display:flex}
-.tarjeta{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--borde);border-radius:24px;padding:22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
-.logo{font-family:"Baloo 2";font-weight:800;font-size:clamp(40px,11vw,64px);line-height:1;background:linear-gradient(90deg,var(--neon),#a78bfa,var(--rosa));-webkit-background-clip:text;background-clip:text;color:transparent;margin:4px 0 2px}
-.sub{color:var(--suave);font-weight:700;margin:0 0 16px}
-.temas{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-.tema{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 10px;color:var(--texto);text-align:center;transition:transform .12s,border-color .12s}
-.tema:hover{transform:translateY(-2px)}
-.tema.sel{border-color:var(--neon);background:rgba(34,211,238,.14);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
-.tema b{display:block;font-family:"Baloo 2";font-size:18px}
-.tema span{font-size:12.5px;color:var(--suave)}
-.tema i{font-style:normal;font-size:26px;display:block}
-.tema em{font-style:normal;display:block;font-size:11.5px;color:var(--oro);margin-top:2px;font-weight:800}
-.btn{border:0;border-radius:16px;padding:14px 26px;font-family:"Baloo 2";font-weight:800;font-size:20px;color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 8px 24px rgba(219,39,119,.4);transition:transform .12s}
-.btn:hover{transform:translateY(-2px)}
-.btn.sec{background:rgba(255,255,255,.1);box-shadow:none;font-size:16px;padding:11px 18px;display:inline-flex;align-items:center;justify-content:center}
-.botones{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-.ayuda{font-size:13px;color:var(--suave);margin:14px 0 0;line-height:1.5}
-.kbd{display:inline-block;border:1px solid var(--borde);border-radius:6px;padding:0 6px;font-weight:800;color:#fff}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
-.stat{background:rgba(255,255,255,.06);border-radius:14px;padding:10px 6px}
-.stat b{display:block;font-family:"Baloo 2";font-size:26px;line-height:1.1}
-.stat span{font-size:12px;color:var(--suave)}
-.record{color:var(--oro);font-weight:800;min-height:22px}
-.repaso{text-align:left;background:rgba(255,255,255,.05);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-size:14.5px}
-.repaso h4{margin:0 0 6px;font-size:14px;color:var(--suave)}
-.repaso li{margin:3px 0}
-.repaso .ok{color:var(--ok);font-weight:800}
-.repaso .mal{color:var(--mal);text-decoration:line-through}
-.cuenta{font-size:13.5px;color:var(--suave);margin:0 0 14px;min-height:20px}
-.cuenta b{color:var(--ok)}
-.volver{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;color:var(--suave);text-decoration:none;font-weight:800;font-size:14px;background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:8px 12px;z-index:2}
-.oculto{display:none!important}
-@media (prefers-reduced-motion:reduce){.aviso,.pregunta{transition:none}}
-</style>
+<link rel="stylesheet" href="arcade-comun.css?v=1">
 </head>
 <body>
 <div id="juego">
@@ -136,112 +79,18 @@ button{font-family:inherit;cursor:pointer}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../../supabase-config.js?v=15"></script>
+<script src="arcade-comun.js?v=1"></script>
 <script>
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const azar = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-  const elegir = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const mezclar = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  const { azar } = window.ARCADE;
   const MOV_REDUCIDO = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   const leer = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
-  // ───────────────────────── Temas y generación de cuentas ─────────────────────────
-  const TEMAS = {
-    sumas:      { ico: "➕", nombre: "Sumas y restas", desc: "De 1 a 3 cifras" },
-    tablas:     { ico: "✖️", nombre: "Tablas", desc: "Multiplicar y dividir" },
-    mezcla:     { ico: "🎲", nombre: "Las 4 operaciones", desc: "Un poco de todo" },
-    potencias:  { ico: "🚀", nombre: "Potencias y raíces", desc: "Cuadrados, cubos, √" },
-    ecuaciones: { ico: "🔍", nombre: "Ecuaciones", desc: "¿Cuánto vale x?" },
-    porcentajes:{ ico: "🍕", nombre: "Fracciones y %", desc: "La mitad, el 25 %…" },
-  };
-
-  function distractores(r, extra) {
-    const set = new Set();
-    const cand = [r + 1, r - 1, r + 2, r - 2, r + 10, r - 10, ...(extra || [])];
-    mezclar(cand);
-    for (const c of cand) if (Number.isInteger(c) && c >= 0 && c !== r) set.add(c);
-    while (set.size < 2) { const c = r + azar(-5, 5); if (c >= 0 && c !== r) set.add(c); }
-    return [...set].slice(0, 2);
-  }
-
-  function cuenta(tema, nivel) {
-    const d = Math.min(nivel, 6);
-    const t = tema === "mezcla" ? elegir(["sumas", "tablas", "sumas", "tablas", "division"]) : tema;
-    let txt, r, extra = [];
-    switch (t) {
-      case "sumas": {
-        const max = [0, 20, 50, 100, 200, 500, 999][d];
-        let a = azar(2, max), b = azar(2, max);
-        if (Math.random() < 0.5) { txt = `${a} + ${b}`; r = a + b; extra = [a + b + 10, Math.abs(a - b)]; }
-        else { if (b > a) [a, b] = [b, a]; txt = `${a} − ${b}`; r = a - b; extra = [a + b, r + 10]; }
-        break;
-      }
-      case "tablas": case "division": {
-        const tope = [0, 5, 7, 10, 10, 12, 12][d];
-        const a = azar(2, tope), b = azar(2, 10);
-        if (t === "division" || (d >= 3 && Math.random() < 0.35)) { txt = `${a * b} ÷ ${a}`; r = b; extra = [b + 1, a]; }
-        else { txt = `${a} × ${b}`; r = a * b; extra = [a * (b + 1), a * (b - 1), a + b]; }
-        break;
-      }
-      case "potencias": {
-        const tipo = elegir(d < 2 ? ["cuad", "cuad", "raiz"] : ["cuad", "cubo", "raiz", "pot2", "raiz"]);
-        if (tipo === "cuad") { const a = azar(2, d < 3 ? 10 : 15); txt = `${a}²`; r = a * a; extra = [a * 2, (a + 1) * (a + 1)]; }
-        else if (tipo === "cubo") { const a = azar(2, 6); txt = `${a}³`; r = a ** 3; extra = [a * 3, a * a]; }
-        else if (tipo === "pot2") { const n = azar(3, 8 + d); txt = `2^${n}`; r = 2 ** n; extra = [2 * n, 2 ** (n - 1)]; }
-        else { const a = azar(2, d < 3 ? 10 : 15); txt = `√${a * a}`; r = a; extra = [a * a / 2 | 0, a + 1]; }
-        break;
-      }
-      case "ecuaciones": {
-        const x = azar(1, d < 3 ? 10 : 15);
-        const tipo = elegir(d < 2 ? ["suma", "resta"] : d < 4 ? ["suma", "mult", "resta"] : ["mult", "lineal", "lineal", "suma"]);
-        if (tipo === "suma") { const a = azar(2, 20); txt = `x + ${a} = ${x + a}`; r = x; extra = [x + a + a, x + 1]; }
-        else if (tipo === "resta") { const a = azar(2, 20); txt = `x − ${a} = ${x}`; r = x + a; extra = [x, Math.max(0, x - a), x + a + 1]; }
-        else if (tipo === "mult") { const a = azar(2, 9); txt = `${a}x = ${a * x}`; r = x; extra = [a * x - a, x + a]; }
-        else { const a = azar(2, 6), b = azar(1, 12); txt = `${a}x + ${b} = ${a * x + b}`; r = x; extra = [x + 1, (a * x + b) - b]; }
-        break;
-      }
-      case "porcentajes": {
-        const tipo = elegir(d < 2 ? ["mitad", "cuarto", "p10"] : ["mitad", "cuarto", "p10", "p25", "p50", "tres4", "p20"]);
-        if (tipo === "mitad") { const n = azar(2, 40) * 2; txt = `½ de ${n}`; r = n / 2; extra = [n * 2, n / 2 + 2]; }
-        else if (tipo === "cuarto") { const n = azar(2, 25) * 4; txt = `¼ de ${n}`; r = n / 4; extra = [n / 2, n / 4 + 4]; }
-        else if (tipo === "tres4") { const n = azar(2, 20) * 4; txt = `¾ de ${n}`; r = n * 3 / 4; extra = [n / 4, n * 3 / 4 + 3]; }
-        else if (tipo === "p10") { const n = azar(2, 50) * 10; txt = `10 % de ${n}`; r = n / 10; extra = [n / 100 | 0, n / 10 + 10]; }
-        else if (tipo === "p20") { const n = azar(2, 25) * 10; txt = `20 % de ${n}`; r = n / 5; extra = [n / 10, n / 5 + 5]; }
-        else if (tipo === "p25") { const n = azar(2, 25) * 4; txt = `25 % de ${n}`; r = n / 4; extra = [n / 2, n / 4 + 5]; }
-        else { const n = azar(2, 50) * 2; txt = `50 % de ${n}`; r = n / 2; extra = [n / 5 | 0, n / 2 + 10]; }
-        break;
-      }
-    }
-    const opciones = mezclar([r, ...distractores(r, extra)]);
-    return { txt, r, opciones, correcta: opciones.indexOf(r) };
-  }
-
-  // ───────────────────────── Sonido (sintetizado, sin archivos) ─────────────────────────
-  let ac = null, sonido = leer("turbo_sonido") !== "0";
-  function nota(f, t0, dur, tipo, vol) {
-    if (!sonido) return;
-    try {
-      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + t0;
-      o.type = tipo || "sine"; o.frequency.setValueAtTime(f, t);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
-    } catch (e) {}
-  }
-  const SFX = {
-    bien: () => { nota(660, 0, .12, "triangle"); nota(990, .08, .18, "triangle"); },
-    mal: () => { nota(180, 0, .28, "sawtooth", .12); nota(120, .1, .3, "sawtooth", .1); },
-    moneda: () => { nota(1320, 0, .07, "square", .05); nota(1760, .05, .1, "square", .05); },
-    nivel: () => [523, 659, 784, 1047].forEach((f, i) => nota(f, i * .08, .2, "triangle", .13)),
-    carril: () => nota(420, 0, .05, "sine", .05),
-    fin: () => [392, 330, 262].forEach((f, i) => nota(f, i * .15, .3, "triangle", .12)),
-  };
-  function pintarSonido() { $("btnSonido").textContent = sonido ? "🔊" : "🔇"; }
-  $("btnSonido").onclick = () => { sonido = !sonido; guardar("turbo_sonido", sonido ? "1" : "0"); pintarSonido(); };
-  pintarSonido();
+  const { TEMAS, cuenta, SFX } = window.ARCADE;
+  window.ARCADE.botonSonido($("btnSonido"));
 
   // ───────────────────────── Lienzo ─────────────────────────
   const cv = $("lienzo"), cx = cv.getContext("2d");
@@ -340,7 +189,7 @@ button{font-family:inherit;cursor:pointer}
   // ───────────────────────── Pantalla de inicio ─────────────────────────
   function pintarTemas() {
     $("temas").innerHTML = Object.entries(TEMAS).map(([k, t]) => {
-      const rec = +leer("turbo_record_" + k) || 0;
+      const rec = window.ARCADE.verRecord("turbo", k);
       return `<button class="tema${k === tema ? " sel" : ""}" data-tema="${k}"><i>${t.ico}</i><b>${t.nombre}</b><span>${t.desc}</span>${rec ? `<em>🏆 Récord: ${rec}</em>` : ""}</button>`;
     }).join("");
     $("temas").querySelectorAll(".tema").forEach((b) => b.onclick = () => { tema = b.dataset.tema; guardar("turbo_tema", tema); pintarTemas(); });
@@ -352,7 +201,7 @@ button{font-family:inherit;cursor:pointer}
     ["hud", "pregunta", "flechas"].forEach((id) => $(id).classList.remove("oculto"));
     nuevaPartida();
     mostrarAviso("¡Ya!");
-    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume && ac.resume(); } catch (e) {}
+    window.ARCADE.activarAudio();
   }
   $("btnJugar").onclick = empezar;
   $("btnOtra").onclick = empezar;
@@ -629,11 +478,9 @@ button{font-family:inherit;cursor:pointer}
     E.corriendo = false; SFX.fin();
     ["hud", "pregunta", "flechas"].forEach((id) => $(id).classList.add("oculto"));
     $("combo").style.opacity = 0;
-    const clave = "turbo_record_" + tema, antes = +leer(clave) || 0;
-    const nuevo = E.puntos > antes;
-    if (nuevo) guardar(clave, E.puntos);
+    const { antes, nuevo } = window.ARCADE.record("turbo", tema, E.puntos);
     $("finTitulo").textContent = E.puntos >= 300 ? "¡Imparable! 🚀" : E.puntos >= 120 ? "¡Muy buena carrera!" : "¡Buena carrera!";
-    $("finRecord").textContent = nuevo && E.puntos > 0 ? "🏆 ¡Nuevo récord en " + TEMAS[tema].nombre + "!" : antes ? `Tu récord: ${antes}` : "";
+    $("finRecord").textContent = nuevo ? "🏆 ¡Nuevo récord en " + TEMAS[tema].nombre + "!" : antes ? `Tu récord: ${antes}` : "";
     $("finPuntos").textContent = E.puntos;
     $("finAciertos").textContent = `${E.aciertos}/${E.total}`;
     $("finCombo").textContent = E.mejorRacha;
@@ -643,19 +490,7 @@ button{font-family:inherit;cursor:pointer}
       rep.classList.remove("oculto");
     } else rep.classList.add("oculto");
     $("fin").classList.add("ver");
-    // Puntos para el ranking (mismo sistema que el resto del sitio; el servidor pone el tope diario)
-    const pts = Math.min(100, Math.round(E.puntos / 10));
-    const c = $("cuenta"); c.textContent = "";
-    try {
-      const api = window.MA_SUPABASE;
-      const u = api && api.sb ? await api.sbUsuario() : null;
-      if (u) {
-        api.sbRegistrarEvento("juego_jugado", { juego: "turbo-mate", tema, puntos: E.puntos, aciertos: E.aciertos, total: E.total });
-        if (pts > 0) { await api.sbSumarPuntos(pts); c.innerHTML = `Sumaste <b>+${pts} puntos</b> al ranking semanal.`; }
-      } else if (api && api.sb) {
-        c.innerHTML = `<a href="../../../index.html" style="color:#a5f3fc;font-weight:800">Iniciá sesión</a> para sumar tus puntos al ranking semanal.`;
-      }
-    } catch (e) {}
+    window.ARCADE.enviarPuntos("turbo-mate", E.puntos, { tema, aciertos: E.aciertos, total: E.total }, $("cuenta"));
   }
 })();
 </script>

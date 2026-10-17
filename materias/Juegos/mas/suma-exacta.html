@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../../../errores.js?v=3"></script><script src="../../../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Suma Exacta 💎 — Uní números hasta llegar al objetivo</title>
+<meta name="description" content="Juego de tablero de matemática: uní números vecinos para que sumen (o multipliquen) exactamente el objetivo. Cadenas largas dan más puntos. ¡Contra reloj!">
+<link rel="canonical" href="https://matematicasactivas.com/materias/Juegos/mas/suma-exacta.html">
+<meta name="theme-color" content="#0b1530">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="arcade-comun.css?v=1">
+<style>
+:root{--fondo:#0b1530}
+html,body{background:radial-gradient(ellipse at 50% 0%,#1e3a8a 0%,#0b1530 60%)}
+.logo{background:linear-gradient(90deg,#5eead4,#60a5fa,#c084fc);-webkit-background-clip:text;background-clip:text}
+.tema.sel{border-color:#5eead4;background:rgba(94,234,212,.12)}
+.aviso{z-index:5}
+.zona{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 12px 24px;gap:12px}
+.objetivo{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--borde);border-radius:20px;padding:6px 18px}
+.objetivo .meta{font-family:"Baloo 2";font-weight:800;font-size:clamp(40px,10vw,58px);line-height:1;background:linear-gradient(135deg,#fde047,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.objetivo small{display:block;color:var(--suave);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+.objetivo .actual{font-family:"Baloo 2";font-weight:800;font-size:26px;min-width:70px;text-align:center;color:#a5f3fc}
+.objetivo .actual.pasado{color:#fb7185}
+.objetivo .actual.justo{color:#86efac}
+.tablero{--n:6;display:grid;grid-template-columns:repeat(var(--n),1fr);gap:clamp(4px,1.4vw,8px);width:min(94vw,58vh,520px);aspect-ratio:1;touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
+.ficha{border-radius:22%;display:grid;place-items:center;font-family:"Baloo 2";font-weight:800;font-size:clamp(22px,6.2vw,36px);color:#fff;border:0;padding:0;cursor:pointer;position:relative;
+  background:linear-gradient(145deg,var(--c1),var(--c2));box-shadow:inset 0 -5px 0 rgba(0,0,0,.25),0 4px 10px rgba(0,0,0,.3);transition:transform .12s,filter .12s,opacity .2s;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.ficha.sel{transform:scale(.9);filter:brightness(1.35) saturate(1.2);box-shadow:0 0 0 3px #fff,0 0 22px rgba(255,255,255,.6)}
+.ficha.pista{animation:pista .7s ease-in-out 3}
+@keyframes pista{50%{transform:scale(.88);box-shadow:0 0 0 3px #fde047,0 0 22px #fde047}}
+.ficha.boom{animation:boom .32s ease-in forwards}
+@keyframes boom{to{transform:scale(1.5) rotate(15deg);opacity:0}}
+.ficha.cae{animation:cae .3s cubic-bezier(.3,1.4,.6,1)}
+@keyframes cae{from{transform:translateY(calc(var(--d) * -110%))}to{transform:none}}
+.tablero.mal{animation:temblor .3s}
+@keyframes temblor{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.linea{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.barraT{width:min(94vw,520px);height:12px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.barraT i{display:block;height:100%;background:linear-gradient(90deg,#5eead4,#60a5fa);transform-origin:left;transition:transform .25s linear}
+.barraT i.poco{background:linear-gradient(90deg,#fb7185,#f97316)}
+.acciones{display:flex;gap:8px}
+.acciones .btn.sec{font-size:15px;padding:8px 14px}
+@media (prefers-reduced-motion:reduce){.ficha.cae,.ficha.boom,.ficha.pista,.tablero.mal{animation:none}}
+</style>
+</head>
+<body>
+<div id="juego">
+  <div class="hud oculto" id="hud">
+    <div class="caja"><div class="puntaje"><small>Puntos</small><span id="puntos">0</span></div></div>
+    <div class="der">
+      <button class="icono" id="btnSonido" aria-label="Sonido">🔊</button>
+      <button class="icono" id="btnPausa" aria-label="Pausa">⏸</button>
+    </div>
+  </div>
+  <div class="combo" id="combo" style="top:calc(max(10px,env(safe-area-inset-top)) + 12px)"></div>
+  <div class="aviso" id="aviso"></div>
+
+  <div class="zona oculto" id="zona">
+    <div class="objetivo">
+      <div><small id="etqMeta">Objetivo</small><div class="meta" id="meta">0</div></div>
+      <div><small id="etqActual">Tu suma</small><div class="actual" id="actual">0</div></div>
+    </div>
+    <div class="tablero" id="tablero" aria-label="Tablero de números"><svg class="linea" id="linea"></svg></div>
+    <div class="barraT" aria-hidden="true"><i id="barra"></i></div>
+    <div class="acciones">
+      <button class="btn sec" id="btnPista">💡 Pista (−15)</button>
+    </div>
+  </div>
+
+  <div class="pantalla ver" id="inicio">
+    <a class="volver" href="../Juegos.html">← Juegos</a>
+    <div class="tarjeta">
+      <div class="logo">Suma Exacta</div>
+      <p class="sub">Uní números vecinos hasta llegar <b>justo</b> al objetivo. Cuantos más números uses, más puntos.</p>
+      <div class="temas" id="modos"></div>
+      <button class="btn" id="btnJugar" style="background:linear-gradient(135deg,#0d9488,#4f46e5)">¡Jugar! 💎</button>
+      <p class="ayuda">Arrastrá el dedo o el mouse por las fichas (también en diagonal) y soltá cuando llegues al número.<br>Cada acierto te da más tiempo. ¡No dejes que se vacíe la barra!</p>
+    </div>
+  </div>
+
+  <div class="pantalla" id="pausa">
+    <div class="tarjeta">
+      <div class="logo" style="font-size:44px">Pausa</div>
+      <p class="sub">El reloj está detenido.</p>
+      <div class="botones"><button class="btn" id="btnSeguir">Seguir ▶</button><button class="btn sec" id="btnSalir">Terminar partida</button></div>
+    </div>
+  </div>
+
+  <div class="pantalla" id="fin">
+    <div class="tarjeta">
+      <div class="logo" style="font-size:46px" id="finTitulo">¡Se terminó el tiempo!</div>
+      <div class="record" id="finRecord"></div>
+      <div class="stats">
+        <div class="stat"><b id="finPuntos">0</b><span>puntos</span></div>
+        <div class="stat"><b id="finAciertos">0</b><span>objetivos</span></div>
+        <div class="stat"><b id="finCadena">0</b><span>cadena más larga</span></div>
+      </div>
+      <p class="cuenta" id="cuenta"></p>
+      <div class="botones">
+        <button class="btn" id="btnOtra" style="background:linear-gradient(135deg,#0d9488,#4f46e5)">Jugar de nuevo 🔁</button>
+        <button class="btn sec" id="btnModos">Cambiar modo</button>
+        <a class="btn sec" href="../Juegos.html" style="text-decoration:none">Más juegos</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../supabase-config.js?v=15"></script>
+<script src="arcade-comun.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const A = window.ARCADE, { SFX, azar, elegir, mezclar } = A;
+  A.botonSonido($("btnSonido"));
+  const N = 6, TIEMPO = 60;
+  const COLORES = { 1: ["#f472b6", "#db2777"], 2: ["#fb923c", "#ea580c"], 3: ["#facc15", "#ca8a04"], 4: ["#4ade80", "#16a34a"], 5: ["#2dd4bf", "#0d9488"],
+    6: ["#60a5fa", "#2563eb"], 7: ["#a78bfa", "#7c3aed"], 8: ["#f87171", "#dc2626"], 9: ["#94a3b8", "#475569"] };
+  const MODOS = {
+    suma: { ico: "➕", nombre: "Suma", desc: "Fichas del 1 al 9", op: (a, b) => a + b, neutro: 0, max: 9, etq: "Tu suma", signo: "+" },
+    producto: { ico: "✖️", nombre: "Producto", desc: "Multiplicá: fichas del 1 al 6", op: (a, b) => a * b, neutro: 1, max: 6, etq: "Tu producto", signo: "×" },
+  };
+  let modo = A.leer("sumaexacta_modo") || "suma"; if (!MODOS[modo]) modo = "suma";
+  let E = null, timer = null;
+
+  // ── Tablero ──
+  const tab = $("tablero"), svg = $("linea");
+  const valorAzar = () => {
+    if (modo === "producto") return elegir([1, 2, 2, 3, 3, 4, 5, 6, 2, 3]);
+    return azar(1, 9);
+  };
+  function crearFichas() {
+    tab.querySelectorAll(".ficha").forEach((f) => f.remove());
+    E.celdas = [];
+    for (let i = 0; i < N * N; i++) {
+      const b = document.createElement("button"); b.className = "ficha"; b.dataset.i = i; b.type = "button";
+      b.addEventListener("animationend", (ev) => { if (ev.animationName === "pista") b.classList.remove("pista"); });
+      tab.appendChild(b); E.celdas.push(b);
+    }
+    E.valores = Array.from({ length: N * N }, valorAzar);
+    pintarTodo();
+  }
+  function pintar(i) {
+    const b = E.celdas[i], v = E.valores[i], c = COLORES[v] || COLORES[9];
+    b.textContent = v; b.style.setProperty("--c1", c[0]); b.style.setProperty("--c2", c[1]);
+    b.setAttribute("aria-label", `Ficha ${v}`);
+  }
+  function pintarTodo() { for (let i = 0; i < N * N; i++) pintar(i); }
+  const fila = (i) => Math.floor(i / N), col = (i) => i % N;
+  const vecinos = (a, b) => a !== b && Math.abs(fila(a) - fila(b)) <= 1 && Math.abs(col(a) - col(b)) <= 1;
+
+  // Objetivo: se arma desde un camino real del tablero, así siempre hay solución.
+  function caminoAzar(largo) {
+    for (let intento = 0; intento < 200; intento++) {
+      const camino = [azar(0, N * N - 1)];
+      while (camino.length < largo) {
+        const u = camino[camino.length - 1];
+        const ops = [];
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const r = fila(u) + dr, c = col(u) + dc, j = r * N + c;
+          if ((dr || dc) && r >= 0 && r < N && c >= 0 && c < N && !camino.includes(j)) ops.push(j);
+        }
+        if (!ops.length) break;
+        camino.push(elegir(ops));
+      }
+      if (camino.length === largo) return camino;
+    }
+    return null;
+  }
+  const calcular = (idxs) => idxs.reduce((acc, i) => MODOS[modo].op(acc, E.valores[i]), MODOS[modo].neutro);
+  function nuevoObjetivo() {
+    const d = Math.min(E.aciertos, 12);
+    const minL = 2, maxL = modo === "producto" ? (d < 4 ? 2 : 3) : (d < 3 ? 2 : d < 7 ? 3 : 4);
+    let camino, meta;
+    for (let k = 0; k < 50; k++) {
+      camino = caminoAzar(azar(minL, maxL)); if (!camino) continue;
+      meta = calcular(camino);
+      if (modo === "suma" && meta >= 6) break;
+      if (modo === "producto" && meta >= 6 && meta <= 120) break;
+    }
+    E.meta = meta; E.solucion = camino;
+    $("meta").textContent = meta;
+    const m = $("meta"); m.animate && m.animate([{ transform: "scale(1.35)" }, { transform: "scale(1)" }], { duration: 260, easing: "ease-out" });
+  }
+
+  // ── Selección con arrastre ──
+  let arrastrando = false;
+  function fichaEn(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el || !el.classList.contains("ficha")) return null;
+    // tolerancia: solo cuenta si el puntero está cerca del centro (evita diagonales accidentales)
+    const r = el.getBoundingClientRect(), cxr = r.left + r.width / 2, cyr = r.top + r.height / 2;
+    if (Math.hypot(x - cxr, y - cyr) > r.width * 0.46) return null;
+    return +el.dataset.i;
+  }
+  function agregar(i) {
+    const s = E.sel;
+    if (s.length >= 2 && s[s.length - 2] === i) { const q = s.pop(); E.celdas[q].classList.remove("sel"); A.nota(330, 0, .05, "sine", .05); return dibujarSel(); }
+    if (s.includes(i)) return;
+    if (s.length && !vecinos(s[s.length - 1], i)) return;
+    s.push(i); E.celdas[i].classList.add("sel");
+    A.nota(440 + s.length * 70, 0, .07, "triangle", .07);
+    dibujarSel();
+  }
+  function dibujarSel() {
+    const v = calcular(E.sel), act = $("actual");
+    act.textContent = E.sel.length ? v : "–";
+    act.classList.toggle("pasado", E.sel.length > 0 && v > E.meta);
+    act.classList.toggle("justo", v === E.meta && E.sel.length >= 2);
+    const rt = tab.getBoundingClientRect();
+    const pts = E.sel.map((i) => { const r = E.celdas[i].getBoundingClientRect(); return `${r.left - rt.left + r.width / 2},${r.top - rt.top + r.height / 2}`; }).join(" ");
+    svg.innerHTML = E.sel.length > 1 ? `<polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` : "";
+  }
+  tab.addEventListener("pointerdown", (e) => {
+    if (!E || !E.jugando || E.pausa) return;
+    const i = fichaEn(e.clientX, e.clientY); if (i === null) return;
+    arrastrando = true; tab.setPointerCapture && tab.setPointerCapture(e.pointerId);
+    limpiarSel(); agregar(i); e.preventDefault();
+  });
+  tab.addEventListener("pointermove", (e) => { if (!arrastrando) return; const i = fichaEn(e.clientX, e.clientY); if (i !== null) agregar(i); });
+  const fin = () => { if (!arrastrando) return; arrastrando = false; confirmar(); };
+  tab.addEventListener("pointerup", fin); tab.addEventListener("pointercancel", fin);
+
+  function limpiarSel() { (E.sel || []).forEach((i) => E.celdas[i].classList.remove("sel")); E.sel = []; dibujarSel(); }
+
+  function confirmar() {
+    const s = [...E.sel];
+    if (s.length < 2) { limpiarSel(); return; }
+    const v = calcular(s);
+    if (v === E.meta) {
+      E.aciertos++; E.racha++; E.mejorCadena = Math.max(E.mejorCadena, s.length);
+      const gan = s.length * s.length * 5 * (E.racha >= 5 ? 2 : 1);
+      E.puntos += gan; E.resto = Math.min(TIEMPO, E.resto + 2 + s.length);
+      SFX.bien(); if (s.length >= 4) { SFX.nivel(); aviso(`¡Cadena de ${s.length}! +${gan}`); } else aviso(`+${gan}`);
+      E.jugando = false;
+      sinPista(); s.forEach((i) => E.celdas[i].classList.add("boom"));
+      setTimeout(() => { caer(s); E.jugando = true; nuevoObjetivo(); }, 320);
+    } else {
+      E.racha = 0; SFX.mal(); tab.classList.add("mal"); setTimeout(() => tab.classList.remove("mal"), 300);
+      const signo = MODOS[modo].signo;
+      aviso(`${s.map((i) => E.valores[i]).join(` ${signo} `)} = ${v}`);
+    }
+    s.forEach((i) => E.celdas[i].classList.remove("sel")); E.sel = []; dibujarSel();
+    actualizarHUD();
+  }
+  // Gravedad: las fichas de arriba caen y entran nuevas desde arriba
+  function caer(quitadas) {
+    const set = new Set(quitadas);
+    for (let c = 0; c < N; c++) {
+      const columna = [];
+      for (let r = N - 1; r >= 0; r--) { const i = r * N + c; if (!set.has(i)) columna.push(E.valores[i]); }
+      const nuevas = N - columna.length;
+      for (let k = 0; k < nuevas; k++) columna.push(valorAzar());
+      for (let r = N - 1, k = 0; r >= 0; r--, k++) {
+        const i = r * N + c, antes = E.valores[i];
+        E.valores[i] = columna[k];
+        const b = E.celdas[i]; b.classList.remove("boom", "cae");
+        if (set.has(i) || antes !== E.valores[i] || r < nuevas) { void b.offsetWidth; b.style.setProperty("--d", Math.max(1, nuevas)); b.classList.add("cae"); }
+        pintar(i);
+      }
+    }
+  }
+
+  const sinPista = () => E.celdas.forEach((b) => b.classList.remove("pista"));
+  // Busca en el tablero actual un camino de fichas vecinas que dé el objetivo (para la pista)
+  function buscarCamino(meta) {
+    const op = MODOS[modo].op;
+    let hallado = null;
+    function dfs(camino, valor) {
+      if (hallado) return;
+      if (camino.length >= 2 && valor === meta) { hallado = [...camino]; return; }
+      if (camino.length >= 5 || valor > meta) return;
+      const u = camino[camino.length - 1];
+      for (let j = 0; j < N * N; j++) if (vecinos(u, j) && !camino.includes(j)) { camino.push(j); dfs(camino, op(valor, E.valores[j])); camino.pop(); }
+    }
+    for (let i = 0; i < N * N && !hallado; i++) dfs([i], op(MODOS[modo].neutro, E.valores[i]));
+    return hallado;
+  }
+  $("btnPista").onclick = () => {
+    if (!E || !E.jugando) return;
+    E.puntos = Math.max(0, E.puntos - 15); actualizarHUD();
+    let camino = buscarCamino(E.meta);
+    if (!camino) { nuevoObjetivo(); camino = E.solucion; aviso("Objetivo nuevo"); }
+    sinPista();
+    camino.forEach((i) => { const b = E.celdas[i]; void b.offsetWidth; b.classList.add("pista"); });
+  };
+
+  // ── Partida ──
+  function aviso(t) { const a = $("aviso"); a.textContent = t; a.classList.add("ver"); clearTimeout(aviso._t); aviso._t = setTimeout(() => a.classList.remove("ver"), 950); }
+  function actualizarHUD() {
+    $("puntos").textContent = E.puntos;
+    const b = $("barra"); b.style.transform = `scaleX(${Math.max(0, E.resto / TIEMPO)})`; b.classList.toggle("poco", E.resto < 10);
+    const c = $("combo"); c.textContent = E.racha >= 5 ? `🔥 Racha ${E.racha} · puntos x2` : ""; c.style.opacity = E.racha >= 5 ? 1 : 0;
+  }
+  function empezar() {
+    ["inicio", "fin", "pausa"].forEach((id) => $(id).classList.remove("ver"));
+    ["hud", "zona"].forEach((id) => $(id).classList.remove("oculto"));
+    $("etqActual").textContent = MODOS[modo].etq;
+    E = { jugando: true, pausa: false, puntos: 0, aciertos: 0, racha: 0, mejorCadena: 0, resto: TIEMPO, sel: [] };
+    crearFichas(); nuevoObjetivo(); dibujarSel(); actualizarHUD(); A.activarAudio(); aviso("¡Ya!");
+    clearInterval(timer);
+    let prev = performance.now();
+    timer = setInterval(() => {
+      const ahora = performance.now(), dt = (ahora - prev) / 1000; prev = ahora;
+      if (!E || E.pausa || $("fin").classList.contains("ver")) return;
+      E.resto -= dt; actualizarHUD();
+      if (E.resto <= 10 && Math.floor(E.resto) !== Math.floor(E.resto + dt) && E.resto > 0) A.nota(880, 0, .05, "square", .04);
+      if (E.resto <= 0) terminar();
+    }, 200);
+  }
+  function alternarPausa(forzar) {
+    if (!E || $("fin").classList.contains("ver") || $("inicio").classList.contains("ver")) return;
+    E.pausa = forzar !== undefined ? forzar : !E.pausa;
+    $("pausa").classList.toggle("ver", E.pausa); $("btnPausa").textContent = E.pausa ? "▶" : "⏸";
+  }
+  $("btnPausa").onclick = () => alternarPausa();
+  $("btnSeguir").onclick = () => alternarPausa(false);
+  $("btnSalir").onclick = () => { alternarPausa(false); terminar(); };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) alternarPausa(true); });
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape" || e.key === "p" || e.key === "P") alternarPausa();
+    else if ((e.key === "Enter" || e.key === " ") && ($("inicio").classList.contains("ver") || $("fin").classList.contains("ver"))) { e.preventDefault(); empezar(); }
+  });
+  addEventListener("resize", () => { if (E) dibujarSel(); });
+
+  function pintarModos() {
+    $("modos").innerHTML = Object.entries(MODOS).map(([k, m]) => {
+      const rec = A.verRecord("sumaexacta", k);
+      return `<button class="tema${k === modo ? " sel" : ""}" data-m="${k}"><i>${m.ico}</i><b>${m.nombre}</b><span>${m.desc}</span>${rec ? `<em>🏆 Récord: ${rec}</em>` : ""}</button>`;
+    }).join("");
+    $("modos").querySelectorAll(".tema").forEach((b) => b.onclick = () => { modo = b.dataset.m; A.guardar("sumaexacta_modo", modo); pintarModos(); });
+  }
+  pintarModos();
+  $("btnJugar").onclick = empezar; $("btnOtra").onclick = empezar;
+  $("btnModos").onclick = () => { $("fin").classList.remove("ver"); pintarModos(); $("inicio").classList.add("ver"); };
+
+  function terminar() {
+    if (!E || $("fin").classList.contains("ver")) return;
+    clearInterval(timer); E.jugando = false; SFX.fin();
+    ["hud", "zona"].forEach((id) => $(id).classList.add("oculto")); $("combo").style.opacity = 0;
+    const { antes, nuevo } = A.record("sumaexacta", modo, E.puntos);
+    $("finTitulo").textContent = E.puntos >= 600 ? "¡Mente brillante! 💎" : E.puntos >= 250 ? "¡Excelente!" : "¡Se terminó el tiempo!";
+    $("finRecord").textContent = nuevo ? `🏆 ¡Nuevo récord en modo ${MODOS[modo].nombre}!` : antes ? `Tu récord: ${antes}` : "";
+    $("finPuntos").textContent = E.puntos; $("finAciertos").textContent = E.aciertos; $("finCadena").textContent = E.mejorCadena;
+    $("fin").classList.add("ver");
+    A.enviarPuntos("suma-exacta", E.puntos, { modo, aciertos: E.aciertos }, $("cuenta"));
+  }
+})();
+</script>
+</body>
+</html>
