@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../errores.js?v=3"></script><script src="../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Entrar a la clase 🎤 — Matemáticas Activas</title>
+<meta name="description" content="Escribí el PIN que te da tu profe y respondé las preguntas del concurso de matemática desde tu celular.">
+<link rel="canonical" href="https://matematicasactivas.com/clase/">
+<meta name="theme-color" content="#4c1d95">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:Nunito,system-ui,sans-serif;color:#fff;background:linear-gradient(160deg,#6d28d9,#4c1d95 45%,#1e1b4b) fixed}
+body{min-height:100dvh;display:flex;flex-direction:column}
+button,input{font-family:inherit}
+.top{display:flex;justify-content:space-between;align-items:center;padding:max(12px,env(safe-area-inset-top)) 16px 8px;font-weight:800}
+.top .yo{background:rgba(255,255,255,.15);border-radius:999px;padding:6px 14px}
+.fase{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;gap:14px}
+.fase.ver{display:flex}
+.logo{font-family:"Baloo 2";font-weight:800;font-size:clamp(34px,10vw,52px);line-height:1}
+.tarjeta{background:#fff;color:#0f172a;border-radius:22px;padding:22px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:12px}
+.tarjeta input{border:2px solid #e2e8f0;border-radius:14px;padding:14px;font-size:22px;font-weight:800;text-align:center;width:100%;color:#0f172a}
+.tarjeta input:focus{outline:none;border-color:#7c3aed}
+#inPin{letter-spacing:.3em;font-family:"Baloo 2";font-size:30px}
+.btn{border:0;border-radius:14px;padding:14px;font-family:"Baloo 2";font-weight:800;font-size:22px;color:#fff;background:#0f172a;cursor:pointer}
+.btn:disabled{opacity:.5}
+.err{color:#dc2626;font-weight:800;font-size:14px;min-height:18px;margin:0}
+.grande{font-family:"Baloo 2";font-weight:800;font-size:clamp(28px,8vw,40px);line-height:1.15}
+.suave{color:#ddd6fe;font-weight:700}
+.girando{width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,.25);border-top-color:#fff;animation:gira 1s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+/* Pregunta */
+#fPregunta{justify-content:flex-start;padding-top:6px}
+.enun{background:#fff;color:#0f172a;border-radius:16px;padding:12px 16px;font-family:"Baloo 2";font-weight:800;font-size:clamp(22px,6vw,34px);width:100%;max-width:640px}
+.tiempo{width:100%;max-width:640px;height:10px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden}
+.tiempo i{display:block;height:100%;background:#fde047;transform-origin:left}
+.botones{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:640px;flex:1;max-height:520px}
+.boton{border:0;border-radius:18px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:"Baloo 2";font-weight:800;font-size:clamp(20px,6vw,30px);padding:10px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.2);cursor:pointer;min-height:110px;transition:transform .1s}
+.boton:active{transform:scale(.96)}
+.boton svg{width:40px;height:40px}
+.boton span{word-break:break-word}
+.resultado{font-size:90px;line-height:1}
+.puntos{font-family:"Baloo 2";font-weight:800;font-size:34px;background:rgba(0,0,0,.2);border-radius:14px;padding:6px 18px}
+body.ok{background:linear-gradient(160deg,#16a34a,#15803d 50%,#14532d) fixed}
+body.mal{background:linear-gradient(160deg,#dc2626,#b91c1c 50%,#7f1d1d) fixed}
+.red{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);background:#fef3c7;color:#92400e;border-radius:12px;padding:8px 14px;font-weight:800;font-size:14px;display:none;z-index:9}
+</style>
+</head>
+<body>
+<div class="top"><span>🎤 Clase en vivo</span><span class="yo" id="yo" style="display:none"></span></div>
+
+<section class="fase ver" id="fEntrar">
+  <div class="logo">¡A jugar!</div>
+  <p class="suave" style="margin:0">Escribí el PIN que aparece en la pantalla de tu profe.</p>
+  <div class="tarjeta">
+    <input id="inPin" inputmode="numeric" maxlength="5" placeholder="PIN" autocomplete="off" aria-label="PIN de la clase">
+    <input id="inNombre" maxlength="20" placeholder="Tu apodo" autocomplete="nickname" aria-label="Tu apodo">
+    <p class="err" id="errEntrar"></p>
+    <button class="btn" id="btnEntrar">Entrar</button>
+  </div>
+  <p class="suave" style="font-size:13px">No hace falta tener cuenta.</p>
+</section>
+
+<section class="fase" id="fEspera">
+  <div class="girando"></div>
+  <div class="grande" id="esperaTit">¡Estás adentro!</div>
+  <p class="suave" id="esperaTxt">Mirá tu nombre en la pantalla del profe. El juego empieza enseguida.</p>
+</section>
+
+<section class="fase" id="fPregunta">
+  <div class="suave" id="nPreg">Pregunta 1</div>
+  <div class="enun" id="enun"></div>
+  <div class="tiempo"><i id="barra"></i></div>
+  <div class="botones" id="botones"></div>
+</section>
+
+<section class="fase" id="fEnviada">
+  <div class="girando"></div>
+  <div class="grande">¡Respuesta enviada!</div>
+  <p class="suave">¿Habrás acertado? Esperá a que termine el tiempo…</p>
+</section>
+
+<section class="fase" id="fResultado">
+  <div class="resultado" id="resIcono">✅</div>
+  <div class="grande" id="resTit">¡Correcto!</div>
+  <div class="puntos" id="resPts">+0</div>
+  <p class="suave" id="resPuesto"></p>
+</section>
+
+<section class="fase" id="fFin">
+  <div class="resultado" id="finIcono">🏆</div>
+  <div class="grande" id="finTit">¡Terminó!</div>
+  <div class="puntos" id="finPts">0 puntos</div>
+  <p class="suave" id="finTxt"></p>
+  <a href="../materias/Juegos/Juegos.html" class="btn" style="text-decoration:none;background:rgba(0,0,0,.25)">Seguir jugando en Matemáticas Activas</a>
+</section>
+
+<div class="red" id="red">Reconectando…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js?v=15"></script>
+<script src="../materias/Juegos/mas/arcade-comun.js?v=1"></script>
+<script src="clase-comun.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const A = window.ARCADE, C = window.CLASE, L = C.limpiarTexto;
+  let canal = null, yo = null, actual = -1, respondida = -1, finPregunta = 0, timer = null, ultimoEstado = "";
+
+  function mostrar(f, clase) {
+    document.querySelectorAll(".fase").forEach((s) => s.classList.toggle("ver", s.id === f));
+    document.body.className = clase || "";
+  }
+  const vibrar = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+  // PIN desde el QR (?pin=12345) y datos de la última vez
+  const qs = new URLSearchParams(location.search);
+  if (/^\d{5}$/.test(qs.get("pin") || "")) $("inPin").value = qs.get("pin");
+  $("inNombre").value = A.leer("clase_apodo") || "";
+  $("inPin").addEventListener("input", () => { $("inPin").value = $("inPin").value.replace(/\D/g, "").slice(0, 5); });
+  [$("inPin"), $("inNombre")].forEach((el) => el.addEventListener("keydown", (e) => { if (e.key === "Enter") entrar(); }));
+  $("btnEntrar").onclick = entrar;
+
+  function entrar() {
+    const pin = $("inPin").value.trim(), nombre = $("inNombre").value.trim().replace(/\s+/g, " ");
+    if (!/^\d{5}$/.test(pin)) return ($("errEntrar").textContent = "El PIN tiene 5 números.");
+    const malo = C.apodoValido(nombre); if (malo) return ($("errEntrar").textContent = malo);
+    $("errEntrar").textContent = ""; $("btnEntrar").disabled = true; $("btnEntrar").textContent = "Entrando…";
+    A.guardar("clase_apodo", nombre); A.activarAudio();
+    // mismo id si recarga la página en la misma clase
+    let id = null;
+    try { const g = JSON.parse(sessionStorage.getItem("ma_clase") || "null"); if (g && g.pin === pin) id = g.id; } catch (e) {}
+    id = id || "a" + Math.random().toString(36).slice(2, 10);
+    try { sessionStorage.setItem("ma_clase", JSON.stringify({ pin, id })); } catch (e) {}
+    yo = { id, nombre, pin };
+    $("yo").textContent = nombre; $("yo").style.display = "";
+    try {
+      canal = C.conectar(pin, id, { nombre }, (estado) => {
+        if (estado === "SUBSCRIBED") {
+          $("red").style.display = "none";
+          canal.enviar("hola", { id, nombre });
+          if (!ultimoEstado) { mostrar("fEspera"); esperarDocente(); }
+        } else if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT" || estado === "CLOSED") $("red").style.display = "block";
+      });
+      canal.on("estado", alEstado).on("expulsar", (d) => {
+        if (d.id !== id) return;
+        canal.cerrar(); try { sessionStorage.removeItem("ma_clase"); } catch (e) {}
+        mostrar("fEntrar"); $("btnEntrar").disabled = false; $("btnEntrar").textContent = "Entrar"; $("yo").style.display = "none";
+        $("errEntrar").textContent = "El profe te sacó de la sala. Probá con otro apodo.";
+      }).abrir();
+    } catch (e) {
+      $("btnEntrar").disabled = false; $("btnEntrar").textContent = "Entrar";
+      $("errEntrar").textContent = "No hay conexión. Revisá internet y probá de nuevo.";
+    }
+  }
+  // Si en unos segundos no responde nadie, puede que el PIN esté mal
+  function esperarDocente() {
+    setTimeout(() => {
+      if (!ultimoEstado && canal) {
+        const hay = Object.keys(canal.canal.presenceState ? canal.canal.presenceState() : {}).includes("docente");
+        if (!hay) { $("esperaTit").textContent = "Buscando la clase…"; $("esperaTxt").textContent = "Fijate que el PIN sea el mismo que está en la pantalla del profe."; }
+      }
+    }, 6000);
+  }
+
+  function alEstado(d) {
+    ultimoEstado = d.fase || "";
+    if (d.fase === "sala") { mostrar("fEspera"); $("esperaTit").textContent = "¡Estás adentro!"; $("esperaTxt").textContent = "Mirá tu nombre en la pantalla del profe. El juego empieza enseguida."; }
+    else if (d.fase === "pregunta") pregunta(d);
+    else if (d.fase === "resultado") resultado(d);
+    else if (d.fase === "fin") fin(d);
+    else if (d.fase === "cerrada") { mostrar("fEspera"); $("esperaTit").textContent = "El profe cerró la sala"; $("esperaTxt").textContent = "Gracias por jugar 🙌"; }
+  }
+
+  function pregunta(d) {
+    if (d.n === actual && respondida === d.n) return mostrar("fEnviada");
+    if (d.n !== actual) { actual = d.n; vibrar(60); A.nota(660, 0, .1, "triangle", .08); }
+    $("nPreg").textContent = `Pregunta ${d.n + 1} de ${d.total}`;
+    $("enun").textContent = d.txt;
+    $("botones").innerHTML = d.opciones.map((o, i) => `<button class="boton" data-i="${i}" style="background:${C.FORMAS[i].color}" aria-label="${C.FORMAS[i].nombre}: ${L(o)}">${C.FORMAS[i].svg}<span>${L(o)}</span></button>`).join("");
+    $("botones").querySelectorAll(".boton").forEach((b) => b.onclick = () => responder(+b.dataset.i));
+    finPregunta = performance.now() + (d.ms || 20000); const total = d.ms || 20000;
+    clearInterval(timer);
+    timer = setInterval(() => { const r = Math.max(0, finPregunta - performance.now()); $("barra").style.transform = `scaleX(${r / total})`; if (!r) clearInterval(timer); }, 100);
+    mostrar("fPregunta");
+  }
+  function responder(i) {
+    if (respondida === actual) return;
+    respondida = actual; vibrar(30);
+    canal.enviar("respuesta", { id: yo.id, n: actual, opcion: i });
+    clearInterval(timer); mostrar("fEnviada");
+  }
+  function resultado(d) {
+    clearInterval(timer);
+    const m = (d.tabla || {})[yo.id];
+    if (!m) { mostrar("fEspera"); $("esperaTit").textContent = "¡Ya estás adentro!"; $("esperaTxt").textContent = "Vas a jugar desde la próxima pregunta."; return; }
+    const no = respondida !== d.n;
+    if (m.ok) { $("resIcono").textContent = "✅"; $("resTit").textContent = m.racha >= 3 ? `¡Correcto! 🔥 Racha de ${m.racha}` : "¡Correcto!"; mostrar("fResultado", "ok"); A.SFX.bien(); vibrar([40, 40, 40]); }
+    else { $("resIcono").textContent = no ? "⏰" : "❌"; $("resTit").textContent = (no ? "¡Se terminó el tiempo!" : "Incorrecto") + (d.correcta ? ` · era ${d.correcta}` : ""); mostrar("fResultado", "mal"); A.SFX.mal(); vibrar(200); }
+    $("resPts").textContent = m.ok ? `+${m.gano}` : `${m.puntos} puntos`;
+    $("resPuesto").textContent = `Vas ${m.puesto}° con ${m.puntos} puntos`;
+  }
+  function fin(d) {
+    clearInterval(timer);
+    const m = (d.tabla || {})[yo.id];
+    if (!m) return mostrar("fFin");
+    $("finIcono").textContent = m.puesto === 1 ? "🥇" : m.puesto === 2 ? "🥈" : m.puesto === 3 ? "🥉" : "🎉";
+    $("finTit").textContent = m.puesto <= 3 ? `¡Quedaste ${m.puesto}°!` : `Quedaste ${m.puesto}°`;
+    $("finPts").textContent = `${m.puntos} puntos`;
+    $("finTxt").textContent = `Acertaste ${m.aciertos} preguntas. ¡Buen trabajo!`;
+    mostrar("fFin", m.puesto <= 3 ? "ok" : ""); if (m.puesto <= 3) A.SFX.nivel();
+  }
+})();
+</script>
+</body>
+</html>

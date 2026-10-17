@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../errores.js?v=3"></script><script src="../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase en vivo 🎤 — Concurso de matemática para el aula</title>
+<meta name="description" content="Armá un concurso de matemática en vivo para tu curso: proyectás las preguntas y los alumnos responden desde el celular con un PIN. Ranking, podio y notas descargables. Gratis.">
+<link rel="canonical" href="https://matematicasactivas.com/docentes/clase-en-vivo.html">
+<meta name="theme-color" content="#1e1b4b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--fondo:#1e1b4b;--panel:#ffffff;--tinta:#0f172a;--suave:#64748b;--linea:#e2e8f0;--violeta:#6d28d9;--ok:#16a34a;--mal:#dc2626}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Nunito,system-ui,sans-serif;color:#fff;background:radial-gradient(ellipse at 20% 0%,#4c1d95 0%,#1e1b4b 55%,#0f0a2e 100%) fixed}
+button{font-family:inherit;cursor:pointer}
+.barra{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:10px}
+.barra a{color:#c4b5fd;text-decoration:none;font-weight:800}
+.marca{font-family:"Baloo 2";font-weight:800;font-size:22px}
+.icono{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:10px;padding:8px 12px;font-weight:800}
+.fase{display:none;padding:10px 20px 30px;max-width:1200px;margin:0 auto}
+.fase.ver{display:block}
+h1,h2{font-family:"Baloo 2";font-weight:800;margin:.2em 0}
+.caja{background:var(--panel);color:var(--tinta);border-radius:22px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+label.t{display:block;font-weight:800;margin:14px 0 6px;color:var(--tinta)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:800;color:var(--tinta)}
+.chip.sel{border-color:var(--violeta);background:#ede9fe;color:var(--violeta)}
+textarea{width:100%;min-height:150px;border:2px solid var(--linea);border-radius:14px;padding:12px;font:15px/1.5 ui-monospace,Consolas,monospace;color:var(--tinta)}
+.ayuda{font-size:13.5px;color:var(--suave);line-height:1.5}
+.err{color:var(--mal);font-weight:800;font-size:14px;min-height:20px}
+.btn{border:0;border-radius:16px;padding:14px 28px;font-family:"Baloo 2";font-weight:800;font-size:22px;color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 10px 24px rgba(124,58,237,.4)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sec{background:rgba(255,255,255,.14);box-shadow:none;font-size:17px;padding:10px 18px}
+.caja .btn.sec{background:#f1f5f9;color:var(--tinta)}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tab{flex:1;border:0;border-radius:12px;padding:10px;font-weight:800;background:#f1f5f9;color:var(--suave)}
+.tab.sel{background:var(--violeta);color:#fff}
+/* Sala */
+.sala{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+@media (max-width:820px){.sala{grid-template-columns:1fr}}
+.pin{font-family:"Baloo 2";font-weight:800;font-size:clamp(64px,11vw,130px);letter-spacing:.08em;line-height:1;color:var(--violeta)}
+.url{font-size:clamp(20px,2.6vw,30px);font-weight:800;color:var(--tinta)}
+.qr{background:#fff;border-radius:16px;padding:8px;width:220px;height:220px;display:grid;place-items:center}
+.qr svg{width:100%;height:100%}
+.alumnos{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;min-height:60px}
+.alumno{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:14px;padding:10px 16px;font-weight:800;font-size:18px;animation:entra .35s cubic-bezier(.3,1.6,.5,1)}
+.alumno:hover{background:rgba(225,29,72,.55)}
+.alumno:hover::after{content:" ✕"}
+@keyframes entra{from{transform:scale(.3);opacity:0}}
+.contador{font-family:"Baloo 2";font-weight:800;font-size:28px}
+/* Pregunta */
+.cab{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.enunciado{background:#fff;color:var(--tinta);border-radius:22px;padding:22px 26px;font-family:"Baloo 2";font-weight:800;font-size:clamp(34px,6vw,72px);text-align:center;line-height:1.15;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.medio{display:flex;justify-content:space-between;align-items:center;margin:18px 6px}
+.reloj{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;font-family:"Baloo 2";font-weight:800;font-size:46px;background:conic-gradient(#a78bfa var(--p,100%),rgba(255,255,255,.12) 0);position:relative}
+.reloj::before{content:"";position:absolute;inset:10px;border-radius:50%;background:#1e1b4b}
+.reloj span{position:relative}
+.respondieron{text-align:center;font-family:"Baloo 2";font-weight:800;font-size:30px;line-height:1}
+.respondieron small{display:block;font-family:Nunito;font-size:14px;color:#c4b5fd}
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.op{display:flex;align-items:center;gap:16px;border-radius:18px;padding:18px 22px;font-family:"Baloo 2";font-weight:800;font-size:clamp(26px,3.6vw,44px);color:#fff;min-height:96px;position:relative;transition:opacity .3s,transform .3s}
+.op svg{width:44px;height:44px;flex:none}
+.op .cant{margin-left:auto;font-size:.8em;opacity:.95}
+.op.apagada{opacity:.28}
+.op.buena{transform:scale(1.03);box-shadow:0 0 0 5px #fff}
+.op.buena::after{content:"✔";position:absolute;right:18px;top:-14px;background:#fff;color:var(--ok);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;font-size:26px}
+.barras{flex:1;display:flex;justify-content:center;align-items:flex-end;gap:22px;height:180px;margin:14px 0}
+.barras div{width:70px;border-radius:12px 12px 0 0;display:flex;align-items:flex-start;justify-content:center;color:#fff;font-weight:800;font-size:22px;padding-top:6px;transition:height .6s cubic-bezier(.3,1.3,.5,1)}
+.acc{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+/* Ranking */
+.ranking{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.fila{display:flex;align-items:center;gap:14px;background:#fff;color:var(--tinta);border-radius:16px;padding:14px 20px;font-weight:800;font-size:24px;animation:entra .4s both}
+.fila .pos{font-family:"Baloo 2";width:44px;color:var(--violeta)}
+.fila .pts{margin-left:auto;font-family:"Baloo 2"}
+.fila .racha{font-size:16px;color:#ea580c}
+/* Podio */
+.podio{display:flex;justify-content:center;align-items:flex-end;gap:16px;margin:30px 0 20px;min-height:340px}
+.escalon{width:min(220px,28vw);text-align:center}
+.escalon .nom{font-family:"Baloo 2";font-weight:800;font-size:clamp(20px,3vw,32px);margin-bottom:6px;word-break:break-word}
+.escalon .pts{color:#c4b5fd;font-weight:800;margin-bottom:8px}
+.escalon .bloque{border-radius:16px 16px 0 0;display:grid;place-items:start center;padding-top:10px;font-family:"Baloo 2";font-weight:800;font-size:60px;color:#fff;animation:sube 1s cubic-bezier(.3,1.2,.5,1) both}
+@keyframes sube{from{transform:scaleY(0);transform-origin:bottom}}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-size:13px}
+#confeti{position:fixed;inset:0;pointer-events:none;z-index:50}
+.aviso-red{background:#fef3c7;color:#92400e;border-radius:12px;padding:10px 14px;font-weight:800;margin-top:12px;display:none}
+@media (prefers-reduced-motion:reduce){.alumno,.fila,.escalon .bloque{animation:none}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <a href="index.html">← Docentes</a>
+  <div class="marca">🎤 Clase en vivo</div>
+  <div style="display:flex;gap:6px"><button class="icono" id="btnSonido" aria-label="Sonido">🔊</button><button class="icono" id="btnPantalla" title="Pantalla completa">⛶</button></div>
+</div>
+
+<!-- 1. Armar la partida -->
+<section class="fase ver" id="fConfig">
+  <div class="grid2">
+    <div class="caja">
+      <h1 style="color:var(--violeta)">Armá el concurso</h1>
+      <p class="ayuda">Proyectás las preguntas en el pizarrón y los alumnos responden desde su celular. Ganan los que aciertan más rápido. No hace falta que tengan cuenta.</p>
+      <div class="tabs"><button class="tab sel" data-modo="auto">🎲 Preguntas automáticas</button><button class="tab" data-modo="propias">✍️ Mis preguntas</button></div>
+      <div id="modoAuto">
+        <label class="t">Tema</label><div class="chips" id="cTema"></div>
+        <label class="t">Dificultad</label>
+        <div class="chips" id="cNivel"><button class="chip" data-v="1">Fácil</button><button class="chip sel" data-v="3">Media</button><button class="chip" data-v="5">Difícil</button></div>
+        <label class="t">Cantidad de preguntas</label>
+        <div class="chips" id="cCant"><button class="chip" data-v="5">5</button><button class="chip sel" data-v="10">10</button><button class="chip" data-v="15">15</button><button class="chip" data-v="20">20</button></div>
+      </div>
+      <div id="modoPropias" style="display:none">
+        <label class="t" for="propias">Una pregunta por línea</label>
+        <textarea id="propias" placeholder="¿Cuánto es 3/4 de 20? | 15 | 12 | 5 | 16
+¿Cuál es el resultado de 2³? | 8 | 6 | 9 | 5
+La raíz cuadrada de 81 es… | 9 | 8 | 18 | 40,5"></textarea>
+        <p class="ayuda">Formato: <b>pregunta | respuesta correcta | incorrecta | incorrecta | incorrecta</b>. Podés poner de 1 a 3 incorrectas. El orden de las opciones se mezcla solo. Se guarda en esta compu para la próxima vez.</p>
+      </div>
+      <label class="t">Tiempo por pregunta</label>
+      <div class="chips" id="cTiempo"><button class="chip" data-v="10">10 s</button><button class="chip sel" data-v="20">20 s</button><button class="chip" data-v="30">30 s</button><button class="chip" data-v="60">60 s</button></div>
+      <p class="err" id="errConfig"></p>
+      <button class="btn" id="btnCrear">Crear la sala →</button>
+    </div>
+    <div class="caja">
+      <h2>¿Cómo funciona?</h2>
+      <ol class="ayuda" style="font-size:15.5px;color:#334155;padding-left:20px">
+        <li>Creás la sala y proyectás esta pantalla.</li>
+        <li>Los alumnos entran a <b>matematicasactivas.com/clase</b> (o escanean el QR) y ponen el <b>PIN</b> y un apodo.</li>
+        <li>Cuando estén todos, tocás <b>Empezar</b>.</li>
+        <li>Cada pregunta aparece acá y en sus celulares tocan la forma de color con la respuesta.</li>
+        <li>Después de cada pregunta ves cuántos acertaron y el ranking.</li>
+        <li>Al final, el podio 🏆 y podés <b>descargar las notas</b> en una planilla.</li>
+      </ol>
+      <p class="ayuda">Consejo: si un apodo no es apropiado, tocalo en la sala de espera para sacar a ese alumno.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Sala de espera -->
+<section class="fase" id="fSala">
+  <div class="caja sala">
+    <div>
+      <div class="ayuda" style="font-size:20px;font-weight:800">Entrá a</div>
+      <div class="url">matematicasactivas.com/clase</div>
+      <div class="ayuda" style="font-size:20px;font-weight:800;margin-top:12px">y escribí el PIN</div>
+      <div class="pin" id="pin">00000</div>
+    </div>
+    <div class="qr" id="qr" aria-label="Código QR para entrar"></div>
+  </div>
+  <div class="cab" style="margin-top:22px">
+    <div class="contador">👥 <span id="nAlumnos">0</span> alumnos</div>
+    <button class="btn" id="btnEmpezar" disabled>Empezar ▶</button>
+  </div>
+  <div class="alumnos" id="alumnos"><span style="color:#c4b5fd;font-weight:700">Esperando que entren los alumnos…</span></div>
+  <div class="aviso-red" id="avisoRed"></div>
+</section>
+
+<!-- 3. Pregunta -->
+<section class="fase" id="fPregunta">
+  <div class="cab"><div class="contador" id="nPregunta">Pregunta 1 de 10</div><button class="btn sec" id="btnSaltar">Terminar pregunta ⏭</button></div>
+  <div class="enunciado" id="enunciado"></div>
+  <div class="medio">
+    <div class="reloj" id="reloj"><span id="seg">20</span></div>
+    <div class="barras" id="barras" style="display:none"></div>
+    <div class="respondieron"><span id="nResp">0</span><small>respuestas</small></div>
+  </div>
+  <div class="opciones" id="opciones"></div>
+  <div class="acc"><button class="btn" id="btnRanking" style="display:none">Ver ranking →</button></div>
+</section>
+
+<!-- 4. Ranking -->
+<section class="fase" id="fRanking">
+  <h1 style="text-align:center">🏅 Ranking</h1>
+  <div class="ranking" id="ranking"></div>
+  <div class="acc" style="max-width:760px;margin:20px auto 0"><button class="btn" id="btnSiguiente">Siguiente pregunta →</button></div>
+</section>
+
+<!-- 5. Podio -->
+<section class="fase" id="fPodio">
+  <h1 style="text-align:center;font-size:48px">🏆 ¡Terminó el concurso!</h1>
+  <div class="podio" id="podio"></div>
+  <div class="caja">
+    <div class="cab"><h2 style="color:var(--tinta)">Resultados del curso</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec" id="btnCSV">⬇️ Descargar notas (Excel/CSV)</button><button class="btn sec" id="btnOtra">🔁 Nueva partida</button></div></div>
+    <div style="overflow:auto"><table id="tabla"></table></div>
+  </div>
+</section>
+<canvas id="confeti"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js?v=15"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="../materias/Juegos/mas/arcade-comun.js?v=1"></script>
+<script src="../clase/clase-comun.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const A = window.ARCADE, C = window.CLASE, L = C.limpiarTexto;
+  A.botonSonido($("btnSonido"));
+  $("btnPantalla").onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
+
+  // ── Configuración ──
+  const cfg = { modo: "auto", tema: A.leer("clase_tema") || "tablas", nivel: 3, cant: 10, tiempo: 20 };
+  if (!A.TEMAS[cfg.tema]) cfg.tema = "tablas";
+  $("cTema").innerHTML = Object.entries(A.TEMAS).map(([k, t]) => `<button class="chip${k === cfg.tema ? " sel" : ""}" data-v="${k}">${t.ico} ${t.nombre}</button>`).join("");
+  function grupo(id, campo, num) {
+    $(id).querySelectorAll(".chip").forEach((b) => b.onclick = () => {
+      $(id).querySelectorAll(".chip").forEach((x) => x.classList.toggle("sel", x === b));
+      cfg[campo] = num ? +b.dataset.v : b.dataset.v; if (campo === "tema") A.guardar("clase_tema", cfg.tema);
+    });
+  }
+  grupo("cTema", "tema"); grupo("cNivel", "nivel", 1); grupo("cCant", "cant", 1); grupo("cTiempo", "tiempo", 1);
+  document.querySelectorAll(".tab").forEach((t) => t.onclick = () => {
+    cfg.modo = t.dataset.modo; document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("sel", x === t));
+    $("modoAuto").style.display = cfg.modo === "auto" ? "" : "none"; $("modoPropias").style.display = cfg.modo === "propias" ? "" : "none";
+  });
+  $("propias").value = A.leer("clase_propias") || "";
+
+  // ── Estado de la partida ──
+  let canal = null, P = null;
+  const alumnos = new Map();     // id → { nombre, puntos, aciertos, racha, respuestas: [] }
+  const echados = new Set();
+  let conectados = new Set();
+
+  function mostrar(f) { document.querySelectorAll(".fase").forEach((s) => s.classList.toggle("ver", s.id === f)); }
+
+  $("btnCrear").onclick = () => {
+    let preguntas;
+    if (cfg.modo === "propias") {
+      A.guardar("clase_propias", $("propias").value);
+      const r = C.parsearPropias($("propias").value);
+      if (r.errores.length) { $("errConfig").textContent = r.errores[0]; return; }
+      if (!r.lista.length) { $("errConfig").textContent = "Escribí al menos una pregunta."; return; }
+      preguntas = r.lista;
+    } else preguntas = C.generarPreguntas(cfg.tema, cfg.nivel, cfg.cant);
+    $("errConfig").textContent = "";
+    A.activarAudio();
+    abrirSala(preguntas);
+  };
+
+  function abrirSala(preguntas) {
+    const pin = String(A.azar(10000, 99999));
+    P = { pin, preguntas, n: -1, fase: "sala", t0: 0, respuestas: new Map(), timer: null };
+    alumnos.clear(); echados.clear(); conectados = new Set();
+    $("pin").textContent = pin;
+    const url = `https://matematicasactivas.com/clase/?pin=${pin}`;
+    try { const q = qrcode(0, "M"); q.addData(url); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); }
+    catch (e) { $("qr").style.display = "none"; }
+    pintarAlumnos(); mostrar("fSala");
+    try {
+      if (canal) canal.cerrar();
+      canal = C.conectar(pin, "docente", { rol: "docente" }, (estado) => {
+        const av = $("avisoRed");
+        if (estado === "SUBSCRIBED") { av.style.display = "none"; enviarEstado(); }
+        else if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT") { av.style.display = "block"; av.textContent = "⚠️ Se cortó la conexión. Revisá internet; se reconecta solo."; }
+      });
+      canal.on("hola", (d) => { if (d.id && !echados.has(d.id)) { registrar(d.id, d.nombre); enviarEstado(); } })
+        .on("respuesta", recibirRespuesta)
+        .presencia((estado) => {
+          conectados = new Set(Object.keys(estado).filter((k) => k !== "docente"));
+          for (const k of conectados) { const meta = (estado[k] || [])[0] || {}; if (!echados.has(k)) registrar(k, meta.nombre); }
+          pintarAlumnos();
+        }).abrir();
+    } catch (e) {
+      const av = $("avisoRed"); av.style.display = "block"; av.textContent = "⚠️ No se pudo conectar. Revisá tu conexión a internet y recargá la página.";
+    }
+  }
+
+  function registrar(id, nombre) {
+    if (!id || echados.has(id)) return;
+    const nom = String(nombre || "Alumno").slice(0, 20);
+    if (C.apodoValido(nom)) return;
+    if (!alumnos.has(id)) {
+      alumnos.set(id, { nombre: nom, puntos: 0, aciertos: 0, racha: 0, respuestas: [] });
+      if (P.fase === "sala") A.nota(660 + Math.random() * 300, 0, .12, "triangle", .08);
+    }
+    pintarAlumnos();
+  }
+  function pintarAlumnos() {
+    const activos = [...alumnos.entries()].filter(([id]) => conectados.has(id) || P.fase !== "sala");
+    $("nAlumnos").textContent = activos.length;
+    $("btnEmpezar").disabled = !activos.length;
+    if (P.fase !== "sala") return;
+    $("alumnos").innerHTML = activos.length ? activos.map(([id, a]) => `<button class="alumno" data-id="${L(id)}" title="Sacar de la sala">${L(a.nombre)}</button>`).join("")
+      : '<span style="color:#c4b5fd;font-weight:700">Esperando que entren los alumnos…</span>';
+    $("alumnos").querySelectorAll(".alumno").forEach((b) => b.onclick = () => {
+      const id = b.dataset.id; echados.add(id); alumnos.delete(id); canal && canal.enviar("expulsar", { id }); pintarAlumnos();
+    });
+  }
+
+  // Lo que ven los alumnos ahora (se reenvía cuando alguien entra tarde o se reconecta)
+  function enviarEstado() {
+    if (!canal || !P) return;
+    if (P.fase === "sala") canal.enviar("estado", { fase: "sala" });
+    else if (P.fase === "pregunta") {
+      const q = P.preguntas[P.n], resta = Math.max(0, cfg.tiempo * 1000 - (performance.now() - P.t0));
+      canal.enviar("estado", { fase: "pregunta", n: P.n, total: P.preguntas.length, txt: q.txt, opciones: q.opciones, ms: resta });
+    } else if (P.fase === "resultado" || P.fase === "ranking") canal.enviar("estado", { fase: "resultado", n: P.n, correcta: P.preguntas[P.n].opciones[P.preguntas[P.n].correcta], tabla: tablaAlumnos() });
+    else if (P.fase === "fin") canal.enviar("estado", { fase: "fin", tabla: tablaAlumnos() });
+  }
+  function tablaAlumnos() {
+    const orden = [...alumnos.entries()].sort((a, b) => b[1].puntos - a[1].puntos);
+    const t = {}; orden.forEach(([id, a], i) => { const r = a.respuestas[P.n]; t[id] = { puesto: i + 1, puntos: a.puntos, aciertos: a.aciertos, ok: !!(r && r.ok), gano: r ? r.pts : 0, racha: a.racha }; });
+    return t;
+  }
+
+  // ── Preguntas ──
+  $("btnEmpezar").onclick = () => { for (const id of [...alumnos.keys()]) if (!conectados.has(id)) alumnos.delete(id); siguiente(); };
+  $("btnSiguiente").onclick = () => siguiente();
+  $("btnSaltar").onclick = () => cerrarPregunta();
+  $("btnRanking").onclick = () => mostrarRanking();
+
+  function siguiente() {
+    P.n++;
+    if (P.n >= P.preguntas.length) return podio();
+    const q = P.preguntas[P.n];
+    P.fase = "pregunta"; P.respuestas = new Map(); P.t0 = performance.now();
+    $("nPregunta").textContent = `Pregunta ${P.n + 1} de ${P.preguntas.length}`;
+    $("enunciado").textContent = q.txt;
+    $("opciones").innerHTML = q.opciones.map((o, i) => `<div class="op" id="op${i}" style="background:${C.FORMAS[i].color}">${C.FORMAS[i].svg}<span>${L(o)}</span><span class="cant" id="cant${i}"></span></div>`).join("");
+    $("barras").style.display = "none"; $("reloj").style.display = ""; $("btnRanking").style.display = "none"; $("btnSaltar").style.display = "";
+    $("nResp").textContent = "0";
+    mostrar("fPregunta"); enviarEstado();
+    A.nota(523, 0, .15, "triangle", .1); A.nota(784, .12, .2, "triangle", .1);
+    clearInterval(P.timer);
+    P.timer = setInterval(() => {
+      const resta = cfg.tiempo - (performance.now() - P.t0) / 1000;
+      $("seg").textContent = Math.max(0, Math.ceil(resta));
+      $("reloj").style.setProperty("--p", `${Math.max(0, resta / cfg.tiempo) * 100}%`);
+      if (resta <= 5 && resta > 0 && Math.ceil(resta) !== P.ultimoTic) { P.ultimoTic = Math.ceil(resta); A.nota(880, 0, .06, "square", .05); }
+      if (resta <= 0) cerrarPregunta();
+    }, 100);
+  }
+
+  function recibirRespuesta(d) {
+    if (!P || P.fase !== "pregunta" || d.n !== P.n || !alumnos.has(d.id) || P.respuestas.has(d.id)) return;
+    const i = +d.opcion; if (!(i >= 0 && i < 4)) return;
+    P.respuestas.set(d.id, { opcion: i, ms: performance.now() - P.t0 });
+    $("nResp").textContent = P.respuestas.size;
+    A.nota(1200, 0, .04, "sine", .04);
+    const total = [...alumnos.keys()].filter((id) => conectados.has(id)).length;
+    if (P.respuestas.size >= total && total > 0) setTimeout(cerrarPregunta, 600);
+  }
+
+  function cerrarPregunta() {
+    if (!P || P.fase !== "pregunta") return;
+    clearInterval(P.timer); P.fase = "resultado";
+    const q = P.preguntas[P.n], cuenta = [0, 0, 0, 0];
+    for (const [id, a] of alumnos) {
+      const r = P.respuestas.get(id);
+      const ok = !!r && r.opcion === q.correcta;
+      a.racha = ok ? a.racha + 1 : 0;
+      const pts = C.puntaje(ok, r ? r.ms : 0, cfg.tiempo * 1000, a.racha);
+      a.puntos += pts; if (ok) a.aciertos++;
+      a.respuestas[P.n] = { opcion: r ? r.opcion : null, ok, pts };
+      if (r) cuenta[r.opcion]++;
+    }
+    // revelar
+    q.opciones.forEach((_, i) => { const el = $("op" + i); el.classList.toggle("buena", i === q.correcta); el.classList.toggle("apagada", i !== q.correcta); $("cant" + i).textContent = cuenta[i]; });
+    const max = Math.max(1, ...cuenta);
+    $("barras").innerHTML = cuenta.map((c, i) => `<div style="background:${C.FORMAS[i].color};height:${12 + (c / max) * 150}px;${i === q.correcta ? "box-shadow:0 0 0 4px #fff" : "opacity:.6"}">${c}</div>`).join("");
+    $("reloj").style.display = "none"; $("barras").style.display = "flex"; $("btnSaltar").style.display = "none";
+    $("btnRanking").style.display = ""; $("btnRanking").textContent = P.n + 1 >= P.preguntas.length ? "Ver podio 🏆" : "Ver ranking →";
+    SON_revelar(); enviarEstado();
+  }
+  const SON_revelar = () => { A.nota(392, 0, .12, "triangle", .1); A.nota(523, .1, .12, "triangle", .1); A.nota(659, .2, .25, "triangle", .12); };
+
+  function mostrarRanking() {
+    if (P.n + 1 >= P.preguntas.length) return podio();
+    P.fase = "ranking";
+    const orden = [...alumnos.values()].sort((a, b) => b.puntos - a.puntos).slice(0, 5);
+    $("ranking").innerHTML = orden.length ? orden.map((a, i) => `<div class="fila" style="animation-delay:${i * 0.08}s"><span class="pos">${i + 1}°</span><span>${L(a.nombre)}</span>${a.racha >= 2 ? `<span class="racha">🔥 ${a.racha}</span>` : ""}<span class="pts">${a.puntos}</span></div>`).join("")
+      : '<p style="text-align:center">Todavía nadie sumó puntos.</p>';
+    $("btnSiguiente").textContent = "Siguiente pregunta →";
+    mostrar("fRanking");
+  }
+
+  function podio() {
+    P.fase = "fin"; clearInterval(P.timer);
+    const orden = [...alumnos.values()].sort((a, b) => b.puntos - a.puntos);
+    const lugar = (i, alto, color) => orden[i] ? `<div class="escalon"><div class="nom">${L(orden[i].nombre)}</div><div class="pts">${orden[i].puntos} pts</div><div class="bloque" style="height:${alto}px;background:${color};animation-delay:${(2 - i) * 0.35}s">${i + 1}</div></div>` : "";
+    $("podio").innerHTML = lugar(1, 170, "#64748b") + lugar(0, 240, "#d97706") + lugar(2, 120, "#b45309");
+    const n = P.preguntas.length;
+    $("tabla").innerHTML = `<tr><th>#</th><th>Alumno</th><th>Puntos</th><th>Aciertos</th><th>Nota (1 a 10)</th></tr>` +
+      orden.map((a, i) => `<tr><td>${i + 1}</td><td>${L(a.nombre)}</td><td>${a.puntos}</td><td>${a.aciertos}/${n}</td><td>${nota(a.aciertos, n)}</td></tr>`).join("");
+    mostrar("fPodio"); enviarEstado(); A.SFX.nivel(); confeti();
+  }
+  const nota = (ac, n) => Math.max(1, Math.round((ac / n) * 10 * 10) / 10).toString().replace(".", ",");
+
+  $("btnCSV").onclick = () => {
+    const n = P.preguntas.length, orden = [...alumnos.values()].sort((a, b) => b.puntos - a.puntos);
+    const enc = ["Puesto", "Alumno", "Puntos", "Aciertos", "Nota (1 a 10)", ...P.preguntas.map((q, i) => `P${i + 1}: ${q.txt}`)];
+    const filas = orden.map((a, i) => [i + 1, a.nombre, a.puntos, `${a.aciertos}/${n}`, nota(a.aciertos, n),
+      ...P.preguntas.map((q, k) => { const r = a.respuestas[k]; return !r || r.opcion === null ? "sin responder" : (r.ok ? "✔ " : "✘ ") + q.opciones[r.opcion]; })]);
+    const csv = "﻿" + [enc, ...filas].map((f) => f.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `clase-en-vivo-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  };
+  $("btnOtra").onclick = () => { if (canal) { canal.enviar("estado", { fase: "cerrada" }); canal.cerrar(); canal = null; } mostrar("fConfig"); };
+
+  // Confeti
+  function confeti() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cv = $("confeti"), cx = cv.getContext("2d"); cv.width = innerWidth; cv.height = innerHeight;
+    const col = ["#f472b6", "#fbbf24", "#34d399", "#60a5fa", "#a78bfa", "#fb7185"];
+    const ps = Array.from({ length: 180 }, () => ({ x: Math.random() * cv.width, y: -20 - Math.random() * cv.height, vy: 2 + Math.random() * 4, vx: (Math.random() - .5) * 2, r: Math.random() * 6, c: col[Math.floor(Math.random() * 6)], g: Math.random() * 6 }));
+    let t = 0;
+    (function paso() { cx.clearRect(0, 0, cv.width, cv.height); t++;
+      ps.forEach((p) => { p.y += p.vy; p.x += p.vx + Math.sin((t + p.g * 10) / 20); cx.fillStyle = p.c; cx.save(); cx.translate(p.x, p.y); cx.rotate(t / 10 + p.g); cx.fillRect(-4, -2, 8 + p.r, 5); cx.restore(); });
+      if (t < 420) requestAnimationFrame(paso); else cx.clearRect(0, 0, cv.width, cv.height); })();
+  }
+  addEventListener("beforeunload", (e) => { if (P && P.fase !== "sala" && P.fase !== "fin") { e.preventDefault(); e.returnValue = ""; } });
+})();
+</script>
+</body>
+</html>
