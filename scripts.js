@@ -438,7 +438,21 @@ async function usuarioRegistro() {
     // Limpiar campos y mostrar la pantalla de confirmación por email
     ["re-nombre","re-user","re-email","re-pass","re-pass2"].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=""; });
     const chk=document.getElementById("re-acepto"); if(chk) chk.checked=false;
+    window._emailPendiente = email;
+    const okEmail = document.getElementById("re-ok-email"); if (okEmail) okEmail.textContent = email;
+    const okMsg = document.getElementById("re-ok-msg"); if (okMsg) okMsg.textContent = "";
     mostrarForm("form-registro-ok");
+}
+
+async function reenviarConfirmacion() {
+    const email = window._emailPendiente, msg = document.getElementById("re-ok-msg"), btn = document.getElementById("re-ok-reenviar");
+    if (!email || !MA()?.sbReenviarConfirmacion) return;
+    if (btn) btn.disabled = true;
+    msg.style.color = "#475569"; msg.textContent = "Enviando…";
+    const { error } = await MA().sbReenviarConfirmacion(email);
+    if (error) { msg.style.color = "#dc2626"; msg.textContent = "No se pudo reenviar. Esperá un minuto y probá de nuevo."; }
+    else { msg.style.color = "#16a34a"; msg.textContent = "✔ Te reenviamos el correo. Revisá tu casilla."; }
+    setTimeout(() => { if (btn) btn.disabled = false; }, 60000);
 }
 
 async function usuarioLogin() {

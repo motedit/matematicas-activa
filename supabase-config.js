@@ -26,6 +26,11 @@ async function sbRegistro({ email, password, username, nombreCompleto }) {
     });
     return { data, error };
 }
+async function sbReenviarConfirmacion(email) {
+    const { error } = await sb.auth.resend({ type: "signup", email,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname } });
+    return { error };
+}
 async function sbLogin({ email, password }) {
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (!error && data?.user) {
@@ -681,7 +686,7 @@ async function sbCrearPreferencia(plan, modulos, cupon) {
 
 window.MA_SUPABASE = {
     sb,
-    sbRegistro, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
+    sbRegistro, sbReenviarConfirmacion, sbLogin, sbLogout, sbSesion, sbUsuario, sbPerfil, sbEsAdmin,
     sbCambiarPassword, sbCambiarUsername, sbOlvidePassword, sbSetPasswordEnRecovery,
     sbListarArchivos, sbCrearArchivo, sbActualizarArchivo, sbBorrarArchivo,
     sbSubirBlob, sbUrlFirmada, sbDescargarBlob,

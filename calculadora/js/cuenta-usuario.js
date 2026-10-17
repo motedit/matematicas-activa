@@ -173,7 +173,7 @@
     } else {
       mostrarVista("cuentaVistaIngresar");
       $("ingEmail").value = email;
-      mensaje("Te mandamos un correo para confirmar la cuenta. Después ingresá desde acá.", "ok");
+      mensaje("¡Ya casi está listo! Solo falta confirmar tu correo: te enviamos un mensaje a " + email + ". Ingresá a tu casilla, hacé clic en “Activar mi cuenta” y después iniciá sesión desde acá. Si no lo ves, revisá spam o correo no deseado.", "ok");
     }
   }
 
