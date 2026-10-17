@@ -25,7 +25,7 @@
     /Non-Error promise rejection captured/i,
     /AbortError|The operation was aborted/i,
     /Failed to fetch|NetworkError|Load failed|network error/i, // sin internet
-    /ethereum|web3|metamask|solana|phantom|tronWeb|__gCrWeb|webkit\.messageHandlers/i // billeteras cripto y navegadores de apps (Instagram, Facebook) que inyectan código propio
+    /ethereum|web3|metamask|solana|phantom|tronWeb|__gCrWeb|webkit\.messageHandlers|standardSelectors/i // billeteras cripto y navegadores de apps (Instagram, Facebook) que inyectan código propio
   ];
 
   function recortar(t, n) { t = String(t == null ? "" : t); return t.length > n ? t.slice(0, n) : t; }

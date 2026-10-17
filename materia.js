@@ -413,7 +413,7 @@
             <main class="mat-main">
                 <section class="mat-section">
                     <h2 class="mat-section-title">📂 Material de ${esc(NOMBRE)}</h2>
-                    <p class="mat-section-desc">Videos, PDFs, ejercicios e imágenes de ${esc(NOMBRE)}.</p>
+                    <p class="mat-section-desc">Teoría, ejercicios y guías de práctica de ${esc(NOMBRE)}.</p>
                     <div id="mat-publicos-grid" class="mat-grid"></div>
                 </section>
                 <section class="mat-section" id="mat-ejercicios-section">
@@ -482,7 +482,7 @@
                     </div>
                     <ul style="list-style:none;padding:16px;margin:0 0 20px;background:#f8fbff;border-radius:10px">
                         <li style="padding:5px 0;font-size:14px">✅ Acceso ilimitado a todos los archivos</li>
-                        <li style="padding:5px 0;font-size:14px">✅ Videos, PDFs y ejercicios sin restricciones</li>
+                        <li style="padding:5px 0;font-size:14px">✅ Todo el material y los ejercicios sin restricciones</li>
                         <li style="padding:5px 0;font-size:14px">✅ 30 días de acceso completo</li>
                         <li style="padding:5px 0;font-size:14px">✅ Todas las materias incluidas</li>
                     </ul>

@@ -1653,11 +1653,12 @@ async function cargarNotifConfig() {
     // Las casillas viejas se reemplazaron por "Novedades, ofertas y cupones" (cuenta-extra.js)
     if (!document.getElementById("notif-inactividad")) return;
     const config = await MA().sbObtenerNotifConfig();
-    if (config) {
-        document.getElementById("notif-inactividad").checked = config.email_inactividad;
-        document.getElementById("notif-logros").checked = config.email_logros;
-        document.getElementById("notif-novedades").checked = config.email_novedades;
-    }
+    if (!config) return;
+    // Mientras se esperaba la respuesta, el perfil pudo redibujarse: se vuelve a buscar cada casilla
+    const poner = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+    poner("notif-inactividad", config.email_inactividad);
+    poner("notif-logros", config.email_logros);
+    poner("notif-novedades", config.email_novedades);
 }
 
 async function guardarNotifConfig() {
