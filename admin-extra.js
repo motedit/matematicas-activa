@@ -152,14 +152,15 @@
     c.innerHTML =
       '<div class="ax-resumen"><div><b>' + (d.resend ? "✅" : "⚠️") + "</b><span>" + (d.resend ? "Resend conectado" : "Falta la clave de Resend") + "</span></div>" +
       "<div><b>" + (d.enviados || 0) + "</b><span>correos enviados</span></div>" +
-      "<div><b>" + ((s.vencimiento || 0) + (s.bienvenida || 0) + (s.errores || 0)) + "</b><span>saldrían hoy</span></div></div>" +
+      "<div><b>" + ((s.vencimiento || 0) + (s.bienvenida || 0) + (s.reactivacion || 0) + (s.errores || 0)) + "</b><span>saldrían hoy</span></div></div>" +
       '<p class="ax-nota">Remitente: <b>' + esc(d.desde) + "</b>. Todos los días a las 9:00 se envían: avisos de vencimiento (3 días antes), " +
-      "la bienvenida con novedades a quien se registró hace 3-4 días y el resumen de errores para vos. Hoy saldrían: " +
-      (s.vencimiento || 0) + " de vencimiento, " + (s.bienvenida || 0) + " de bienvenida y " + (s.errores || 0) + " de errores.</p>" +
+      "la bienvenida con novedades a quien se registró hace 3-4 días, el “te extrañamos” a quien se registró hace una semana y no volvió, y el resumen de errores para vos. Hoy saldrían: " +
+      (s.vencimiento || 0) + " de vencimiento, " + (s.bienvenida || 0) + " de bienvenida, " + (s.reactivacion || 0) + " de “te extrañamos” y " + (s.errores || 0) + " de errores.</p>" +
       '<div class="ax-acciones"><button type="button" class="ax-btn" onclick="MA_adminVista(\'bienvenida\')">👁️ Bienvenida</button>' +
       '<button type="button" class="ax-btn" onclick="MA_adminVista(\'vencimiento\')">👁️ Vencimiento</button>' +
+      '<button type="button" class="ax-btn" onclick="MA_adminVista(\'reactivacion\')">👁️ Te extrañamos</button>' +
       '<button type="button" class="ax-btn" onclick="MA_adminVista(\'errores\')">👁️ Resumen de errores</button></div>' +
-      '<div class="ax-acciones"><button type="button" class="ax-btn ax-principal" onclick="MA_adminPrueba(this)"' + (d.resend ? "" : " disabled") + '>📨 Enviarme las 3 pruebas a mi correo</button>' +
+      '<div class="ax-acciones"><button type="button" class="ax-btn ax-principal" onclick="MA_adminPrueba(this)"' + (d.resend ? "" : " disabled") + '>📨 Enviarme las 4 pruebas a mi correo</button>' +
       '<button type="button" class="ax-btn" onclick="MA_adminEjecutar(this)"' + (d.resend ? "" : " disabled") + ">▶️ Hacer el envío de hoy ahora</button></div>" +
       '<div id="ax-vista"></div>' +
       (d.ultimos && d.ultimos.length ? "<h4>Últimos enviados</h4><ul class=\"ax-lista\">" + d.ultimos.map(function (u) {
@@ -188,7 +189,7 @@
     btn.disabled = true;
     try {
       var d = await llamar("ejecutar");
-      toast("Enviados: " + d.vencimiento + " vencimiento, " + d.bienvenida + " bienvenida, " + d.errores + " errores" + (d.fallidos && d.fallidos.length ? " · fallaron " + d.fallidos.length : ""), "ok");
+      toast("Enviados: " + d.vencimiento + " vencimiento, " + d.bienvenida + " bienvenida, " + (d.reactivacion || 0) + " te extrañamos, " + d.errores + " errores" + (d.fallidos && d.fallidos.length ? " · fallaron " + d.fallidos.length : ""), "ok");
       renderCorreos();
     } catch (e) { toast(e.message, "error"); btn.disabled = false; }
   };

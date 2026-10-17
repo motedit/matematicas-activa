@@ -136,5 +136,83 @@
   "ejercicios": 16,
   "pdf": "recursos/guias/aritmetica/induccion-matematica.pdf",
   "materia": "aritmetica"
+ },
+ "27f546c7-6bc3-4e89-9949-573a74c35ce0": {
+  "titulo": "Figuras planas",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/figuras-planas.pdf",
+  "materia": "geometria"
+ },
+ "05ec2c72-f6b8-4794-b61b-22fd0c5b39a8": {
+  "titulo": "Transformaciones isométricas",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/transformaciones-isometricas.pdf",
+  "materia": "geometria"
+ },
+ "b31f52b2-cad3-4ade-8e1b-7b0f89e1d087": {
+  "titulo": "Teoremas fundamentales: Pitágoras",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/teoremas-fundamentales.pdf",
+  "materia": "geometria"
+ },
+ "15c6bc4e-0d17-49f0-8e77-ee9e6c07fe5f": {
+  "titulo": "Circunferencia y círculo",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/circunferencia-y-circulo.pdf",
+  "materia": "geometria"
+ },
+ "5d3669bd-ab01-455c-bbbf-b11a2e88bed3": {
+  "titulo": "Cuerpos geométricos",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/cuerpos-geometricos.pdf",
+  "materia": "geometria"
+ },
+ "fe675c4e-fb54-4220-b387-f8d9d41aee36": {
+  "titulo": "Lugar geométrico",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/lugar-geometrico.pdf",
+  "materia": "geometria"
+ },
+ "5f593fa4-0b3a-4ffe-9852-c2be06e07d3b": {
+  "titulo": "Semejanza y Teorema de Thales",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/semejanza-y-thales.pdf",
+  "materia": "geometria"
+ },
+ "f0174a0e-f054-4454-9737-eec12afa830a": {
+  "titulo": "Geometría analítica: cónicas",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/geometria-analitica-conicas.pdf",
+  "materia": "geometria"
+ },
+ "b270e864-f90b-4f72-94a1-9a24811f37aa": {
+  "titulo": "Ecuación de la recta",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/ecuacion-de-la-recta.pdf",
+  "materia": "geometria"
+ },
+ "0cd36d53-e65c-4cd0-8533-b6d126e4436b": {
+  "titulo": "Vectores en el plano y el espacio",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/vectores.pdf",
+  "materia": "geometria"
+ },
+ "aae58a84-6668-4fd7-9a23-635269b6dfb7": {
+  "titulo": "Geometría deductiva",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/geometria-deductiva.pdf",
+  "materia": "geometria"
+ },
+ "09889764-8fe8-4bb1-b565-4c61d8bfde10": {
+  "titulo": "Geometría diferencial (introductoria)",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/geometria/geometria-diferencial.pdf",
+  "materia": "geometria"
+ },
+ "a71256dc-a01c-4429-bc0b-0a8b09022333": {
+  "titulo": "Funciones parte entera y valor absoluto",
+  "ejercicios": 16,
+  "pdf": "recursos/guias/algebra/funciones-parte-entera-y-valor-absoluto.pdf",
+  "materia": "algebra"
  }
 }
