@@ -48,8 +48,12 @@
       const k = Math.min((r.width - 2 * m) / fondoImg.naturalWidth, (r.height - 2 * m) / fondoImg.naturalHeight);
       const w = fondoImg.naturalWidth * k, h = fondoImg.naturalHeight * k, x = (r.width - w) / 2, y = (r.height - h) / 2;
       H.rectFondo = { x, y, w, h };
-      Object.assign(fondoImg.style, { display: "block", left: x + "px", top: y + "px", width: w + "px", height: h + "px", transformOrigin: `${-x}px ${-y}px`,
-        transform: H.z === 1 ? "" : `translate(${H.px}px,${H.py}px) scale(${H.z})` });
+      fondoImg.style.display = "block"; colocarFondo();
+      // hojas cargadas con la versión anterior (imagen chica): se avisa una vez para que la vuelva a subir
+      if (fondoImg.naturalWidth < 1700 && fondoImg.naturalHeight < 1700 && !hoja.avisada) {
+        hoja.avisada = true;
+        setTimeout(() => toast("Esta hoja tiene la imagen en baja calidad: borrala y volvé a subir el archivo para verla nítida"), 400);
+      }
       window.dispatchEvent(new Event("pz-fondo"));
     };
     if (fondoImg.dataset.src !== String(hoja.fondo.length) + hoja.fondo.slice(-40)) {
@@ -57,6 +61,12 @@
       fondoImg.onload = pintar; fondoImg.src = hoja.fondo;
     } else pintar();
   }
+  // Se dibuja al tamaño final (con el zoom ya aplicado), así el navegador la pinta desde su resolución original
+  function colocarFondo() {
+    const f = H.rectFondo; if (!f) return;
+    Object.assign(fondoImg.style, { transform: "", left: (H.px + f.x * H.z) + "px", top: (H.py + f.y * H.z) + "px", width: (f.w * H.z) + "px", height: (f.h * H.z) + "px" });
+  }
+  H.colocarFondo = colocarFondo;
   const dibujarBgOriginal = window.drawBg;
   window.drawBg = function () { dibujarBgOriginal(); ubicarFondo(); };
 
@@ -152,7 +162,8 @@
     const r = stage.getBoundingClientRect();
     H.px = Math.min(0, Math.max(r.width * (1 - H.z), H.px)); H.py = Math.min(0, Math.max(r.height * (1 - H.z), H.py));
     [bg, canvas].forEach((cv) => { cv.style.transformOrigin = "0 0"; cv.style.transform = H.z === 1 ? "" : `translate(${H.px}px,${H.py}px) scale(${H.z})`; });
-    if (H.rectFondo) fondoImg.style.transform = H.z === 1 ? "" : `translate(${H.px}px,${H.py}px) scale(${H.z})`;
+    colocarFondo();
+    stage.style.cursor = H.mover && H.z > 1 ? "grab" : ""; canvas.style.cursor = H.mover && H.z > 1 ? "grab" : (tool === "text" ? "text" : tool === "laser" ? "none" : "crosshair");
     const z = document.getElementById("hjZoom"); if (z) z.textContent = Math.round(H.z * 100) + "%";
     document.getElementById("hjMover")?.classList.toggle("on", H.mover);
     if (H.z !== 1) document.querySelectorAll(".instrument:not(.hidden)").forEach((el) => { el.classList.add("hidden"); document.querySelector(`.tool-inst[data-inst="${el.id}"]`)?.classList.remove("active"); });
@@ -181,6 +192,7 @@
       e.stopPropagation(); e.preventDefault();
       if (dedos.size === 2 && typeof drawing !== "undefined" && drawing) { drawing = false; undo(); }   // el segundo dedo cancela el trazo
       const pts = [...dedos.values()];
+      if (H.mover) canvas.style.cursor = "grabbing";
       arrastre = { x: pts.reduce((s, p) => s + p.x, 0) / pts.length, y: pts.reduce((s, p) => s + p.y, 0) / pts.length, px: H.px, py: H.py, d: pts.length === 2 ? Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) : 0, z: H.z };
     }
   }, true);
@@ -196,8 +208,8 @@
     } else { H.px = arrastre.px + (mx - arrastre.x); H.py = arrastre.py + (my - arrastre.y); }
     aplicarZoom();
   }, true);
-  const soltar = (e) => { dedos.delete(e.pointerId); if (arrastre && dedos.size < (H.mover ? 1 : 2)) { arrastre = null; if (H.z < 1.02) zoom(1 / H.z); } };
-  stage.addEventListener("pointerup", soltar, true); stage.addEventListener("pointercancel", soltar, true);
+  const soltar = (e) => { dedos.delete(e.pointerId); if (arrastre && dedos.size < (H.mover ? 1 : 2)) { arrastre = null; if (H.z < 1.02) zoom(1 / H.z); else aplicarZoom(); } };
+  window.addEventListener("pointerup", soltar, true); window.addEventListener("pointercancel", soltar, true);
 
   // ── PDF de toda la clase ──
   const JSPDF = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";

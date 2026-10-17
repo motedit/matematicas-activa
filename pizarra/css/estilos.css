@@ -216,6 +216,7 @@
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:11px;font-size:.88rem;font-weight:500;box-shadow:0 12px 32px rgba(15,37,64,.3);opacity:0;transition:.25s;z-index:200;display:flex;align-items:center;gap:9px}
   .toast svg{width:18px;height:18px;color:var(--teal)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast{pointer-events:none;bottom:96px}   /* el aviso no tapa los botones de abajo (zoom, mano, hojas) */
 
   ::-webkit-scrollbar{width:9px;height:9px}
   ::-webkit-scrollbar-thumb{background:#c2cfdb;border-radius:6px}
