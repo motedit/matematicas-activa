@@ -428,8 +428,161 @@
     return { tema: "razonamiento", metodo: "Fracciones de un total (hacia atrás)", pasos: ps, resultado: `x=${R(x)}`, area: "arit" };
   }
 
+  /* =====================================================================
+     10) Geometría analítica con enunciado: punto medio, otro extremo, distancias,
+         perímetro / área / tipo de triángulo, punto que divide en una razón, puntos alineados
+     ===================================================================== */
+  const RE_COORD = "(-?\\s*\\d+(?:[.,]\\d+)?(?:\\s*\\/\\s*\\d+)?)";
+  function leerCoord(s) {
+    s = s.replace(/\s/g, "");
+    const neg = s.startsWith("-"); if (neg) s = s.slice(1);
+    let v; if (s.includes("/")) { const [a, b] = s.split("/"); v = leerNum(a).entre(leerNum(b)); } else v = leerNum(s);
+    return neg ? v.por(-1) : v;
+  }
+  function puntos(orig) {
+    const out = [];
+    const re = new RegExp(`(?:\\b([A-Z])(?:_?(\\d))?\\s*)?\\(\\s*${RE_COORD}\\s*([;,])\\s*${RE_COORD}\\s*\\)`, "g");
+    let m;
+    while ((m = re.exec(orig))) {
+      // "(1,5; 2)" → coma decimal si hay punto y coma
+      out.push({ nombre: m[1] ? m[1] + (m[2] ? `_${m[2]}` : "") : null, x: leerCoord(m[3]), y: leerCoord(m[5]), i: m.index, fin: m.index + m[0].length });
+    }
+    const libres = "ABCDEFGHPQRST".split("").filter((l) => !out.some((q) => q.nombre === l));
+    out.forEach((q) => { if (!q.nombre) q.nombre = libres.shift(); });
+    return out;
+  }
+  const Lp = (q) => `${q.nombre}(${L(q.x)},\\,${L(q.y)})`;
+  const par = (f) => (f.n < 0 ? `(${L(f)})` : L(f));
+  // raíz exacta de una fracción: devuelve {tex, v}
+  function raizFr(f) {
+    // √(n/d) = √(n·d)/d
+    let n = f.n * f.d, d = f.d, fuera = 1;
+    for (let k = 2; k * k <= n; k++) while (n % (k * k) === 0) { n /= k * k; fuera *= k; }
+    const g = mcd(fuera, d); fuera /= g; d /= g;
+    const v = (fuera * Math.sqrt(n)) / d;
+    let tex = n === 1 ? String(fuera) : `${fuera === 1 ? "" : fuera}\\sqrt{${n}}`;
+    if (d !== 1) tex = `\\frac{${tex}}{${d}}`;
+    const ap = String(Math.round(v * 100) / 100).replace(".", "{,}");
+    return { tex: n === 1 ? tex : `${tex}\\approx ${ap}`, v, exacto: n === 1 && d === 1 ? fuera : null, sola: tex };
+  }
+  function distPasos(A, B) {
+    const dx = B.x.menos(A.x), dy = B.y.menos(A.y), d2 = dx.por(dx).mas(dy.por(dy)), r = raizFr(d2);
+    return { d2, r, mates: [`d(${A.nombre},${B.nombre})=\\sqrt{(${L(B.x)}-${par(A.x)})^2+(${L(B.y)}-${par(A.y)})^2}`, `=\\sqrt{${par(dx)}^2+${par(dy)}^2}=\\sqrt{${L(dx.por(dx))}+${L(dy.por(dy))}}=\\sqrt{${L(d2)}}`, `=${r.tex}`] };
+  }
+  const FORM_MEDIO = "M=\\left(\\frac{x_1+x_2}{2}\\,;\\,\\frac{y_1+y_2}{2}\\right)", FORM_DIST = "d=\\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}";
+  function medio(A, B, nombre = "M") { return { nombre, x: A.x.mas(B.x).entre(2), y: A.y.mas(B.y).entre(2) }; }
+  const RP = (q) => `${q.nombre}=(${R(q.x)};\\,${R(q.y)})`;
+  function geometria(orig, p) {
+    const pts = puntos(orig.replace(/[−–—]/g, "-"));
+    if (pts.length < 2) return null;
+    const { p: ps, P } = pasos();
+    const geo = (metodo, resultado) => ({ tema: "uni", metodo, pasos: ps, resultado, area: "geo" });
+    const cerca = (q, re) => re.test(plano(orig.slice(Math.max(0, q.i - 45), q.i)));
+    // a) otro extremo conociendo un extremo y el punto medio
+    if (/extremo/.test(p) && /medio/.test(p) && pts.length === 2) {
+      let M = pts.find((q) => q.nombre === "M") || pts.find((q) => cerca(q, /medio[^()]*$/));
+      if (!M) M = pts[1];
+      const A = pts.find((q) => q !== M);
+      const nB = ["B", "Q", "C", "R"].find((l) => l !== A.nombre && l !== M.nombre);
+      const B = { nombre: nB, x: M.x.por(2).menos(A.x), y: M.y.por(2).menos(A.y) };
+      P("Leemos el problema y anotamos los datos", `Conocemos un extremo ${m$(Lp(A))} y el punto medio ${m$(Lp(M))}. Buscamos el otro extremo ${m$(`${nB}(x,\\,y)`)}.`);
+      P("Usamos la fórmula del punto medio", "Cada coordenada del punto medio es el promedio de las coordenadas de los extremos.", [FORM_MEDIO]);
+      P("Planteamos una ecuación para cada coordenada", "", [`\\frac{${L(A.x)}+x}{2}=${L(M.x)}`, `\\frac{${L(A.y)}+y}{2}=${L(M.y)}`]);
+      P("Resolvemos", "Multiplicamos por 2 y despejamos.", [`${L(A.x)}+x=${L(M.x.por(2))}\;\\Rightarrow\;x=${L(M.x.por(2))}-${par(A.x)}=${L(B.x)}`, `${L(A.y)}+y=${L(M.y.por(2))}\;\\Rightarrow\;y=${L(M.y.por(2))}-${par(A.y)}=${L(B.y)}`]);
+      P("Verificamos", `Calculamos el punto medio entre ${A.nombre} y ${nB}: tiene que dar ${M.nombre}.`, [`\\left(\\frac{${L(A.x)}+${par(B.x)}}{2}\\,;\\,\\frac{${L(A.y)}+${par(B.y)}}{2}\\right)=(${L(M.x)},\\,${L(M.y)})${ok}`]);
+      P("Respondemos", `El otro extremo del segmento es ${m$(Lp(B))}.`);
+      return geo("Punto medio: otro extremo", RP(B));
+    }
+    // b) distancia de un punto al punto medio de un segmento
+    if (/distancia/.test(p) && /medio/.test(p) && pts.length === 3) {
+      // el punto suelto es el que aparece antes de "medio" o el que no está en el segmento
+      const posMedio = plano(orig).indexOf("medio");
+      let Pt = pts.find((q) => q.i < posMedio) || pts[0];
+      const [A, B] = pts.filter((q) => q !== Pt);
+      const M = medio(A, B);
+      const dd = distPasos(Pt, M);
+      P("Leemos el problema y anotamos los datos", `Tenemos el punto ${m$(Lp(Pt))} y el segmento de extremos ${m$(Lp(A))} y ${m$(Lp(B))}. Primero hay que encontrar el punto medio y después medir la distancia.`);
+      P("Hallamos el punto medio del segmento", "Promediamos las coordenadas de los extremos.", [FORM_MEDIO, `M=\\left(\\frac{${L(A.x)}+${par(B.x)}}{2}\\,;\\,\\frac{${L(A.y)}+${par(B.y)}}{2}\\right)=(${L(M.x)},\\,${L(M.y)})`]);
+      P(`Calculamos la distancia de ${Pt.nombre} a M`, "Usamos la fórmula de distancia entre dos puntos.", [FORM_DIST, ...dd.mates]);
+      P("Respondemos", `La distancia entre ${Pt.nombre} y el punto medio de ${A.nombre}${B.nombre} es ${m$(dd.r.tex)} unidades.`);
+      return geo("Punto medio y distancia", `d=${dd.r.sola}`);
+    }
+    // c) punto que divide un segmento en una razón
+    if (/divid|divide|razon/.test(p) && /razon/.test(p) && pts.length === 2) {
+      const mr = plano(orig).match(/razon\D{0,25}?(-?\d+(?:[.,]\d+)?(?:\s*\/\s*\d+)?|-?\d+\s*:\s*\d+)/);
+      if (!mr) return null;
+      let r = mr[1].includes(":") ? (([a, b]) => leerNum(a).entre(leerNum(b)))(mr[1].replace(/\s/g, "").split(":")) : leerCoord(mr[1]);
+      const [A, B] = pts, uno = F(1).mas(r);
+      if (uno.cero()) throw problema("Con razón −1 no existe ese punto.");
+      const Q = { nombre: "P", x: A.x.mas(r.por(B.x)).entre(uno), y: A.y.mas(r.por(B.y)).entre(uno) };
+      if (Q.nombre === A.nombre || Q.nombre === B.nombre) Q.nombre = "Q";
+      P("Leemos el problema y anotamos los datos", `Extremos ${m$(Lp(A))} y ${m$(Lp(B))}; razón ${m$(`r=\\frac{${A.nombre}${Q.nombre}}{${Q.nombre}${B.nombre}}=${L(r)}`)}.`);
+      P("Usamos la fórmula del punto que divide un segmento en una razón", "", [`x=\\frac{x_1+r\\,x_2}{1+r},\\qquad y=\\frac{y_1+r\\,y_2}{1+r}`]);
+      P("Reemplazamos y resolvemos", "", [`x=\\frac{${L(A.x)}+${L(r)}\\cdot ${par(B.x)}}{1+${L(r)}}=${L(Q.x)}`, `y=\\frac{${L(A.y)}+${L(r)}\\cdot ${par(B.y)}}{1+${L(r)}}=${L(Q.y)}`]);
+      P("Respondemos", `El punto buscado es ${m$(Lp(Q))}.`);
+      return geo("Punto que divide un segmento en una razón", RP(Q));
+    }
+    // d) puntos alineados
+    if (/(colineal|alinead|misma recta)/.test(p) && pts.length === 3) {
+      const [A, B, C] = pts;
+      const det = B.x.menos(A.x).por(C.y.menos(A.y)).menos(B.y.menos(A.y).por(C.x.menos(A.x)));
+      const si = det.cero();
+      P("Leemos el problema y anotamos los datos", `Los puntos son ${m$(Lp(A))}, ${m$(Lp(B))} y ${m$(Lp(C))}.`);
+      P("Comparamos las pendientes", `Si ${A.nombre}${B.nombre} y ${A.nombre}${C.nombre} tienen la misma pendiente, los tres puntos están en la misma recta. Para no dividir por cero, comparamos los productos cruzados.`, [`(x_B-x_A)(y_C-y_A)-(y_B-y_A)(x_C-x_A)`, `=${par(B.x.menos(A.x))}\\cdot ${par(C.y.menos(A.y))}-${par(B.y.menos(A.y))}\\cdot ${par(C.x.menos(A.x))}=${L(det)}`]);
+      P("Respondemos", si ? "Da 0: los tres puntos están alineados (son colineales)." : `Da ${m$(L(det))}, distinto de 0: los puntos no están alineados.`);
+      return geo("Puntos alineados", si ? tx("Sí, son colineales") : tx("No son colineales"));
+    }
+    // e) triángulo: perímetro, área o clasificación
+    if (/triangulo/.test(p) && pts.length === 3 && /(perimetro|area|superficie|tipo|clasific|isosceles|escaleno|equilatero|rectangulo)/.test(p)) {
+      const [A, B, C] = pts;
+      const lados = [[A, B], [B, C], [C, A]].map(([U, W]) => ({ U, W, ...distPasos(U, W) }));
+      P("Leemos el problema y anotamos los datos", `Vértices: ${m$(Lp(A))}, ${m$(Lp(B))} y ${m$(Lp(C))}.`);
+      P("Calculamos la longitud de cada lado", "Con la fórmula de distancia entre dos puntos.", [FORM_DIST, ...lados.map((l) => `\\overline{${l.U.nombre}${l.W.nombre}}=\\sqrt{${L(l.d2)}}${l.r.exacto !== null ? "=" + l.r.exacto : "\\approx " + String(Math.round(l.r.v * 100) / 100).replace(".", "{,}")}`)]);
+      const res = [];
+      if (/(perimetro)/.test(p)) {
+        const per = lados.reduce((a, l) => a + l.r.v, 0);
+        const todosEnteros = lados.every((l) => l.r.exacto !== null);
+        P("Calculamos el perímetro", "Sumamos los tres lados.", [`${tx("Per")}=${lados.map((l) => l.r.exacto !== null ? l.r.exacto : `\\sqrt{${L(l.d2)}}`).join("+")}${todosEnteros ? "=" + per : "\\approx " + String(Math.round(per * 100) / 100).replace(".", "{,}")}`]);
+        res.push(`${tx("Per")}${todosEnteros ? "=" + per : "\\approx " + String(Math.round(per * 100) / 100).replace(".", "{,}")}`);
+      }
+      if (/(area|superficie)/.test(p)) {
+        const det = B.x.menos(A.x).por(C.y.menos(A.y)).menos(B.y.menos(A.y).por(C.x.menos(A.x)));
+        const area = F(Math.abs(det.n), det.d).entre(2);
+        P("Calculamos el área", "Usamos la fórmula del determinante (la mitad del valor absoluto).", [`A=\\frac{1}{2}\\left|(x_B-x_A)(y_C-y_A)-(y_B-y_A)(x_C-x_A)\\right|`, `=\\frac{1}{2}\\left|${par(B.x.menos(A.x))}\\cdot ${par(C.y.menos(A.y))}-${par(B.y.menos(A.y))}\\cdot ${par(C.x.menos(A.x))}\\right|=\\frac{1}{2}\\cdot ${L(F(Math.abs(det.n), det.d))}=${L(area)}`]);
+        res.push(`A=${R(area)}`);
+      }
+      if (/(tipo|clasific|isosceles|escaleno|equilatero|rectangulo)/.test(p)) {
+        const c2 = lados.map((l) => l.d2.v).sort((a, b) => a - b);
+        const iguales = (c2[0] === c2[1]) + (c2[1] === c2[2]);
+        const porLados = iguales === 2 ? "equilátero" : iguales === 1 ? "isósceles" : "escaleno";
+        const rect = Math.abs(c2[0] + c2[1] - c2[2]) < 1e-9, obt = c2[0] + c2[1] < c2[2] - 1e-9;
+        const porAng = rect ? "rectángulo" : obt ? "obtusángulo" : "acutángulo";
+        P("Clasificamos el triángulo", "Por sus lados comparamos las longitudes; por sus ángulos comparamos el cuadrado del lado mayor con la suma de los cuadrados de los otros dos (Pitágoras).", [`${c2[0]}+${c2[1]}${rect ? "=" : obt ? "<" : ">"}${c2[2]}`]);
+        res.push(tx(`${porLados} y ${porAng}`));
+      }
+      P("Respondemos", `Resultado: ${res.map((r) => m$(r)).join(" ; ")}.`);
+      return geo("Triángulo dado por sus vértices", res.join(",\;"));
+    }
+    // f) punto medio o distancia simple con puntos con nombre
+    if (pts.length === 2 && /medio/.test(p) && !/distancia/.test(p)) {
+      const [A, B] = pts, M = medio(A, B);
+      P("Leemos el problema y anotamos los datos", `Extremos ${m$(Lp(A))} y ${m$(Lp(B))}.`);
+      P("Usamos la fórmula del punto medio", "Promediamos las coordenadas.", [FORM_MEDIO, `M=\\left(\\frac{${L(A.x)}+${par(B.x)}}{2}\\,;\\,\\frac{${L(A.y)}+${par(B.y)}}{2}\\right)=(${L(M.x)},\\,${L(M.y)})`]);
+      P("Respondemos", `El punto medio es ${m$(Lp(M))}.`);
+      return geo("Punto medio de un segmento", RP(M));
+    }
+    if (pts.length === 2 && /distancia/.test(p) && !/medio/.test(p)) {
+      const [A, B] = pts, dd = distPasos(A, B);
+      P("Leemos el problema y anotamos los datos", `Puntos ${m$(Lp(A))} y ${m$(Lp(B))}.`);
+      P("Calculamos la distancia", "Usamos la fórmula de distancia entre dos puntos (sale de Pitágoras).", [FORM_DIST, ...dd.mates]);
+      P("Respondemos", `La distancia entre ${A.nombre} y ${B.nombre} es ${m$(dd.r.tex)} unidades.`);
+      return geo("Distancia entre dos puntos", `d=${dd.r.sola}`);
+    }
+    return null;
+  }
+
   /* ---------- detección ---------- */
-  const TIPOS = [(o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
+  const TIPOS = [geometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
     (o, p) => fraccionesDelTotal(p), dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
   function resolver(texto) {
     const orig = String(texto || "").replace(/\s+/g, " ").trim();
@@ -471,7 +624,7 @@
       if (er) er.textContent = "";
       mostrarExito(texto, r, metodo);
       // si los temas del área todavía no cargaron, mostramos el nombre lindo del tema
-      const NOMBRES = { problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
+      const NOMBRES = { uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
       const cab = document.querySelector("#cabecera b");
       if (cab && cab.textContent === r.tema && NOMBRES[r.tema]) cab.textContent = NOMBRES[r.tema];
     })();
