@@ -137,6 +137,29 @@
 
     alTrabajador(w) { M.trab = w; enviarAlTrabajador(); },
 
+    // Ejercicios que se resuelven en el dispositivo pero cuentan como uno de los 3 gratis del día
+    async usar() {
+      await M.lista;
+      if (window.MA_PLENO) return true;
+      const c = sb();
+      if (!c || !(await token())) {
+        if (typeof abrirPlan === "function") abrirPlan("Iniciá sesión en Matemáticas Activas para usar esta área (3 ejercicios gratis por día).");
+        return false;
+      }
+      try {
+        const { data, error } = await c.rpc("usar_calculadora");
+        if (error || !data) throw error || new Error("sin datos");
+        aplicarEstado(data);
+        if (data.acceso === "agotado") {
+          if (typeof abrirPlan === "function") abrirPlan("Usaste tus 3 ejercicios gratis de hoy. Volvé mañana o activá la calculadora.");
+          return false;
+        }
+        return true;
+      } catch {
+        throw new Error("No pude conectar con el servidor. Revisá tu conexión e intentá de nuevo.");
+      }
+    },
+
     // Funciones que necesitan el motor completo en el dispositivo (graficador, comprobar respuesta)
     soloPleno(nombre) {
       if (window.MA_PLENO) return true;
