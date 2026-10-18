@@ -441,7 +441,7 @@
   }
   function puntos(orig) {
     const out = [];
-    const re = new RegExp(`(?:\\b([A-Z])(?:_?(\\d))?\\s*)?\\(\\s*${RE_COORD}\\s*([;,])\\s*${RE_COORD}\\s*\\)`, "g");
+    const re = new RegExp(`(?:\\b([A-Z])(?:_?(\\d))?\\s*=?\\s*)?\\(\\s*${RE_COORD}\\s*([;,])\\s*${RE_COORD}\\s*\\)`, "g");
     let m;
     while ((m = re.exec(orig))) {
       // "(1,5; 2)" → coma decimal si hay punto y coma
@@ -488,7 +488,7 @@
       P("Leemos el problema y anotamos los datos", `Conocemos un extremo ${m$(Lp(A))} y el punto medio ${m$(Lp(M))}. Buscamos el otro extremo ${m$(`${nB}(x,\\,y)`)}.`);
       P("Usamos la fórmula del punto medio", "Cada coordenada del punto medio es el promedio de las coordenadas de los extremos.", [FORM_MEDIO]);
       P("Planteamos una ecuación para cada coordenada", "", [`\\frac{${L(A.x)}+x}{2}=${L(M.x)}`, `\\frac{${L(A.y)}+y}{2}=${L(M.y)}`]);
-      P("Resolvemos", "Multiplicamos por 2 y despejamos.", [`${L(A.x)}+x=${L(M.x.por(2))}\;\\Rightarrow\;x=${L(M.x.por(2))}-${par(A.x)}=${L(B.x)}`, `${L(A.y)}+y=${L(M.y.por(2))}\;\\Rightarrow\;y=${L(M.y.por(2))}-${par(A.y)}=${L(B.y)}`]);
+      P("Resolvemos", "Multiplicamos por 2 y despejamos.", [`${L(A.x)}+x=${L(M.x.por(2))}\\;\\Rightarrow\\;x=${L(M.x.por(2))}-${par(A.x)}=${L(B.x)}`, `${L(A.y)}+y=${L(M.y.por(2))}\\;\\Rightarrow\\;y=${L(M.y.por(2))}-${par(A.y)}=${L(B.y)}`]);
       P("Verificamos", `Calculamos el punto medio entre ${A.nombre} y ${nB}: tiene que dar ${M.nombre}.`, [`\\left(\\frac{${L(A.x)}+${par(B.x)}}{2}\\,;\\,\\frac{${L(A.y)}+${par(B.y)}}{2}\\right)=(${L(M.x)},\\,${L(M.y)})${ok}`]);
       P("Respondemos", `El otro extremo del segmento es ${m$(Lp(B))}.`);
       return geo("Punto medio: otro extremo", RP(B));
@@ -836,8 +836,276 @@
     return null;
   }
 
+  /* =====================================================================
+     12) Circunferencia y transformación de coordenadas
+     ===================================================================== */
+  const FR0 = () => F(0);
+  const raw = (f) => (f.d === 1 ? String(f.n) : `${f.n}/${f.d}`);
+  // Ecuaciones escritas en el texto (3x + 2y − 12 = 0, x = 2y, x² + y² = 50, (x+4)^2+(y+1)^2=52…)
+  function ecuacionesEn(orig) {
+    const t = orig.replace(/[−–—]/g, "-").replace(/²/g, "^2").split(/\s+/);
+    const limpio = (w) => w.replace(/[.;:]+$/, "").replace(/,$/, "");
+    const mat = (w) => /^[0-9xy+\-*/^().,=]+$/.test(w) && /[0-9xy=+\-]/.test(w) && w !== ",";
+    const out = [];
+    for (let i = 0; i < t.length; i++) {
+      if (!limpio(t[i]).includes("=") || !mat(limpio(t[i]))) continue;
+      let a = i, b = i;
+      const op = (w) => /^[+\-=*/^]|[+\-=*/^(]$/.test(w);
+      while (a - 1 >= 0 && mat(limpio(t[a - 1])) && (limpio(t[a - 1]) !== "y" || op(limpio(t[a])))) a--;
+      while (b + 1 < t.length && mat(limpio(t[b + 1])) && (limpio(t[b + 1]) !== "y" || op(limpio(t[b])))) { b++; if (/[.;]$/.test(t[b]) && !/^\d+\.$/.test(t[b])) break; }
+      const e = t.slice(a, b + 1).map(limpio).join("");
+      if (/[xy]/.test(e) && /=./.test(e) && /.=/.test(e) && !out.includes(e)) out.push(e);
+      i = b;
+    }
+    return out.map(leerEcuacion).filter(Boolean);
+  }
+  function leerEcuacion(str) {
+    let s = str.replace(/\*\*/g, "^").replace(/[·*]/g, "").replace(/\s+/g, "");
+    s = s.replace(/\(([xy])([+-])(\d+(?:[.,]\d+)?(?:\/\d+)?)\)\^2/g, (m, v, sg, a) => { const A = leerCoord(a); return `+${v}^2${sg}${raw(A.por(2))}${v}+${raw(A.por(A))}`; });
+    s = s.replace(/\+\+/g, "+").replace(/-\+/g, "-").replace(/\+-/g, "-").replace(/--/g, "+").replace(/=\+/g, "=");
+    if (/[()]/.test(s)) return null;
+    const lados = s.split("=");
+    if (lados.length !== 2 || !lados[0] || !lados[1]) return null;
+    const c = { x2: FR0(), xy: FR0(), y2: FR0(), x: FR0(), y: FR0(), c: FR0() };
+    for (const [k, lado] of [[1, lados[0]], [-1, lados[1]]]) {
+      const tt = (/^[+-]/.test(lado) ? lado : "+" + lado).match(/[+-][^+-]+/g);
+      if (!tt || tt.join("") !== (/^[+-]/.test(lado) ? lado : "+" + lado)) return null;
+      for (const term of tt) {
+        const m = term.slice(1).match(/^(\d+(?:[.,]\d+)?(?:\/\d+)?)?((?:[xy](?:\^\d)?)*)$/);
+        if (!m || (!m[1] && !m[2])) return null;
+        let coef = m[1] ? leerCoord(m[1]) : F(1); if (term[0] === "-") coef = coef.por(-1);
+        let gx = 0, gy = 0; for (const v of m[2].matchAll(/([xy])(?:\^(\d))?/g)) { const g = v[2] ? +v[2] : 1; if (v[1] === "x") gx += g; else gy += g; }
+        const key = { "2,0": "x2", "1,1": "xy", "0,2": "y2", "1,0": "x", "0,1": "y", "0,0": "c" }[`${gx},${gy}`];
+        if (!key) return null;
+        c[key] = c[key].mas(coef.por(k));
+      }
+    }
+    c.texto = str;
+    c.grado = !c.x2.cero() || !c.xy.cero() || !c.y2.cero() ? 2 : 1;
+    return c;
+  }
+  // a·x + b·y … en LaTeX
+  function polyTex(pares) {
+    let s = "";
+    for (const [c, v] of pares) {
+      if (c.cero()) continue;
+      const neg = c.n < 0, a = F(Math.abs(c.n), c.d), num = v && a.n === a.d ? "" : L(a);
+      s += (neg ? "-" : s ? "+" : "") + num + (v || "");
+    }
+    return s || "0";
+  }
+  const mcm = (a, b) => (a / mcd(a, b)) * b;
+  function sinFracciones(lista) { const m = lista.reduce((a, f) => mcm(a, f.d), 1); return lista.map((f) => f.por(m)); }
+  const binom = (v, h) => (h.cero() ? `${v}^2` : `(${v}${h.n < 0 ? "+" : "-"}${L(F(Math.abs(h.n), h.d))})^2`);
+  function ecuacionesCirc(h, k, r2) {
+    const D = h.por(-2), E = k.por(-2), Fc = h.por(h).mas(k.por(k)).menos(r2);
+    const [a, d, e, f] = sinFracciones([F(1), D, E, Fc]);
+    return { ord: `${binom("x", h)}+${binom("y", k)}=${L(r2)}`, gen: `${polyTex([[a, "x^2"], [a, "y^2"], [d, "x"], [e, "y"], [f, ""]])}=0`, D, E, F: Fc };
+  }
+  const circTxt = (h, k, r2) => { const e = ecuacionesCirc(h, k, r2); return { ...e, res: `${e.ord}` }; };
+  function centroRadio(c) {
+    if (c.grado !== 2 || !c.xy.cero() || c.x2.cero() || c.x2.v !== c.y2.v) return null;
+    const a = c.x2, D = c.x.entre(a), E = c.y.entre(a), Fc = c.c.entre(a);
+    const h = D.entre(-2), k = E.entre(-2), r2 = h.por(h).mas(k.por(k)).menos(Fc);
+    return { h, k, r2, D, E, F: Fc };
+  }
+  const rTex = (r2) => { const r = raizFr(r2); return r.tex; };
+
+  function circunferencia(orig, p) {
+    if (!/circunferencia|circulo/.test(p)) return null;
+    const o = orig.replace(/[−–—]/g, "-");
+    const pts = puntos(o), ecs = ecuacionesEn(o);
+    const circ = ecs.map(centroRadio).find(Boolean), rectas = ecs.filter((e) => e.grado === 1);
+    const { p: ps, P } = pasos();
+    const geo = (metodo, resultado) => ({ tema: "circunferencia", metodo, pasos: ps, resultado, area: "geo" });
+    const esCentro = (q) => q.nombre === "C" && /centro/.test(p) || /centro[^()]{0,25}$/.test(plano(o.slice(Math.max(0, q.i - 30), q.i)));
+    const mr = p.match(/radio\s*(?:es\s*|de\s*|igual a\s*|=\s*|r\s*=\s*)?(\d+(?:[.,]\d+)?)/);
+    const final = (h, k, r2, txt) => {
+      const e = ecuacionesCirc(h, k, r2);
+      P("Escribimos la ecuación", "Forma ordinaria (centro y radio) y forma general (desarrollando los cuadrados).", [`(x-h)^2+(y-k)^2=r^2`, e.ord, e.gen]);
+      P("Respondemos", `${txt} ${m$(e.ord)}, o en forma general ${m$(e.gen)}.`);
+      return e;
+    };
+    // 1) cuerda con punto medio dado
+    if (/cuerda/.test(p) && /medio/.test(p) && circ && pts.length === 1) {
+      const Pm = pts[0], C = { nombre: "C", x: circ.h, y: circ.k };
+      P("Leemos el problema y anotamos los datos", `De la ecuación sacamos el centro ${m$(Lp(C))}. El punto medio de la cuerda es ${m$(Lp(Pm))}.`, [`${tx("centro")}=\\left(-\\frac{D}{2},-\\frac{E}{2}\\right)=(${L(circ.h)},\\,${L(circ.k)})`]);
+      P("Idea clave", "La recta que une el centro con el punto medio de una cuerda es perpendicular a la cuerda.");
+      const dx = Pm.x.menos(C.x), dy = Pm.y.menos(C.y);
+      let recta;
+      if (dx.cero()) { recta = `y=${L(Pm.y)}`; P("Pendiente del radio", "El segmento centro–punto medio es vertical, así que la cuerda es horizontal."); }
+      else if (dy.cero()) { recta = `x=${L(Pm.x)}`; P("Pendiente del radio", "El segmento centro–punto medio es horizontal, así que la cuerda es vertical."); }
+      else {
+        const m1 = dy.entre(dx), m2 = F(-1).entre(m1);
+        P("Calculamos las pendientes", "Pendiente del segmento centro–punto medio y, por ser perpendiculares, la de la cuerda (inversa y opuesta).", [`m_1=\\frac{${L(Pm.y)}-${par(C.y)}}{${L(Pm.x)}-${par(C.x)}}=${L(m1)}`, `m_1\\cdot m_2=-1\\Rightarrow m_2=${L(m2)}`]);
+        // y - y0 = m2 (x - x0)  →  m2 x - y + (y0 - m2 x0) = 0
+        const [a, b, c] = sinFracciones([m2, F(-1), Pm.y.menos(m2.por(Pm.x))]);
+        const sg = a.n < 0 ? -1 : 1;
+        recta = `${polyTex([[a.por(sg), "x"], [b.por(sg), "y"], [c.por(sg), ""]])}=0`;
+        P("Ecuación de la cuerda (punto–pendiente)", "", [`y-${par(Pm.y)}=${L(m2)}\\,(x-${par(Pm.x)})`, recta]);
+      }
+      P("Respondemos", `La cuerda está sobre la recta ${m$(recta)}.`);
+      return geo("Cuerda con punto medio dado", recta);
+    }
+    // 2) tangente en un punto de la circunferencia
+    if (/tangente/.test(p) && circ && pts.length === 1 && !/centro/.test(p)) {
+      const T = pts[0], dx = T.x.menos(circ.h), dy = T.y.menos(circ.k);
+      const val = dx.por(dx).mas(dy.por(dy));
+      if (val.v !== circ.r2.v) return null;
+      // (x0-h)(x-x0)+(y0-k)(y-y0)=0
+      const [a, b, c] = sinFracciones([dx, dy, dx.por(T.x).mas(dy.por(T.y)).por(-1)]);
+      const recta = `${polyTex([[a, "x"], [b, "y"], [c, ""]])}=0`;
+      P("Leemos el problema y anotamos los datos", `Centro ${m$(`(${L(circ.h)},\\,${L(circ.k)})`)}, punto de tangencia ${m$(Lp(T))} (está sobre la circunferencia).`);
+      P("Idea clave", "La recta tangente es perpendicular al radio en el punto de tangencia.", [`(x_0-h)(x-x_0)+(y_0-k)(y-y_0)=0`]);
+      P("Reemplazamos", "", [`${par(dx)}(x-${par(T.x)})+${par(dy)}(y-${par(T.y)})=0`, recta]);
+      P("Respondemos", `La recta tangente es ${m$(recta)}.`);
+      return geo("Recta tangente en un punto", recta);
+    }
+    // 3) centro y tangente a una recta
+    const C0 = pts.find(esCentro) || (pts.length === 1 ? pts[0] : null);
+    if (/tangente/.test(p) && C0 && rectas.length === 1 && !/eje/.test(p)) {
+      const R = rectas[0], A = R.x, B = R.y, Cc = R.c, num = A.por(C0.x).mas(B.por(C0.y)).mas(Cc), den = A.por(A).mas(B.por(B)), r2 = num.por(num).entre(den);
+      const C = { ...C0, nombre: "C" };
+      P("Leemos el problema y anotamos los datos", `Centro ${m$(Lp(C))}, recta tangente ${m$(`${polyTex([[A, "x"], [B, "y"], [Cc, ""]])}=0`)}.`);
+      P("Idea clave", "Si la recta es tangente, el radio es la distancia del centro a la recta.", [`r=\\frac{|A\\,h+B\\,k+C|}{\\sqrt{A^2+B^2}}`]);
+      P("Calculamos el radio", "", [`r=\\frac{|${L(A)}\\cdot ${par(C.x)}+${par(B)}\\cdot ${par(C.y)}+${par(Cc)}|}{\\sqrt{${par(A)}^2+${par(B)}^2}}=\\frac{${L(F(Math.abs(num.n), num.d))}}{\\sqrt{${L(den)}}}`, `r^2=${L(r2)}\\qquad r=${rTex(r2)}`]);
+      final(C.x, C.y, r2, "La circunferencia es");
+      return geo("Centro y recta tangente", ecuacionesCirc(C.x, C.y, r2).ord);
+    }
+    // 4) radio dado, tangente a un eje, centro sobre una recta
+    const eje = /tangente (?:en|al|a)l? eje (?:de las )?([xy])\b|tangente al eje ([xy])|tangente en el eje ([xy])/.exec(p);
+    if (eje && mr && rectas.length === 1) {
+      const ej = eje[1] || eje[2] || eje[3], r = leerNum(mr[1]), R = rectas[0], sol = [];
+      P("Leemos el problema y anotamos los datos", `Radio ${m$(L(r))}, tangente al eje ${ej.toUpperCase()}, centro sobre ${m$(`${polyTex([[R.x, "x"], [R.y, "y"], [R.c, ""]])}=0`)}.`);
+      P("Idea clave", ej === "x" ? "Si es tangente al eje X, la distancia del centro al eje X (su |k|) es el radio: k = r o k = −r." : "Si es tangente al eje Y, la distancia del centro al eje Y (su |h|) es el radio: h = r o h = −r.");
+      for (const sg of [1, -1]) {
+        const fijo = r.por(sg);
+        let h, k;
+        if (ej === "x") { if (R.x.cero()) continue; k = fijo; h = R.y.por(k).mas(R.c).por(-1).entre(R.x); }
+        else { if (R.y.cero()) continue; h = fijo; k = R.x.por(h).mas(R.c).por(-1).entre(R.y); }
+        const e = ecuacionesCirc(h, k, r.por(r));
+        P(`${sol.length ? "Segundo" : "Primer"} caso: ${ej === "x" ? "k" : "h"} = ${L(fijo)}`, "Reemplazamos en la ecuación de la recta para hallar la otra coordenada del centro.", [`C=(${L(h)},\\,${L(k)})`, e.ord, e.gen]);
+        sol.push(e);
+      }
+      if (!sol.length) return null;
+      P("Respondemos", `Hay ${sol.length === 2 ? "dos circunferencias" : "una circunferencia"}: ${sol.map((e) => m$(e.gen)).join(" y ")}.`);
+      return geo("Radio, tangente a un eje y centro sobre una recta", sol.map((e) => e.ord).join(",\\;"));
+    }
+    // 5) pasa por tres puntos
+    if (pts.length === 3 && /pasa/.test(p)) {
+      const [A, B, C] = pts;
+      P("Leemos el problema y anotamos los datos", `Pasa por ${m$(Lp(A))}, ${m$(Lp(B))} y ${m$(Lp(C))}. Usamos la forma general.`, [`x^2+y^2+Dx+Ey+F=0`]);
+      const filas = pts.map((q) => [q.x, q.y, F(1), q.x.por(q.x).mas(q.y.por(q.y)).por(-1)]);
+      P("Reemplazamos cada punto", "Cada punto que está en la circunferencia cumple la ecuación: queda un sistema de tres ecuaciones.", filas.map((f, i) => `${tx(pts[i].nombre + ": ")}${polyTex([[f[0], "D"], [f[1], "E"], [f[2], "F"]])}=${L(f[3])}`));
+      // Gauss con fracciones
+      const M = filas.map((f) => f.slice());
+      for (let col = 0; col < 3; col++) {
+        let piv = M.findIndex((f, i) => i >= col && !f[col].cero());
+        if (piv < 0) throw problema("Los tres puntos están alineados: no hay ninguna circunferencia que pase por ellos.");
+        [M[col], M[piv]] = [M[piv], M[col]];
+        for (let i = 0; i < 3; i++) if (i !== col && !M[i][col].cero()) { const fac = M[i][col].entre(M[col][col]); M[i] = M[i].map((v, j) => v.menos(M[col][j].por(fac))); }
+      }
+      const D = M[0][3].entre(M[0][0]), E = M[1][3].entre(M[1][1]), Fc = M[2][3].entre(M[2][2]);
+      P("Resolvemos el sistema", "Por reducción (restando ecuaciones para eliminar F, después E…).", [`D=${L(D)},\\quad E=${L(E)},\\quad F=${L(Fc)}`]);
+      const h = D.entre(-2), k = E.entre(-2), r2 = h.por(h).mas(k.por(k)).menos(Fc);
+      const [a, d, e, f] = sinFracciones([F(1), D, E, Fc]);
+      const gen = `${polyTex([[a, "x^2"], [a, "y^2"], [d, "x"], [e, "y"], [f, ""]])}=0`;
+      P("Escribimos la ecuación", "Reemplazamos D, E y F (y multiplicamos para sacar denominadores).", [gen, `${tx("centro")}=(${L(h)},\\,${L(k)}),\\quad r=${rTex(r2)}`]);
+      P("Verificamos", "Cada punto tiene que cumplir la ecuación.", pts.map((q) => `${tx(q.nombre + ": ")}${L(q.x.por(q.x).mas(q.y.por(q.y)).mas(D.por(q.x)).mas(E.por(q.y)).mas(Fc))}=0${ok}`));
+      P("Respondemos", `La circunferencia es ${m$(gen)}.`);
+      return geo("Circunferencia por tres puntos", gen);
+    }
+    // 6) extremos de un diámetro
+    if (/diametro/.test(p) && pts.length === 2) {
+      const [A, B] = pts, M = medio(A, B, "C"), dx = B.x.menos(A.x), dy = B.y.menos(A.y), r2 = dx.por(dx).mas(dy.por(dy)).entre(4);
+      P("Leemos el problema y anotamos los datos", `Extremos del diámetro: ${m$(Lp(A))} y ${m$(Lp(B))}.`);
+      P("El centro es el punto medio del diámetro", "", [FORM_MEDIO, `C=(${L(M.x)},\\,${L(M.y)})`]);
+      P("El radio es la mitad del diámetro", "", [`r^2=\\left(\\frac{${tx("diámetro")}}{2}\\right)^2=\\frac{${L(dx)}^2+${L(dy)}^2}{4}=${L(r2)}`]);
+      final(M.x, M.y, r2, "La circunferencia es");
+      return geo("Circunferencia dados los extremos de un diámetro", ecuacionesCirc(M.x, M.y, r2).ord);
+    }
+    // 7) centro y un punto por donde pasa
+    if (pts.length === 2 && /pasa/.test(p) && /centro/.test(p)) {
+      const C = pts.find(esCentro) || pts[0], Q = pts.find((q) => q !== C), dx = Q.x.menos(C.x), dy = Q.y.menos(C.y), r2 = dx.por(dx).mas(dy.por(dy));
+      P("Leemos el problema y anotamos los datos", `Centro ${m$(Lp(C))} y un punto de la circunferencia ${m$(Lp(Q))}.`);
+      P("El radio es la distancia del centro al punto", "", [`r^2=(${L(Q.x)}-${par(C.x)})^2+(${L(Q.y)}-${par(C.y)})^2=${L(dx.por(dx))}+${L(dy.por(dy))}=${L(r2)}`, `r=${rTex(r2)}`]);
+      final(C.x, C.y, r2, "La circunferencia es");
+      return geo("Centro y un punto", ecuacionesCirc(C.x, C.y, r2).ord);
+    }
+    // 8) centro y radio
+    if (C0 && mr && pts.length === 1) {
+      const r = leerNum(mr[1]);
+      P("Leemos el problema y anotamos los datos", `Centro ${m$(Lp(C0))} y radio ${m$(L(r))}.`);
+      final(C0.x, C0.y, r.por(r), "La circunferencia es");
+      return geo("Centro y radio", ecuacionesCirc(C0.x, C0.y, r.por(r)).ord);
+    }
+    // 9) centro y radio a partir de la ecuación
+    if (circ && /(centro|radio|elementos)/.test(p)) {
+      const c = ecs.find(centroRadio);
+      P("Leemos la ecuación", "Si hace falta, dividimos para que x² e y² tengan coeficiente 1 y la comparamos con la forma general.", [`x^2+y^2+${par(circ.D)}x+${par(circ.E)}y+${par(circ.F)}=0`]);
+      P("Calculamos el centro", "", [`h=-\\frac{D}{2}=${L(circ.h)},\\quad k=-\\frac{E}{2}=${L(circ.k)}`]);
+      if (circ.r2.n <= 0) { P("Calculamos el radio", "", [`r^2=h^2+k^2-F=${L(circ.r2)}`]); P("Respondemos", circ.r2.cero() ? "El radio da 0: la ecuación representa un solo punto." : "r² da negativo: la ecuación no representa ninguna circunferencia real."); return geo("Centro y radio desde la ecuación", tx("No es una circunferencia real")); }
+      P("Calculamos el radio", "", [`r^2=h^2+k^2-F=${L(circ.r2)}\\Rightarrow r=${rTex(circ.r2)}`]);
+      P("Respondemos", `Centro ${m$(`(${L(circ.h)},\\,${L(circ.k)})`)} y radio ${m$(rTex(circ.r2))}.`);
+      return geo("Centro y radio desde la ecuación", `C=(${R(circ.h)};\\,${R(circ.k)}),\\;r=${raizFr(circ.r2).sola}`);
+    }
+    return null;
+  }
+
+  function transformacion(orig, p) {
+    if (!/(transformaci|traslac|rotac|simplific|eliminar|girar|gira los ejes|nuevo sistema)/.test(p)) return null;
+    const ec = ecuacionesEn(orig).find((e) => e.grado === 2);
+    if (!ec) return null;
+    const { p: ps, P } = pasos();
+    let A = ec.x2, B = ec.xy, C = ec.y2, D = ec.x, E = ec.y, Fc = ec.c;
+    const ecTex = (a, b, c, d, e, f, X, Y) => `${polyTex([[a, `${X}^2`], [b, `${X}${Y}`], [c, `${Y}^2`], [d, X], [e, Y], [f, ""]])}=0`;
+    P("Leemos la ecuación", "La comparamos con la forma general.", [`Ax^2+Bxy+Cy^2+Dx+Ey+F=0`, ecTex(A, B, C, D, E, Fc, "x", "y")]);
+    let X = "x", Y = "y", h = null, k = null;
+    if (!D.cero() || !E.cero()) {
+      const det = A.por(4).por(C).menos(B.por(B));
+      if (det.cero()) return null;
+      // 2Ah + Bk + D = 0 ; Bh + 2Ck + E = 0
+      k = B.por(D).menos(A.por(2).por(E)).entre(det);
+      h = D.por(-1).menos(B.por(k)).entre(A.por(2));
+      const F2 = A.por(h).por(h).mas(B.por(h).por(k)).mas(C.por(k).por(k)).mas(D.por(h)).mas(E.por(k)).mas(Fc);
+      P("Trasladamos los ejes", "Reemplazamos x = x' + h, y = y' + k. Para que desaparezcan los términos en x' e y' tiene que cumplirse:", [`\\begin{cases}2Ah+Bk+D=0\\\\ Bh+2Ck+E=0\\end{cases}\\Rightarrow\\begin{cases}${polyTex([[A.por(2), "h"], [B, "k"], [D, ""]])}=0\\\\ ${polyTex([[B, "h"], [C.por(2), "k"], [E, ""]])}=0\\end{cases}`, `h=${L(h)},\\quad k=${L(k)}`]);
+      P("Calculamos el nuevo término independiente", "Es el valor del primer miembro en el punto (h, k).", [`F'=${L(F2)}`, ecTex(A, B, C, F(0), F(0), F2, "x'", "y'")]);
+      D = F(0); E = F(0); Fc = F2; X = "x'"; Y = "y'";
+    }
+    let res = ecTex(A, B, C, D, E, Fc, X, Y), nombres = [X, Y];
+    if (!B.cero()) {
+      const AC = A.menos(C), S2 = AC.por(AC).mas(B.por(B)), S = raizFr(S2);
+      let th = Math.atan2(B.v, AC.v) / 2 / RAD;
+      const exacto = S.exacto !== null;
+      const Sf = exacto ? F(S.exacto) : null;
+      let A2 = exacto ? A.mas(C).mas(Sf).entre(2) : null, C2 = exacto ? A.mas(C).menos(Sf).entre(2) : null;
+      if (th < 0) { th += 90; [A2, C2] = [C2, A2]; }
+      const X2 = X + "'", Y2 = Y + "'";
+      P("Rotamos los ejes para eliminar el término en xy", "El ángulo de giro cumple esta condición:", [AC.cero() ? `A=C\\Rightarrow\\theta=45^\\circ` : `${TG}\\,2\\theta=\\frac{B}{A-C}=\\frac{${L(B)}}{${L(AC)}}\\Rightarrow\\theta=${g2(th)}`, `${X}=${X2}\\cos\\theta-${Y2}\\,${SEN}\\,\\theta,\\quad ${Y}=${X2}\\,${SEN}\\,\\theta+${Y2}\\cos\\theta`]);
+      if (exacto) {
+        P("Calculamos los nuevos coeficientes", "Los coeficientes de los cuadrados quedan (A + C ± √((A − C)² + B²))/2 y el término independiente no cambia.", [`A'=${L(A2)},\\quad C'=${L(C2)}`, ecTex(A2, F(0), C2, F(0), F(0), Fc, X2, Y2)]);
+        let [a, c, f] = [A2, C2, Fc]; const g = mcd(mcd(Math.abs(a.n), Math.abs(c.n)), Math.abs(f.n)) || 1;
+        if (a.entero && c.entero && f.entero && g > 1) { a = a.entre(g); c = c.entre(g); f = f.entre(g); }
+        if (a.n < 0 && c.n <= 0 || (a.n < 0 && f.n > 0)) { a = a.por(-1); c = c.por(-1); f = f.por(-1); }
+        res = `${polyTex([[a, `${X2}^2`], [c, `${Y2}^2`]])}=${L(f.por(-1))}`;
+        P("Simplificamos", "", [res]);
+      } else {
+        const c2 = cos(th), s2 = sen(th);
+        const A2n = A.v * c2 * c2 + B.v * s2 * c2 + C.v * s2 * s2, C2n = A.v * s2 * s2 - B.v * s2 * c2 + C.v * c2 * c2;
+        res = `${d2(A2n)}${X2}^2${C2n < 0 ? "" : "+"}${d2(C2n)}${Y2}^2${Fc.n < 0 ? "" : "+"}${L(Fc)}=0`;
+        P("Calculamos los nuevos coeficientes", "", [`A'=A\\cos^2\\theta+B\\,${SEN}\\,\\theta\\cos\\theta+C\\,${SEN}^2\\theta\\approx ${d2(A2n)}`, `C'=A\\,${SEN}^2\\theta-B\\,${SEN}\\,\\theta\\cos\\theta+C\\cos^2\\theta\\approx ${d2(C2n)}`, res]);
+      }
+      nombres = [X2, Y2];
+    }
+    const disc = ec.xy.por(ec.xy).menos(ec.x2.por(ec.y2).por(4));
+    const tipo = disc.n < 0 ? (ec.xy.cero() && ec.x2.v === ec.y2.v ? "una circunferencia" : "una elipse") : disc.n === 0 ? "una parábola" : "una hipérbola";
+    P("Identificamos la cónica", "Con el discriminante B² − 4AC: negativo → elipse, cero → parábola, positivo → hipérbola.", [`B^2-4AC=${L(disc)}`]);
+    P("Respondemos", `La ecuación simplificada es ${m$(res)}${h ? ` (traslación al punto ${m$(`(${L(h)},\\,${L(k)})`)})` : ""}. Representa ${tipo}.`);
+    return { tema: "transformacion", metodo: "Transformación de coordenadas", pasos: ps, resultado: res, area: "geo" };
+  }
+
   /* ---------- detección ---------- */
-  const TIPOS = [geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
+  const TIPOS = [transformacion, circunferencia, geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
     (o, p) => fraccionesDelTotal(p), dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
   function resolver(texto) {
     const orig = String(texto || "").replace(/\s+/g, " ").trim();
@@ -879,7 +1147,7 @@
       if (er) er.textContent = "";
       mostrarExito(texto, r, metodo);
       // si los temas del área todavía no cargaron, mostramos el nombre lindo del tema
-      const NOMBRES = { rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
+      const NOMBRES = { circunferencia: "Circunferencia", transformacion: "Transformación de coordenadas", rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
       const cab = document.querySelector("#cabecera b");
       if (cab && cab.textContent === r.tema && NOMBRES[r.tema]) cab.textContent = NOMBRES[r.tema];
     })();
