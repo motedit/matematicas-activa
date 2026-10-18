@@ -704,7 +704,7 @@
     const POL = { "triangulo equilatero": 3, cuadrado: 4, pentagono: 5, hexagono: 6, heptagono: 7, octagono: 8, octogono: 8, eneagono: 9, nonagono: 9, decagono: 10, dodecagono: 12 };
     const mp = p.match(/\b(triangulo equilatero|cuadrado|pentagono|hexagono|heptagono|octagono|octogono|eneagono|nonagono|decagono|dodecagono)\b/) || p.match(/poligono regular de (\d+) lados/);
     if (mp && /(inscrit|circunscrit|apotema|radio)/.test(p)) {
-      const n = POL[mp[1]] || +mp[1], ml = p.match(/lados?\s+(?:que\s+)?(?:miden|mide|de)\s+(\d+(?:[.,]\d+)?)/) || p.match(/(\d+(?:[.,]\d+)?)\s*(?:m|cm|metros|centimetros)?\s*de lado/);
+      const n = POL[mp[1]] || +mp[1], ml = p.match(/lados?\s+(?:que\s+)?(?:miden|mide|de|=)?\s*(\d+(?:[.,]\d+)?)/) || p.match(/(\d+(?:[.,]\d+)?)\s*(?:m|cm|metros|centimetros)?\s*de lado/);
       if (!ml) return null;
       const l = numT(ml[1]), th = 180 / n, ap = l / (2 * tg(th)), R = l / (2 * sen(th));
       const uu = (p.slice(p.indexOf(ml[0])).match(/\b(m|metros|cm|centimetros|km)\b/) || [, ""])[1].replace("metros", "m").replace("centimetros", "cm"), UU = uu ? `\\,${tx(uu)}` : "";
@@ -746,8 +746,13 @@
       else if (mc) datos = { A: 90, b: numT(mc[1]), c: numT(mc[2]) };
       if (datos.A === 90 && !datos.B && angs.length === 1 && Object.keys(datos).length === 2) { const ml = longs[0]; if (ml) datos.b = ml.v; }
     }
+    const HIPOT = /(cuerda|escalera|cable|hilo|rampa|tobogan|tirante|soga|cometa|barrilete|piolin|alambre|viga|tabla|sombra)/;
+    if (Object.keys(datos).length < 3 && !HIPOT.test(p)) {
+      if (/triangulo/.test(p) && longs.length === 3 && angs.length === 0) datos = { a: longs[0].v, b: longs[1].v, c: longs[2].v };
+      else if (longs.length === 2 && angs.length === 1 && /(forman|entre ellos|entre si|rumbos|abertura|comprendido|separa)/.test(p)) datos = { b: longs[0].v, c: longs[1].v, A: angs[0].v };
+    }
     const nd = Object.keys(datos).length, hayLado = ["a", "b", "c"].some((x) => datos[x] !== undefined);
-    if (nd >= 3 && hayLado && /triangulo|ciudad|vertice|lado|cateto/.test(p)) {
+    if (nd >= 3 && hayLado && (/triangulo|ciudad|vertice|lado|cateto/.test(p) || Object.keys(datos).join("") === "bcA")) {
       const u = u0 ? tx(u0) : "";
       const lista = Object.entries(datos).map(([k, v]) => (/[ABC]/.test(k) ? `${k}=${g2(v)}` : `${k}=${d2(v)}\\,${u}`)).join(",\\quad ");
       P("Leemos el problema y anotamos los datos", "Los lados se nombran con minúscula y cada uno es opuesto al ángulo de la misma letra en mayúscula.", [lista]);
@@ -757,11 +762,22 @@
       P("Respondemos", `Lados: ${m$(`a=${d2(s.a)},\\;b=${d2(s.b)},\\;c=${d2(s.c)}`)}${u0 ? " " + u0 : ""}. Ángulos: ${m$(`A=${g2(s.A)},\\;B=${g2(s.B)},\\;C=${g2(s.C)}`)}.` + aviso);
       return tri(recto ? "Resolución de triángulo rectángulo" : "Resolución de triángulo (teoremas del seno y del coseno)", `a=${d2(s.a)},\\;b=${d2(s.b)},\\;c=${d2(s.c)},\\;A=${d2(s.A)}^\\circ,\\;B=${d2(s.B)}^\\circ,\\;C=${d2(s.C)}^\\circ`, ps, recto ? "rectangulos" : "oblicuangulos");
     }
+    if (angs.length === 0 && longs.length === 2 && /(cuerda|escalera|cable|hilo|rampa|tobogan|tirante|soga|barrilete|alambre|viga|tabla)/.test(p) && /(angulo|inclinacion)/.test(p)) {
+      const Lh = Math.max(longs[0].v, longs[1].v), h = Math.min(longs[0].v, longs[1].v), conPared = /(con la pared|con el muro|con la vertical)/.test(p);
+      const horizontal = /(horizontal|del pie|de la pared|de la base|separ)/.test(p) && !/(sube|altura|alto|eleva)/.test(p);
+      const a0 = horizontal ? acos(h / Lh) : asen(h / Lh), a = conPared ? 90 - a0 : a0;
+      P("Leemos el problema y anotamos los datos", `El objeto es la hipotenusa y ${horizontal ? "la distancia horizontal es el cateto adyacente" : "lo que sube es el cateto opuesto"} al ángulo con el piso.`, [`${tx("hipotenusa")}=${d2(Lh)}${U},\\quad ${horizontal ? "d" : "h"}=${d2(h)}${U}`]);
+      P("Elegimos la razón trigonométrica", horizontal ? "Cateto adyacente sobre hipotenusa: coseno." : "Cateto opuesto sobre hipotenusa: seno.", [`${horizontal ? "\\cos" : SEN}\\,\\alpha=\\frac{${d2(h)}}{${d2(Lh)}}=${d2(h / Lh, 4)}`]);
+      P("Resolvemos", "Usamos la función inversa de la calculadora.", [`\\alpha=${horizontal ? "\\arccos" : "\\arcsen"}(${d2(h / Lh, 4)})=${g2(a0)}`]);
+      P("Respondemos", `El ángulo con ${conPared ? "la pared" : "el piso"} es ${m$(g2(a))}.`);
+      return tri("Triángulo rectángulo (funciones inversas)", `\\alpha=${d2(a)}^\\circ`, ps);
+    }
     if (angs.length !== 1 && !(/sombra/.test(p) && longs.length === 2)) return null;
     const t = angs[0] && angs[0].v;
     // f) sombra
     if (/sombra/.test(p) && longs.length >= 1) {
-      const lS = longs.find((l) => /sombra[^.]{0,25}$/.test(p.slice(Math.max(0, l.i - 30), l.i))) || (longs.length === 1 && !/(alto|altura|mide)\D{0,15}$/.test(p.slice(Math.max(0, longs[0].i - 20), longs[0].i)) ? longs[0] : null);
+      const esAlt = (l) => /^\s*\d+(?:[.,]\d+)?\s*[a-z]+\s*de (altura|alto)/.test(p.slice(l.i)) || /(alto|altura|mide|poste de|arbol de|edificio de|torre de)\D{0,15}$/.test(p.slice(Math.max(0, l.i - 20), l.i));
+      const lS = longs.find((l) => /sombra[^.]{0,25}$/.test(p.slice(Math.max(0, l.i - 30), l.i)) && !esAlt(l)) || (longs.length === 1 && !esAlt(longs[0]) ? longs[0] : null);
       const lH = longs.find((l) => l !== lS);
       if (lS && t !== undefined && !lH) {
         const h = lS.v * tg(t);
@@ -803,7 +819,7 @@
     // h) ángulo de elevación o depresión con una distancia
     if (/(elevacion|depresion|se ve|se observa|observa)/.test(p)) {
       const antes = p.slice(Math.max(0, longs[0].i - 30), longs[0].i + 30);
-      const esAltura = /(altura|alto|de alto|mide|faro|torre de|edificio de|acantilado de)/.test(antes) && !/(de la base|del pie|distancia|se encuentra a|esta a|a\s*$)/.test(p.slice(Math.max(0, longs[0].i - 25), longs[0].i));
+      const esAltura = /^\s*\d+(?:[.,]\d+)?\s*[a-z]+\s*de (altura|alto)/.test(p.slice(longs[0].i)) || /(altura|alto|de alto|mide|faro|torre de|edificio de|acantilado de)/.test(antes) && !/(de la base|del pie|distancia|se encuentra a|esta a|a\s*$)/.test(p.slice(Math.max(0, longs[0].i - 25), longs[0].i));
       if (esAltura) {
         const x = L0 / tg(t);
         P("Leemos el problema y anotamos los datos", "La altura es el cateto opuesto al ángulo y la distancia horizontal es el adyacente.", [`h=${d2(L0)}${U},\\quad \\alpha=${g2(t)}`]);
