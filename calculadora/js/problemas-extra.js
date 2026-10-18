@@ -561,7 +561,7 @@
         res.push(tx(`${porLados} y ${porAng}`));
       }
       P("Respondemos", `Resultado: ${res.map((r) => m$(r)).join(" ; ")}.`);
-      return geo("Triángulo dado por sus vértices", res.join(",\;"));
+      return geo("Triángulo dado por sus vértices", res.join(",\\;"));
     }
     // f) punto medio o distancia simple con puntos con nombre
     if (pts.length === 2 && /medio/.test(p) && !/distancia/.test(p)) {
@@ -581,8 +581,247 @@
     return null;
   }
 
+  /* =====================================================================
+     11) Trigonometría con enunciado: triángulos (rectángulos y oblicuángulos), alturas con
+         ángulo de elevación, sombras, dos observaciones, polígonos regulares, compás, dos edificios
+     ===================================================================== */
+  const RAD = Math.PI / 180;
+  const sen = (g) => Math.sin(g * RAD), cos = (g) => Math.cos(g * RAD), tg = (g) => Math.tan(g * RAD);
+  const asen = (x) => Math.asin(x) / RAD, acos = (x) => Math.acos(x) / RAD, atg = (x) => Math.atan(x) / RAD;
+  const d2 = (v, n = 2) => { const r = Math.round(v * 10 ** n) / 10 ** n; return String(r).replace(".", "{,}"); };
+  const g2 = (v) => `${d2(v)}^\\circ`;
+  const SEN = "\\operatorname{sen}", TG = "\\operatorname{tg}";
+  const numT = (s) => parseFloat(String(s).replace(",", "."));
+  const RE_ANG = /(\d+(?:[.,]\d+)?)\s*(?:°|º|grados)/g;
+  const RE_LONG = /(\d+(?:[.,]\d+)?)\s*(m|metros?|cm|centimetros?|km|kilometros?|mm|pies)\b/g;
+  const angulosEn = (p) => [...p.matchAll(RE_ANG)].map((m) => ({ v: numT(m[1]), i: m.index }));
+  const largosEn = (p) => [...p.matchAll(RE_LONG)].map((m) => ({ v: numT(m[1]), u: m[2].replace(/^metros?$/, "m").replace(/^centimetros?$/, "cm").replace(/^kilometros?$/, "km"), i: m.index }));
+  const tri = (metodo, resultado, ps, tema = "rectangulos") => ({ tema, metodo, pasos: ps, resultado, area: "trig" });
+
+  // --- resolución general de un triángulo con datos a, b, c, A, B, C ---
+  function resolverTriangulo(datos, u, P) {
+    const L3 = ["a", "b", "c"], A3 = ["A", "B", "C"], s = { ...datos };
+    const op = (x) => x.toUpperCase(), lado = (X) => X.toLowerCase();
+    let aviso = "";
+    const ang0 = A3.filter((X) => s[X] !== undefined), lad0 = L3.filter((x) => s[x] !== undefined);
+    const ssa = ang0.length === 1 && lad0.length === 2 && lad0.includes(lado(ang0[0]));
+    for (let vuelta = 0; vuelta < 12; vuelta++) {
+      const angC = A3.filter((X) => s[X] !== undefined), ladC = L3.filter((x) => s[x] !== undefined);
+      if (angC.length === 3 && ladC.length === 3) break;
+      if (angC.length === 2) {
+        const X = A3.find((Y) => s[Y] === undefined); s[X] = 180 - angC.reduce((t, Y) => t + s[Y], 0);
+        if (s[X] <= 0) throw problema("Los ángulos suman 180° o más: así no existe el triángulo.");
+        P(`Calculamos el ángulo ${X}`, "Los tres ángulos de un triángulo suman 180°.", [`${X}=180^\\circ-${angC.map((Y) => g2(s[Y])).join("-")}=${g2(s[X])}`]);
+        continue;
+      }
+      const recto = A3.find((X) => s[X] !== undefined && Math.abs(s[X] - 90) < 1e-9);
+      if (recto && ladC.length === 2) {
+        const h = lado(recto), falta = L3.find((x) => s[x] === undefined), otros = L3.filter((x) => x !== h);
+        if (falta === h) { s[h] = Math.hypot(s[otros[0]], s[otros[1]]); P(`Calculamos la hipotenusa ${h} (Pitágoras)`, "En un triángulo rectángulo, la hipotenusa al cuadrado es la suma de los cuadrados de los catetos.", [`${h}=\\sqrt{${otros[0]}^2+${otros[1]}^2}=\\sqrt{${d2(s[otros[0]])}^2+${d2(s[otros[1]])}^2}=${d2(s[h])}\\,${u}`]); }
+        else {
+          const o = otros.find((x) => x !== falta);
+          if (s[h] <= s[o]) throw problema("La hipotenusa tiene que ser el lado más largo: revisá los datos.");
+          s[falta] = Math.sqrt(s[h] ** 2 - s[o] ** 2);
+          P(`Calculamos el cateto ${falta} (Pitágoras)`, "Despejamos el cateto del teorema de Pitágoras.", [`${falta}=\\sqrt{${h}^2-${o}^2}=\\sqrt{${d2(s[h])}^2-${d2(s[o])}^2}=${d2(s[falta])}\\,${u}`]);
+        }
+        continue;
+      }
+      // dos lados y el ángulo comprendido → teorema del coseno
+      const xFal = L3.find((x) => s[x] === undefined && s[op(x)] !== undefined && L3.filter((y) => y !== x).every((y) => s[y] !== undefined));
+      if (xFal) {
+        const [y, z] = L3.filter((w) => w !== xFal), X = op(xFal);
+        s[xFal] = Math.sqrt(s[y] ** 2 + s[z] ** 2 - 2 * s[y] * s[z] * cos(s[X]));
+        P(`Calculamos el lado ${xFal} (teorema del coseno)`, `Conocemos dos lados y el ángulo que forman entre ellos.`, [`${xFal}^2=${y}^2+${z}^2-2\\,${y}\\,${z}\\cos ${X}`, `${xFal}^2=${d2(s[y])}^2+${d2(s[z])}^2-2\\cdot ${d2(s[y])}\\cdot ${d2(s[z])}\\cdot\\cos ${g2(s[X])}=${d2(s[xFal] ** 2)}`, `${xFal}=${d2(s[xFal])}\\,${u}`]);
+        continue;
+      }
+      const par = L3.find((x) => s[x] !== undefined && s[op(x)] !== undefined);
+      if (ladC.length === 3 && !par) {
+        const X = A3.find((Y) => s[Y] === undefined), x = lado(X), [y, z] = L3.filter((w) => w !== x);
+        const c0 = (s[y] ** 2 + s[z] ** 2 - s[x] ** 2) / (2 * s[y] * s[z]);
+        if (Math.abs(c0) > 1) throw problema("Con esos tres lados no se forma un triángulo (no cumple la desigualdad triangular).");
+        s[X] = acos(c0);
+        P(`Calculamos el ángulo ${X} (teorema del coseno)`, "Conocemos los tres lados: despejamos el coseno del ángulo.", [`\\cos ${X}=\\frac{${y}^2+${z}^2-${x}^2}{2\\,${y}\\,${z}}=\\frac{${d2(s[y])}^2+${d2(s[z])}^2-${d2(s[x])}^2}{2\\cdot ${d2(s[y])}\\cdot ${d2(s[z])}}=${d2(c0, 4)}`, `${X}=${g2(s[X])}`]);
+        continue;
+      }
+      if (par) {
+        const X = op(par), rec = Math.abs(s[X] - 90) < 1e-9;
+        // lado que falta con su ángulo conocido
+        const y = L3.find((w) => s[w] === undefined && s[op(w)] !== undefined);
+        if (y) {
+          const Y = op(y); s[y] = (s[par] * sen(s[Y])) / sen(s[X]);
+          P(`Calculamos el lado ${y} (${rec ? "seno en el triángulo rectángulo" : "teorema del seno"})`, rec ? `En un triángulo rectángulo, ${"$" + SEN + " " + Y + "=\\frac{" + y + "}{" + par + "}$"} (cateto opuesto sobre hipotenusa).` : "Cada lado es proporcional al seno del ángulo opuesto.",
+            rec ? [`${y}=${par}\\cdot ${SEN} ${Y}=${d2(s[par])}\\cdot ${SEN} ${g2(s[Y])}=${d2(s[y])}\\,${u}`] : [`\\frac{${y}}{${SEN} ${Y}}=\\frac{${par}}{${SEN} ${X}}`, `${y}=\\frac{${d2(s[par])}\\cdot ${SEN} ${g2(s[Y])}}{${SEN} ${g2(s[X])}}=${d2(s[y])}\\,${u}`]);
+          continue;
+        }
+        const Y = A3.filter((W) => s[W] === undefined && s[lado(W)] !== undefined).sort((P1, P2) => s[lado(P1)] - s[lado(P2)])[0];
+        if (Y) {
+          const y2 = lado(Y), sv = (s[y2] * sen(s[X])) / s[par];
+          if (sv > 1 + 1e-12) throw problema("Con esos datos no existe el triángulo (el seno daría mayor que 1).");
+          s[Y] = asen(Math.min(1, sv));
+          if (ssa && !rec && s[y2] > s[par] && s[Y] < 90) aviso = ` Atención: como ${y2} > ${par}, también podría existir otro triángulo con ${Y} = ${d2(180 - s[Y])}°.`;
+          P(`Calculamos el ángulo ${Y} (${rec ? "seno en el triángulo rectángulo" : "teorema del seno"})`, rec ? "Cateto opuesto sobre hipotenusa." : "Despejamos el seno del ángulo.",
+            [`${SEN} ${Y}=\\frac{${rec ? y2 : y2 + "\\cdot " + SEN + " " + X}}{${par}}=\\frac{${rec ? d2(s[y2]) : d2(s[y2]) + "\\cdot " + SEN + " " + g2(s[X])}}{${d2(s[par])}}=${d2(sv, 4)}`, `${Y}=${g2(s[Y])}`]);
+          continue;
+        }
+      }
+      throw problema("Faltan datos para resolver el triángulo: se necesitan tres datos y al menos uno tiene que ser un lado.");
+    }
+    return { s, aviso };
+  }
+  function datosTriangulo(orig, p) {
+    const d = {};
+    for (const m of orig.matchAll(/(?<![A-Za-zÁ-ú])([abc])\s*=\s*(\d+(?:[.,]\d+)?)/g)) d[m[1]] = numT(m[2]);
+    for (const m of orig.matchAll(/(?<![A-Za-zÁ-ú])([ABC])\s*=\s*(\d+(?:[.,]\d+)?)\s*(?:°|º)?/g)) d[m[1]] = numT(m[2]);
+    for (const m of orig.matchAll(/[áa]ngulo\s+([ABC])([ABC])([ABC])\s*(?:es|=|mide|de)?\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/gi)) d[m[2].toUpperCase()] = numT(m[4]);
+    for (const m of orig.matchAll(/(?:distancia|lado|camino)\s+(?:de|entre)\s+([ABC])\s+(?:a|y)\s+([ABC])\s*(?:es|=|mide)?\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/gi)) {
+      const fal = ["A", "B", "C"].find((X) => X !== m[1].toUpperCase() && X !== m[2].toUpperCase()); d[fal.toLowerCase()] = numT(m[3]);
+    }
+    const r = p.match(/rectangulo en (?:el )?(?:angulo |vertice )?([abc])\b/);
+    if (r) d[r[1].toUpperCase()] = 90;
+    return d;
+  }
+
+  function trigonometria(orig, p) {
+    const o = orig.replace(/[−–—]/g, "-");
+    const angs = angulosEn(p), longs = largosEn(p);
+    const { p: ps, P } = pasos();
+    const u0 = (longs[0] && longs[0].u) || "";
+    const U = u0 ? `\\,${tx(u0)}` : "";
+
+    // a) dos edificios: desde la azotea del alto y desde su base
+    if (/edificio/.test(p) && /azotea/.test(p) && angs.length === 2 && longs.length >= 1) {
+      const c = longs[0].v, posBase = p.search(/desde la base|desde el pie|base del mismo/);
+      const aBe = posBase >= 0 ? (angs.find((x) => x.i > posBase) || angs[1]) : angs[1], al = (angs.find((x) => x !== aBe) || angs[0]).v, be = aBe.v;
+      const hB = c * tg(be), dif = c / tg(al), hA = hB + dif;
+      P("Leemos el problema y anotamos los datos", "Distancia entre los edificios, el ángulo desde la azotea del alto (medido desde la pared) y el ángulo de elevación desde su base.", [`c=${d2(c)}${U},\\quad \\alpha=${g2(al)},\\quad \\beta=${g2(be)}`]);
+      P("Altura del edificio bajo", "Desde la base del alto se forma un triángulo rectángulo: cateto opuesto = altura del bajo, cateto adyacente = distancia.", [`${TG}\\,\\beta=\\frac{h_B}{c}\\Rightarrow h_B=${d2(c)}\\cdot ${TG}\\,${g2(be)}=${d2(hB)}${U}`]);
+      P("Diferencia de alturas", "Desde la azotea, el ángulo se mide desde la pared: la distancia horizontal es el cateto opuesto y la diferencia de alturas el adyacente.", [`${TG}\\,\\alpha=\\frac{c}{h_A-h_B}\\Rightarrow h_A-h_B=\\frac{${d2(c)}}{${TG}\\,${g2(al)}}=${d2(dif)}${U}`]);
+      P("Altura del edificio alto", "Sumamos.", [`h_A=${d2(hB)}+${d2(dif)}=${d2(hA)}${U}`]);
+      P("Respondemos", `Sí, se puede. El edificio alto mide ${m$(d2(hA) + U)} y el bajo ${m$(d2(hB) + U)}.`);
+      return tri("Dos edificios (tangente)", `h_A=${d2(hA)},\\;h_B=${d2(hB)}`, ps);
+    }
+    // b) polígono regular: radios inscrito y circunscrito
+    const POL = { "triangulo equilatero": 3, cuadrado: 4, pentagono: 5, hexagono: 6, heptagono: 7, octagono: 8, octogono: 8, eneagono: 9, nonagono: 9, decagono: 10, dodecagono: 12 };
+    const mp = p.match(/\b(triangulo equilatero|cuadrado|pentagono|hexagono|heptagono|octagono|octogono|eneagono|nonagono|decagono|dodecagono)\b/) || p.match(/poligono regular de (\d+) lados/);
+    if (mp && /(inscrit|circunscrit|apotema|radio)/.test(p)) {
+      const n = POL[mp[1]] || +mp[1], ml = p.match(/lados?\s+(?:que\s+)?(?:miden|mide|de)\s+(\d+(?:[.,]\d+)?)/) || p.match(/(\d+(?:[.,]\d+)?)\s*(?:m|cm|metros|centimetros)?\s*de lado/);
+      if (!ml) return null;
+      const l = numT(ml[1]), th = 180 / n, ap = l / (2 * tg(th)), R = l / (2 * sen(th));
+      const uu = (p.slice(p.indexOf(ml[0])).match(/\b(m|metros|cm|centimetros|km)\b/) || [, ""])[1].replace("metros", "m").replace("centimetros", "cm"), UU = uu ? `\\,${tx(uu)}` : "";
+      P("Leemos el problema y anotamos los datos", `Polígono regular de ${n} lados, cada lado mide ${m$(d2(l) + UU)}.`);
+      P("Dividimos el polígono en triángulos", `Uniendo el centro con los vértices quedan ${n} triángulos isósceles iguales. El ángulo central de cada uno es 360°/${n}; trazando la apotema lo partimos en dos triángulos rectángulos.`, [`\\frac{360^\\circ}{${n}}=${g2(360 / n)},\\qquad \\frac{${g2(360 / n)}}{2}=${g2(th)}`]);
+      P("Radio de la circunferencia inscrita (apotema)", "La apotema es el cateto adyacente al ángulo; medio lado es el opuesto.", [`${TG}\\,${g2(th)}=\\frac{l/2}{ap}\\Rightarrow ap=\\frac{${d2(l / 2)}}{${TG}\\,${g2(th)}}=${d2(ap)}${UU}`]);
+      P("Radio de la circunferencia circunscrita", "El radio es la hipotenusa del mismo triángulo.", [`${SEN}\\,${g2(th)}=\\frac{l/2}{R}\\Rightarrow R=\\frac{${d2(l / 2)}}{${SEN}\\,${g2(th)}}=${d2(R)}${UU}`]);
+      const extra = /(area|superficie)/.test(p) ? ` El área es ${m$(`\\frac{P\\cdot ap}{2}=\\frac{${d2(n * l)}\\cdot ${d2(ap)}}{2}=${d2((n * l * ap) / 2)}`)}.` : "";
+      P("Respondemos", `Radio de la inscrita (apotema): ${m$(d2(ap) + UU)}. Radio de la circunscrita: ${m$(d2(R) + UU)}.` + extra);
+      return tri("Polígono regular", `r=${d2(ap)},\\;R=${d2(R)}`, ps);
+    }
+    // c) compás o triángulo isósceles: dos lados iguales y el ángulo entre ellos
+    if ((/compas/.test(p) || /lados iguales/.test(p)) && angs.length === 1 && longs.length >= 1) {
+      const l = longs[0].v, t = angs[0].v, R = 2 * l * sen(t / 2);
+      P("Leemos el problema y anotamos los datos", "Los dos brazos (lados iguales) y el ángulo que forman arman un triángulo isósceles. El lado que falta es el radio buscado.", [`${tx("brazos")}=${d2(l)}${U},\\quad ${tx("ángulo")}=${g2(t)}`]);
+      P("Partimos el triángulo isósceles en dos rectángulos", "La altura desde el vértice divide al ángulo y a la base por la mitad.", [`\\frac{${g2(t)}}{2}=${g2(t / 2)}`]);
+      P("Calculamos media base con el seno", "Cateto opuesto = brazo · seno del medio ángulo.", [`\\frac{R}{2}=${d2(l)}\\cdot ${SEN}\\,${g2(t / 2)}=${d2(R / 2)}`, `R=2\\cdot ${d2(R / 2)}=${d2(R)}${U}`]);
+      P("Verificamos con el teorema del coseno", "", [`R^2=${d2(l)}^2+${d2(l)}^2-2\\cdot ${d2(l)}^2\\cos ${g2(t)}=${d2(R * R)}\\Rightarrow R=${d2(R)}`]);
+      P("Respondemos", `El radio de la circunferencia es ${m$(d2(R) + U)}.`);
+      return tri("Triángulo isósceles (seno del medio ángulo)", `R=${d2(R)}`, ps, "oblicuangulos");
+    }
+    // d) dos observaciones: me acerco/alejo una distancia y el ángulo cambia
+    if (angs.length === 2 && longs.length >= 1 && /(acerca|aleja|avanza|retrocede|camina|caminamos|nos movemos|desplaz)/.test(p) && !/(sombra|azotea)/.test(p)) {
+      const [t1, t2] = [Math.min(angs[0].v, angs[1].v), Math.max(angs[0].v, angs[1].v)], d = longs[0].v;
+      const h = (d * tg(t1) * tg(t2)) / (tg(t2) - tg(t1)), x = h / tg(t2);
+      P("Leemos el problema y anotamos los datos", "Desde lejos se ve con el ángulo menor; al acercarse, con el mayor. Llamamos h a la altura y x a la distancia desde el punto más cercano.", [`\\alpha=${g2(t1)},\\quad \\beta=${g2(t2)},\\quad d=${d2(d)}${U}`]);
+      P("Planteamos dos ecuaciones con la tangente", "En cada triángulo rectángulo: tangente = altura / distancia horizontal.", [`${TG}\\,${g2(t2)}=\\frac{h}{x}\\Rightarrow h=x\\cdot ${TG}\\,${g2(t2)}`, `${TG}\\,${g2(t1)}=\\frac{h}{x+${d2(d)}}\\Rightarrow h=(x+${d2(d)})\\cdot ${TG}\\,${g2(t1)}`]);
+      P("Igualamos y despejamos x", "", [`x\\cdot ${d2(tg(t2), 4)}=(x+${d2(d)})\\cdot ${d2(tg(t1), 4)}`, `x=\\frac{${d2(d)}\\cdot ${d2(tg(t1), 4)}}{${d2(tg(t2), 4)}-${d2(tg(t1), 4)}}=${d2(x)}${U}`]);
+      P("Calculamos la altura", "", [`h=${d2(x)}\\cdot ${TG}\\,${g2(t2)}=${d2(h)}${U}`]);
+      P("Respondemos", `La altura es ${m$(d2(h) + U)}. Desde el punto más cercano, la base está a ${m$(d2(x) + U)}.`);
+      return tri("Dos ángulos de elevación", `h=${d2(h)}`, ps);
+    }
+    // e) triángulo con datos por letras o catetos/hipotenusa
+    let datos = datosTriangulo(o, p);
+    const mc = p.match(/catetos?\D{0,30}?(\d+(?:[.,]\d+)?)\s*(?:m|cm|metros)?\D{1,25}?(\d+(?:[.,]\d+)?)/);
+    if (Object.keys(datos).length < 3 && /cateto/.test(p) && /rectangulo/.test(p)) {
+      const mh = p.match(/hipotenusa\s*(?:mide|de|es|=)?\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/);
+      if (mh) { const m1 = p.match(/cateto\s*(?:mide|de|es|=)?\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/); if (m1) datos = { A: 90, a: numT(mh[1]), b: numT(m1[1]) }; }
+      else if (mc) datos = { A: 90, b: numT(mc[1]), c: numT(mc[2]) };
+      if (datos.A === 90 && !datos.B && angs.length === 1 && Object.keys(datos).length === 2) { const ml = longs[0]; if (ml) datos.b = ml.v; }
+    }
+    const nd = Object.keys(datos).length, hayLado = ["a", "b", "c"].some((x) => datos[x] !== undefined);
+    if (nd >= 3 && hayLado && /triangulo|ciudad|vertice|lado|cateto/.test(p)) {
+      const u = u0 ? tx(u0) : "";
+      const lista = Object.entries(datos).map(([k, v]) => (/[ABC]/.test(k) ? `${k}=${g2(v)}` : `${k}=${d2(v)}\\,${u}`)).join(",\\quad ");
+      P("Leemos el problema y anotamos los datos", "Los lados se nombran con minúscula y cada uno es opuesto al ángulo de la misma letra en mayúscula.", [lista]);
+      const recto = Object.values(datos).includes(90);
+      const { s, aviso } = resolverTriangulo(datos, u, P);
+      P("Verificamos", "Los ángulos suman 180° y el lado mayor está frente al ángulo mayor.", [`A+B+C=${d2(s.A)}+${d2(s.B)}+${d2(s.C)}=180^\\circ${ok}`]);
+      P("Respondemos", `Lados: ${m$(`a=${d2(s.a)},\\;b=${d2(s.b)},\\;c=${d2(s.c)}`)}${u0 ? " " + u0 : ""}. Ángulos: ${m$(`A=${g2(s.A)},\\;B=${g2(s.B)},\\;C=${g2(s.C)}`)}.` + aviso);
+      return tri(recto ? "Resolución de triángulo rectángulo" : "Resolución de triángulo (teoremas del seno y del coseno)", `a=${d2(s.a)},\\;b=${d2(s.b)},\\;c=${d2(s.c)},\\;A=${d2(s.A)}^\\circ,\\;B=${d2(s.B)}^\\circ,\\;C=${d2(s.C)}^\\circ`, ps, recto ? "rectangulos" : "oblicuangulos");
+    }
+    if (angs.length !== 1 && !(/sombra/.test(p) && longs.length === 2)) return null;
+    const t = angs[0] && angs[0].v;
+    // f) sombra
+    if (/sombra/.test(p) && longs.length >= 1) {
+      const lS = longs.find((l) => /sombra[^.]{0,25}$/.test(p.slice(Math.max(0, l.i - 30), l.i))) || (longs.length === 1 && !/(alto|altura|mide)\D{0,15}$/.test(p.slice(Math.max(0, longs[0].i - 20), longs[0].i)) ? longs[0] : null);
+      const lH = longs.find((l) => l !== lS);
+      if (lS && t !== undefined && !lH) {
+        const h = lS.v * tg(t);
+        P("Leemos el problema y anotamos los datos", "El objeto, su sombra y el rayo de sol forman un triángulo rectángulo. La sombra es el cateto adyacente al ángulo de elevación del sol; la altura es el opuesto.", [`${tx("sombra")}=${d2(lS.v)}${U},\\quad \\alpha=${g2(t)}`]);
+        P("Elegimos la razón trigonométrica", "Relaciona cateto opuesto (altura) con cateto adyacente (sombra): la tangente.", [`${TG}\\,\\alpha=\\frac{h}{${tx("sombra")}}`]);
+        P("Resolvemos", "", [`h=${d2(lS.v)}\\cdot ${TG}\\,${g2(t)}=${d2(lS.v)}\\cdot ${d2(tg(t), 4)}=${d2(h)}${U}`]);
+        P("Respondemos", `La altura es ${m$(d2(h) + U)}.`);
+        return tri("Sombra y ángulo de elevación (tangente)", `h=${d2(h)}`, ps);
+      }
+      if (lH && t !== undefined && !lS) {
+        const s = lH.v / tg(t);
+        P("Leemos el problema y anotamos los datos", "La altura es el cateto opuesto al ángulo del sol y la sombra el adyacente.", [`h=${d2(lH.v)}${U},\\quad \\alpha=${g2(t)}`]);
+        P("Resolvemos con la tangente", "", [`${TG}\\,\\alpha=\\frac{h}{s}\\Rightarrow s=\\frac{${d2(lH.v)}}{${TG}\\,${g2(t)}}=${d2(s)}${U}`]);
+        P("Respondemos", `La sombra mide ${m$(d2(s) + U)}.`);
+        return tri("Sombra y ángulo de elevación (tangente)", `s=${d2(s)}`, ps);
+      }
+      if (lS && lH && t === undefined) {
+        const a = atg(lH.v / lS.v);
+        P("Leemos el problema y anotamos los datos", "Altura (cateto opuesto) y sombra (cateto adyacente).", [`h=${d2(lH.v)}${U},\\quad s=${d2(lS.v)}${U}`]);
+        P("Resolvemos con la tangente", "", [`${TG}\\,\\alpha=\\frac{${d2(lH.v)}}{${d2(lS.v)}}=${d2(lH.v / lS.v, 4)}\\Rightarrow \\alpha=${g2(a)}`]);
+        P("Respondemos", `El ángulo de elevación del sol es ${m$(g2(a))}.`);
+        return tri("Sombra y ángulo de elevación (tangente)", `\\alpha=${d2(a)}^\\circ`, ps);
+      }
+      return null;
+    }
+    if (longs.length !== 1 || t === undefined) return null;
+    const L0 = longs[0].v;
+    // g) cuerda, escalera, cable… (hipotenusa) con ángulo
+    if (/(cuerda|escalera|cable|hilo|rampa|tobogan|tirante|soga|cometa|barrilete|piolin|alambre|viga|tabla)/.test(p)) {
+      const conPared = /(con la pared|con el muro|con la vertical)/.test(p);
+      const h = conPared ? L0 * cos(t) : L0 * sen(t), b = conPared ? L0 * sen(t) : L0 * cos(t);
+      const quiereBase = /(distancia|separ|pie|horizontal|base)/.test(p) && !/altura/.test(p);
+      P("Leemos el problema y anotamos los datos", `Se forma un triángulo rectángulo: la ${(p.match(/(cuerda|escalera|cable|hilo|rampa|tobogan|tirante|soga|piolin|alambre|viga|tabla)/) || ["", "cuerda"])[1]} es la hipotenusa${conPared ? " y el ángulo se mide desde la pared" : " y el ángulo se mide desde el piso"}.`, [`${tx("hipotenusa")}=${d2(L0)}${U},\\quad \\alpha=${g2(t)}`]);
+      P("Elegimos la razón trigonométrica", conPared ? "La altura es el cateto adyacente al ángulo: usamos el coseno." : "La altura es el cateto opuesto al ángulo: usamos el seno.", [conPared ? `\\cos\\alpha=\\frac{h}{${tx("hip")}}` : `${SEN}\\,\\alpha=\\frac{h}{${tx("hip")}}`]);
+      P("Resolvemos", "", [`h=${d2(L0)}\\cdot ${conPared ? "\\cos" : SEN}\\,${g2(t)}=${d2(h)}${U}`, `${tx("distancia horizontal")}=${d2(L0)}\\cdot ${conPared ? SEN : "\\cos"}\\,${g2(t)}=${d2(b)}${U}`]);
+      P("Respondemos", quiereBase ? `La distancia horizontal es ${m$(d2(b) + U)} (y la altura alcanzada, ${m$(d2(h) + U)}).` : `La altura es ${m$(d2(h) + U)}.`);
+      return tri("Triángulo rectángulo (seno y coseno)", quiereBase ? `d=${d2(b)}` : `h=${d2(h)}`, ps);
+    }
+    // h) ángulo de elevación o depresión con una distancia
+    if (/(elevacion|depresion|se ve|se observa|observa)/.test(p)) {
+      const antes = p.slice(Math.max(0, longs[0].i - 30), longs[0].i + 30);
+      const esAltura = /(altura|alto|de alto|mide|faro|torre de|edificio de|acantilado de)/.test(antes) && !/(de la base|del pie|distancia|se encuentra a|esta a|a\s*$)/.test(p.slice(Math.max(0, longs[0].i - 25), longs[0].i));
+      if (esAltura) {
+        const x = L0 / tg(t);
+        P("Leemos el problema y anotamos los datos", "La altura es el cateto opuesto al ángulo y la distancia horizontal es el adyacente.", [`h=${d2(L0)}${U},\\quad \\alpha=${g2(t)}`]);
+        P("Resolvemos con la tangente", "", [`${TG}\\,\\alpha=\\frac{h}{d}\\Rightarrow d=\\frac{${d2(L0)}}{${TG}\\,${g2(t)}}=${d2(x)}${U}`]);
+        P("Respondemos", `La distancia horizontal es ${m$(d2(x) + U)}.`);
+        return tri("Ángulo de elevación/depresión (tangente)", `d=${d2(x)}`, ps);
+      }
+      const h = L0 * tg(t);
+      P("Leemos el problema y anotamos los datos", "La distancia horizontal es el cateto adyacente al ángulo y la altura el opuesto.", [`d=${d2(L0)}${U},\\quad \\alpha=${g2(t)}`]);
+      P("Resolvemos con la tangente", "", [`${TG}\\,\\alpha=\\frac{h}{d}\\Rightarrow h=${d2(L0)}\\cdot ${TG}\\,${g2(t)}=${d2(h)}${U}`]);
+      P("Respondemos", `La altura es ${m$(d2(h) + U)}.`);
+      return tri("Ángulo de elevación/depresión (tangente)", `h=${d2(h)}`, ps);
+    }
+    return null;
+  }
+
   /* ---------- detección ---------- */
-  const TIPOS = [geometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
+  const TIPOS = [geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
     (o, p) => fraccionesDelTotal(p), dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
   function resolver(texto) {
     const orig = String(texto || "").replace(/\s+/g, " ").trim();
@@ -618,13 +857,13 @@
       if (area !== destino && typeof cambiarArea === "function") {
         cambiarArea(destino);
         campoTexto.value = texto;
-        if (typeof avisar === "function") avisar(destino === "alg" ? "Es un problema con enunciado: lo resolvemos en Álgebra." : "Este problema se resuelve con aritmética (gratis).");
+        if (typeof avisar === "function") avisar({ alg: "Es un problema con enunciado: lo resolvemos en Álgebra.", geo: "Lo resolvemos en Geometría analítica.", trig: "Lo resolvemos en Geometría y trigonometría.", arit: "Este problema se resuelve con aritmética (gratis)." }[destino] || "Problema reconocido.");
       }
       ultimaEntrada = texto;
       if (er) er.textContent = "";
       mostrarExito(texto, r, metodo);
       // si los temas del área todavía no cargaron, mostramos el nombre lindo del tema
-      const NOMBRES = { uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
+      const NOMBRES = { rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
       const cab = document.querySelector("#cabecera b");
       if (cab && cab.textContent === r.tema && NOMBRES[r.tema]) cab.textContent = NOMBRES[r.tema];
     })();
