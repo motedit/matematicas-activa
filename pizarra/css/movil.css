@@ -1,0 +1,87 @@
+/* =================================================================
+   Pizarra en el celular: la hoja ocupa casi toda la pantalla.
+   - Arriba: barra finita (solo íconos).
+   - Abajo: una sola fila de herramientas (como las apps de dibujo).
+   - Colores, grosor, fondo, guardar… en el panel "Opciones" que se abre y se cierra.
+   - Alumnos y archivos en una pantalla aparte (botón 👥).
+   ================================================================= */
+.pz-movil-solo{display:none!important}
+
+@media (max-width:760px), (max-height:520px) and (pointer:coarse){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  .app{height:100vh;height:100dvh}
+  .pz-movil-solo{display:grid!important}
+  .group.pz-movil-solo{display:flex!important;flex-direction:row}
+
+  /* Barra de arriba compacta */
+  .topbar{padding:6px 8px!important;gap:6px!important;min-height:0}
+  .topbar>a:first-child{font-size:0!important;padding:8px 10px!important;margin-right:2px!important;gap:0!important}
+  .topbar>a:first-child::before{content:"←";font-size:16px;font-weight:700}
+  .brand{margin-right:auto!important;gap:0!important}
+  .brand>div:not(.mark){display:none}
+  .brand .mark{width:32px;height:32px}
+  .calc-launch{font-size:0!important;gap:0!important;padding:8px!important;margin-right:4px!important;min-width:36px;justify-content:center}
+  .calc-launch svg{width:18px;height:18px}
+  #btnVivo span{display:none}
+  .role-switch{padding:3px}
+  .role-switch button{padding:6px 8px;font-size:0;gap:0}
+  .role-switch button svg{width:17px;height:17px}
+  #pzPrueba{padding:5px 10px!important;font-size:12px!important}
+  #pzPrueba .pz-txt{min-width:0!important}
+
+  /* La hoja ocupa todo */
+  .stage-wrap{flex:1 1 auto;min-height:0;position:relative}
+  .stage{flex:1 1 auto;min-height:0}
+
+  /* Opciones: panel que se abre desde abajo */
+  .optionbar{position:absolute;left:8px;right:8px;bottom:8px;z-index:60;display:none!important;flex-wrap:wrap!important;gap:10px!important;
+    padding:14px!important;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:0 18px 50px rgba(15,23,42,.3)!important;overflow:visible!important;max-height:60%;overflow-y:auto!important}
+  body.pz-opciones .optionbar{display:flex!important}
+  .optionbar .obsep,.optionbar .spacer{display:none}
+  .optionbar .opt{flex-wrap:wrap}
+  .optionbar .swatch{width:30px;height:30px}
+  .optionbar input[type=range]{width:150px}
+  .optionbar .obtn{padding:9px 12px}
+
+  /* Hojas y zoom: una fila finita, solo íconos */
+  .hojabar{padding:5px 8px!important;gap:5px!important;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}
+  .hojabar::-webkit-scrollbar{display:none}
+  .hojabar>*{flex-shrink:0}
+  .hojabar .mini,.hojabar .sep,.hojabar .esp{display:none!important}
+  .hojabar button{padding:6px 8px!important;font-size:0!important;gap:0!important}
+  .hojabar button svg{width:18px!important;height:18px!important}
+  .hojabar #hjZoom{font-size:12px!important}
+  .hojabar .num{min-width:0!important;font-size:12px}
+
+  /* Alumnos y archivos: pantalla aparte */
+  .panel{display:none!important}
+  body.pz-panel .panel{display:flex!important;position:fixed!important;inset:0!important;z-index:9500!important;width:auto!important;max-height:none!important;border:0!important}
+  .pz-cerrar-panel{position:absolute;right:10px;top:8px;z-index:2;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:18px;cursor:pointer}
+
+  .toast{bottom:150px!important}
+  #crono{transform:scale(.85);transform-origin:top right}
+}
+
+/* Celular parado: las herramientas van en una fila abajo */
+@media (max-width:760px){
+  .workspace,.view.active,#teacherView.view.active{flex-direction:column}
+  .toolrail{order:3;flex-direction:row!important;width:100%!important;height:58px!important;padding:0 6px!important;gap:2px!important;
+    border-right:0!important;border-top:1px solid var(--line)!important;border-bottom:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+    padding-bottom:env(safe-area-inset-bottom)!important;box-shadow:0 -6px 16px rgba(15,23,42,.06)}
+  .toolrail .group{flex-direction:row!important;gap:2px!important}
+  .toolrail .glabel{display:none!important}
+  .toolrail .sep{width:1px!important;height:28px!important;margin:0 4px!important}
+  .toolrail .tbtn{width:44px;height:44px;flex-shrink:0}
+  .stage-wrap{order:2}
+}
+
+/* Celular acostado: herramientas en una columna finita a la izquierda */
+@media (max-height:520px) and (pointer:coarse) and (min-width:761px){
+  .workspace,.view.active,#teacherView.view.active{flex-direction:row!important}
+  .stage-wrap{flex:1 1 auto;min-width:0;min-height:0}
+  .toolrail{width:52px!important;padding:6px 0!important;flex-direction:column!important;height:auto!important}
+  .group.pz-movil-solo{flex-direction:column!important}
+  .group.pz-movil-solo .sep{width:28px!important;height:1px!important;margin:4px 0!important}
+  .toolrail .glabel{display:none!important}
+  .toolrail .tbtn{width:40px;height:40px}
+}
