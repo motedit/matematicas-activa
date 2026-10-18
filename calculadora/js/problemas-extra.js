@@ -768,7 +768,7 @@
       const a0 = horizontal ? acos(h / Lh) : asen(h / Lh), a = conPared ? 90 - a0 : a0;
       P("Leemos el problema y anotamos los datos", `El objeto es la hipotenusa y ${horizontal ? "la distancia horizontal es el cateto adyacente" : "lo que sube es el cateto opuesto"} al ángulo con el piso.`, [`${tx("hipotenusa")}=${d2(Lh)}${U},\\quad ${horizontal ? "d" : "h"}=${d2(h)}${U}`]);
       P("Elegimos la razón trigonométrica", horizontal ? "Cateto adyacente sobre hipotenusa: coseno." : "Cateto opuesto sobre hipotenusa: seno.", [`${horizontal ? "\\cos" : SEN}\\,\\alpha=\\frac{${d2(h)}}{${d2(Lh)}}=${d2(h / Lh, 4)}`]);
-      P("Resolvemos", "Usamos la función inversa de la calculadora.", [`\\alpha=${horizontal ? "\\arccos" : "\\arcsen"}(${d2(h / Lh, 4)})=${g2(a0)}`]);
+      P("Resolvemos", "Usamos la función inversa de la calculadora.", [`\\alpha=${horizontal ? "\\arccos" : "\\operatorname{arcsen}"}(${d2(h / Lh, 4)})=${g2(a0)}`]);
       P("Respondemos", `El ángulo con ${conPared ? "la pared" : "el piso"} es ${m$(g2(a))}.`);
       return tri("Triángulo rectángulo (funciones inversas)", `\\alpha=${d2(a)}^\\circ`, ps);
     }
