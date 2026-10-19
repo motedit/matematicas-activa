@@ -843,7 +843,7 @@
   const raw = (f) => (f.d === 1 ? String(f.n) : `${f.n}/${f.d}`);
   // Ecuaciones escritas en el texto (3x + 2y − 12 = 0, x = 2y, x² + y² = 50, (x+4)^2+(y+1)^2=52…)
   function ecuacionesEn(orig) {
-    const t = orig.replace(/[−–—]/g, "-").replace(/²/g, "^2").split(/\s+/);
+    const t = orig.replace(/[−–—]/g, "-").replace(/²/g, "^2").replace(/½/g, "1/2").split(/\s+/);
     const limpio = (w) => w.replace(/[.;:]+$/, "").replace(/,$/, "");
     const mat = (w) => /^[0-9xy+\-*/^().,=]+$/.test(w) && /[0-9xy=+\-]/.test(w) && w !== ",";
     const out = [];
@@ -859,21 +859,38 @@
     }
     return out.map(leerEcuacion).filter(Boolean);
   }
+  const NUMR = "\\d+(?:[.,]\\d+)?(?:\\/\\d+)?";
+  const term = (f, v) => (f.cero() ? "" : (f.n < 0 ? "-" : "+") + raw(F(Math.abs(f.n), f.d)) + v);
   function leerEcuacion(str) {
-    let s = str.replace(/\*\*/g, "^").replace(/[·*]/g, "").replace(/\s+/g, "");
-    s = s.replace(/\(([xy])([+-])(\d+(?:[.,]\d+)?(?:\/\d+)?)\)\^2/g, (m, v, sg, a) => { const A = leerCoord(a); return `+${v}^2${sg}${raw(A.por(2))}${v}+${raw(A.por(A))}`; });
+    let s = str.replace(/\*\*/g, "^").replace(/[·*]/g, "").replace(/\s+/g, "").replace(/½/g, "1/2").replace(/¼/g, "1/4").replace(/¾/g, "3/4");
+    // K(x ± a)^2 / d  → desarrollado
+    s = s.replace(new RegExp(`([+\\-=]?)(${NUMR})?\\(([xy])([+-])(${NUMR})\\)\\^2(?:\\/(${NUMR}))?`, "g"), (m, sg, k, v, sa, a, d) => {
+      let K = (k ? leerCoord(k) : F(1)).entre(d ? leerCoord(d) : F(1)); if (sg === "-") K = K.por(-1);
+      const A = leerCoord(a).por(sa === "-" ? -1 : 1);
+      return (sg === "=" ? "=" : "") + term(K, `${v}^2`) + term(K.por(A).por(2), v) + term(K.por(A).por(A), "") || "+0";
+    });
+    // K(… lineal …)  → distribuido
+    s = s.replace(new RegExp(`([+\\-=]?)(${NUMR})?\\(([^()^]+)\\)`, "g"), (m, sg, k, dentro) => {
+      let K = k ? leerCoord(k) : F(1); if (sg === "-") K = K.por(-1);
+      const tt = (/^[+-]/.test(dentro) ? dentro : "+" + dentro).match(/[+-][^+-]+/g);
+      if (!tt) return m;
+      let out = "";
+      for (const t of tt) { const q = t.slice(1).match(new RegExp(`^(${NUMR})?([xy]?)$`)); if (!q || (!q[1] && !q[2])) return m; out += term(K.por(q[1] ? leerCoord(q[1]) : F(1)).por(t[0] === "-" ? -1 : 1), q[2]); }
+      return (sg === "=" ? "=" : "") + (out || "+0");
+    });
     s = s.replace(/\+\+/g, "+").replace(/-\+/g, "-").replace(/\+-/g, "-").replace(/--/g, "+").replace(/=\+/g, "=");
     if (/[()]/.test(s)) return null;
     const lados = s.split("=");
     if (lados.length !== 2 || !lados[0] || !lados[1]) return null;
     const c = { x2: FR0(), xy: FR0(), y2: FR0(), x: FR0(), y: FR0(), c: FR0() };
     for (const [k, lado] of [[1, lados[0]], [-1, lados[1]]]) {
-      const tt = (/^[+-]/.test(lado) ? lado : "+" + lado).match(/[+-][^+-]+/g);
-      if (!tt || tt.join("") !== (/^[+-]/.test(lado) ? lado : "+" + lado)) return null;
-      for (const term of tt) {
-        const m = term.slice(1).match(/^(\d+(?:[.,]\d+)?(?:\/\d+)?)?((?:[xy](?:\^\d)?)*)$/);
+      const ld = /^[+-]/.test(lado) ? lado : "+" + lado;
+      const tt = ld.match(/[+-][^+-]+/g);
+      if (!tt || tt.join("") !== ld) return null;
+      for (const tr of tt) {
+        const m = tr.slice(1).match(new RegExp(`^(${NUMR})?((?:[xy](?:\\^\\d)?)*)(?:\\/(\\d+(?:[.,]\\d+)?))?$`));
         if (!m || (!m[1] && !m[2])) return null;
-        let coef = m[1] ? leerCoord(m[1]) : F(1); if (term[0] === "-") coef = coef.por(-1);
+        let coef = m[1] ? leerCoord(m[1]) : F(1); if (m[3]) coef = coef.entre(leerCoord(m[3])); if (tr[0] === "-") coef = coef.por(-1);
         let gx = 0, gy = 0; for (const v of m[2].matchAll(/([xy])(?:\^(\d))?/g)) { const g = v[2] ? +v[2] : 1; if (v[1] === "x") gx += g; else gy += g; }
         const key = { "2,0": "x2", "1,1": "xy", "0,2": "y2", "1,0": "x", "0,1": "y", "0,0": "c" }[`${gx},${gy}`];
         if (!key) return null;
@@ -882,6 +899,7 @@
     }
     c.texto = str;
     c.grado = !c.x2.cero() || !c.xy.cero() || !c.y2.cero() ? 2 : 1;
+    if (c.grado === 1 && c.x.cero() && c.y.cero()) return null;
     return c;
   }
   // a·x + b·y … en LaTeX
@@ -1104,8 +1122,270 @@
     return { tema: "transformacion", metodo: "Transformación de coordenadas", pasos: ps, resultado: res, area: "geo" };
   }
 
+  /* =====================================================================
+     13) Recta: dos puntos, punto y pendiente, paralelas y perpendiculares, intersección,
+         distancia punto–recta, ángulo entre rectas, pendiente y ordenada de una ecuación
+     ===================================================================== */
+  function rectaGeneral(a, b, c) {           // a x + b y + c = 0 con enteros y a > 0
+    let [A, B, C] = sinFracciones([a, b, c]);
+    const g = mcd(mcd(Math.abs(A.n), Math.abs(B.n)), Math.abs(C.n)) || 1;
+    [A, B, C] = [A, B, C].map((f) => f.entre(g));
+    if (A.n < 0 || (A.cero() && B.n < 0)) [A, B, C] = [A, B, C].map((f) => f.por(-1));
+    return { A, B, C, tex: `${polyTex([[A, "x"], [B, "y"], [C, ""]])}=0` };
+  }
+  const explicita = (m, b) => `y=${polyTex([[m, "x"], [b, ""]])}`;
+  function porPuntoPendiente(P0, m) {          // devuelve {tex, gen, exp}
+    if (m === null) return { pp: `x=${L(P0.x)}`, gen: rectaGeneral(F(1), F(0), P0.x.por(-1)), exp: `x=${L(P0.x)}` };
+    const b = P0.y.menos(m.por(P0.x));
+    return { pp: `y-${par(P0.y)}=${L(m)}\\,(x-${par(P0.x)})`, gen: rectaGeneral(m, F(-1), b), exp: explicita(m, b), b };
+  }
+  const pendienteDe = (r) => (r.y.cero() ? null : r.x.entre(r.y).por(-1));
+  const mTex = (m) => (m === null ? tx("no tiene (recta vertical)") : L(m));
+  function recta(orig, p) {
+    if (!/\brecta|\brectas/.test(p) || /(circunferencia|circulo|parabola|elipse|hiperbola)/.test(p)) return null;
+    const o = orig.replace(/[−–—]/g, "-");
+    const pts = puntos(o), ecs = ecuacionesEn(o).filter((e) => e.grado === 1);
+    const { p: ps, P } = pasos();
+    const geo = (metodo, resultado, tema = "recta") => ({ tema, metodo, pasos: ps, resultado, area: "geo" });
+    const rTex = (r) => `${polyTex([[r.x, "x"], [r.y, "y"], [r.c, ""]])}=0`;
+    // intersección de dos rectas
+    if (ecs.length === 2 && /(interseccion|interse|corte|se cortan|cortan)/.test(p)) {
+      const [r1, r2] = ecs, det = r1.x.por(r2.y).menos(r2.x.por(r1.y));
+      P("Leemos el problema y anotamos los datos", "Buscamos el punto que cumple las dos ecuaciones a la vez: resolvemos el sistema.", [`\\begin{cases}${rTex(r1)}\\\\ ${rTex(r2)}\\end{cases}`]);
+      if (det.cero()) { P("Respondemos", "Las rectas tienen la misma pendiente: son paralelas (o la misma recta), así que no tienen un único punto de corte."); return geo("Intersección de rectas", tx("Paralelas: no se cortan")); }
+      const x = r1.y.por(r2.c).menos(r2.y.por(r1.c)).entre(det), y = r2.x.por(r1.c).menos(r1.x.por(r2.c)).entre(det);
+      P("Resolvemos por reducción", "Combinamos las ecuaciones para eliminar una incógnita y despejamos la otra.", [`x=${L(x)}`, `y=${L(y)}`]);
+      P("Verificamos", "El punto tiene que cumplir las dos ecuaciones.", [`${L(r1.x.por(x).mas(r1.y.por(y)).mas(r1.c))}=0${ok}`, `${L(r2.x.por(x).mas(r2.y.por(y)).mas(r2.c))}=0${ok}`]);
+      P("Respondemos", `Las rectas se cortan en ${m$(`(${L(x)},\\,${L(y)})`)}.`);
+      return geo("Intersección de dos rectas", `P=(${R(x)};\\,${R(y)})`);
+    }
+    // ángulo entre dos rectas
+    if (ecs.length === 2 && /angulo/.test(p)) {
+      const [m1, m2] = ecs.map(pendienteDe);
+      P("Calculamos las pendientes", "Despejamos y de cada ecuación (o usamos m = −A/B).", [`m_1=${mTex(m1)},\\quad m_2=${mTex(m2)}`]);
+      let ang;
+      if (m1 === null || m2 === null) { const m = m1 === null ? m2 : m1; ang = m === null ? 0 : 90 - Math.abs(atg(m.v)); P("Una recta es vertical", "El ángulo es el complemento de la inclinación de la otra.", [`\\theta=90^\\circ-${g2(Math.abs(atg((m || F(0)).v)))}=${g2(ang)}`]); }
+      else if (m1.por(m2).v === -1) { ang = 90; P("Son perpendiculares", "", [`m_1\\cdot m_2=-1\\Rightarrow\\theta=90^\\circ`]); }
+      else { const t = m2.menos(m1).entre(F(1).mas(m1.por(m2))); ang = atg(Math.abs(t.v)); P("Usamos la fórmula del ángulo entre rectas", "", [`${TG}\\,\\theta=\\left|\\frac{m_2-m_1}{1+m_1m_2}\\right|=\\left|\\frac{${L(m2)}-${par(m1)}}{1+${par(m1)}\\cdot ${par(m2)}}\\right|=${L(F(Math.abs(t.n), t.d))}`, `\\theta=${g2(ang)}`]); }
+      P("Respondemos", `El ángulo entre las rectas es ${m$(g2(ang))}.`);
+      return geo("Ángulo entre dos rectas", `\\theta=${d2(ang)}^\\circ`);
+    }
+    // paralela o perpendicular por un punto
+    if (ecs.length === 1 && pts.length === 1 && /(paralela|perpendicular)/.test(p)) {
+      const r = ecs[0], P0 = pts[0], m0 = pendienteDe(r), perp = /perpendicular/.test(p);
+      let m = perp ? (m0 === null ? F(0) : m0.cero() ? null : F(-1).entre(m0)) : m0;
+      P("Leemos el problema y anotamos los datos", `Punto ${m$(Lp(P0))} y recta dada ${m$(rTex(r))}.`);
+      P("Pendiente de la recta dada", "Despejamos y (o usamos m = −A/B).", [`m=${mTex(m0)}`]);
+      P(perp ? "Pendiente de la perpendicular" : "Pendiente de la paralela", perp ? "Dos rectas son perpendiculares si el producto de sus pendientes es −1 (pendiente inversa y opuesta)." : "Las rectas paralelas tienen la misma pendiente.", [perp ? `m_\\perp=${mTex(m)}` : `m_{\\parallel}=${mTex(m)}`]);
+      const e = porPuntoPendiente(P0, m);
+      P("Ecuación punto–pendiente", "", [e.pp, e.gen.tex]);
+      P("Respondemos", `La recta buscada es ${m$(e.gen.tex)}${m !== null ? ` (en forma explícita ${m$(e.exp)})` : ""}.`);
+      return geo(perp ? "Recta perpendicular por un punto" : "Recta paralela por un punto", e.gen.tex);
+    }
+    // distancia de un punto a una recta
+    if (ecs.length === 1 && pts.length === 1 && /distancia/.test(p)) {
+      const r = ecs[0], P0 = pts[0], num = r.x.por(P0.x).mas(r.y.por(P0.y)).mas(r.c), den = r.x.por(r.x).mas(r.y.por(r.y)), d2f = num.por(num).entre(den), rr = raizFr(d2f);
+      P("Leemos el problema y anotamos los datos", `Punto ${m$(Lp(P0))} y recta ${m$(rTex(r))}.`);
+      P("Usamos la fórmula de distancia de un punto a una recta", "", [`d=\\frac{|A\\,x_0+B\\,y_0+C|}{\\sqrt{A^2+B^2}}`, `d=\\frac{|${L(r.x)}\\cdot ${par(P0.x)}+${par(r.y)}\\cdot ${par(P0.y)}+${par(r.c)}|}{\\sqrt{${par(r.x)}^2+${par(r.y)}^2}}=\\frac{${L(F(Math.abs(num.n), num.d))}}{\\sqrt{${L(den)}}}=${rr.tex}`]);
+      P("Respondemos", `La distancia es ${m$(rr.tex)} unidades.`);
+      return geo("Distancia de un punto a una recta", `d=${rr.sola}`);
+    }
+    // recta por dos puntos
+    if (pts.length === 2 && !ecs.length && /(pasa|une|determina|por los puntos|contiene)/.test(p)) {
+      const [A, B] = pts, dx = B.x.menos(A.x), dy = B.y.menos(A.y);
+      if (dx.cero() && dy.cero()) throw problema("Los dos puntos son iguales: hay infinitas rectas que pasan por ellos.");
+      const m = dx.cero() ? null : dy.entre(dx), e = porPuntoPendiente(A, m);
+      P("Leemos el problema y anotamos los datos", `Puntos ${m$(Lp(A))} y ${m$(Lp(B))}.`);
+      P("Calculamos la pendiente", "Diferencia de las y sobre diferencia de las x.", [m === null ? `x_1=x_2\\Rightarrow ${tx("recta vertical")}` : `m=\\frac{y_2-y_1}{x_2-x_1}=\\frac{${L(B.y)}-${par(A.y)}}{${L(B.x)}-${par(A.x)}}=${L(m)}`]);
+      P("Ecuación punto–pendiente", `Usamos el punto ${A.nombre}.`, [e.pp, e.gen.tex]);
+      P("Verificamos", `El punto ${B.nombre} también tiene que cumplir la ecuación.`, [`${L(e.gen.A.por(B.x).mas(e.gen.B.por(B.y)).mas(e.gen.C))}=0${ok}`]);
+      P("Respondemos", `La recta es ${m$(e.gen.tex)}${m !== null ? ` (forma explícita ${m$(e.exp)})` : ""}.`);
+      return geo("Recta que pasa por dos puntos", e.gen.tex);
+    }
+    // punto y pendiente (o ángulo de inclinación de 45° / 135°)
+    const mp = o.match(/pendiente\s*(?:m\s*=\s*|es\s*|de\s*|igual a\s*|=\s*)?(-?\s*\d+(?:[.,]\d+)?(?:\s*\/\s*\d+)?)/i);
+    const mi = p.match(/inclinacion\D{0,20}?(45|135|0)\s*(?:°|º|grados)/);
+    if (pts.length === 1 && !ecs.length && (mp || mi)) {
+      const m = mp ? leerCoord(mp[1]) : F(mi[1] === "45" ? 1 : mi[1] === "135" ? -1 : 0), P0 = pts[0], e = porPuntoPendiente(P0, m);
+      P("Leemos el problema y anotamos los datos", `Punto ${m$(Lp(P0))} y pendiente ${m$(`m=${L(m)}`)}${mi ? ` (la pendiente es la tangente del ángulo de inclinación: ${TG}\\,${mi[1]}° = ${L(m)})` : ""}.`);
+      P("Ecuación punto–pendiente", "", [`y-y_0=m\\,(x-x_0)`, e.pp, e.gen.tex]);
+      P("Respondemos", `La recta es ${m$(e.gen.tex)} (forma explícita ${m$(e.exp)}).`);
+      return geo("Recta dado un punto y la pendiente", e.gen.tex);
+    }
+    // elementos de una recta dada
+    if (ecs.length === 1 && /(pendiente|ordenada|inclinacion|ejes|elementos|abscisa)/.test(p)) {
+      const r = ecs[0], m = pendienteDe(r);
+      P("Leemos la ecuación", "Despejamos y para llevarla a la forma explícita y = m x + b.", [rTex(r)]);
+      if (m === null) { P("Respondemos", `Es una recta vertical ${m$(`x=${L(r.c.por(-1).entre(r.x))}`)}: no tiene pendiente ni ordenada al origen.`); return geo("Elementos de una recta", tx("recta vertical")); }
+      const b = r.c.por(-1).entre(r.y), ang = (atg(m.v) + 180) % 180;
+      const corteX = m.cero() ? null : b.por(-1).entre(m);
+      P("Forma explícita", "", [explicita(m, b), `m=${L(m)},\\quad b=${L(b)}`]);
+      P("Cortes con los ejes", "Con el eje Y hacemos x = 0; con el eje X hacemos y = 0.", [`${tx("eje Y: ")}(0,\\,${L(b)})`, corteX === null ? tx("no corta al eje X (es horizontal)") : `${tx("eje X: ")}(${L(corteX)},\\,0)`]);
+      P("Ángulo de inclinación", "Es el ángulo cuya tangente es la pendiente.", [`${TG}\\,\\alpha=${L(m)}\\Rightarrow\\alpha=${g2(ang)}`]);
+      P("Respondemos", `Pendiente ${m$(L(m))}, ordenada al origen ${m$(L(b))}${corteX === null ? "" : `, corta al eje X en ${m$(L(corteX))}`}, ángulo de inclinación ${m$(g2(ang))}.`);
+      return geo("Elementos de una recta", `m=${R(m)},\\;b=${R(b)}`, "pendiente");
+    }
+    return null;
+  }
+
+  /* =====================================================================
+     14) Cónicas: parábola, elipse e hipérbola (elementos desde la ecuación, o la ecuación desde los datos)
+     ===================================================================== */
+  function raizExacta(f) { if (f.n < 0) return null; const a = Math.round(Math.sqrt(f.n)), b = Math.round(Math.sqrt(f.d)); return a * a === f.n && b * b === f.d ? F(a, b) : null; }
+  const rz = (f) => { const e = raizExacta(f); return e ? { fr: e, tex: L(e), v: e.v } : { fr: null, tex: raizFr(f).sola, v: Math.sqrt(f.v) }; };
+  const sumT = (h, r, sg) => (r.fr ? L(sg > 0 ? h.mas(r.fr) : h.menos(r.fr)) : `${h.cero() ? (sg > 0 ? "" : "-") : L(h) + (sg > 0 ? "+" : "-")}${r.tex}`);
+  const lin = (v, k) => (k.cero() ? v : `(${v}${k.n < 0 ? "+" : "-"}${L(F(Math.abs(k.n), k.d))})`);
+  const coefTex = (f) => (f.v === 1 ? "" : f.v === -1 ? "-" : L(f));
+  function generalDe(c) { // c: {x2,y2,x,y,c}
+    let arr = sinFracciones([c.x2, c.y2, c.x, c.y, c.c]);
+    const g = arr.reduce((a, f) => mcd(a, Math.abs(f.n)), 0) || 1; arr = arr.map((f) => f.entre(g));
+    if (arr[0].n < 0 || (arr[0].cero() && arr[1].n < 0)) arr = arr.map((f) => f.por(-1));
+    return `${polyTex([[arr[0], "x^2"], [arr[1], "y^2"], [arr[2], "x"], [arr[3], "y"], [arr[4], ""]])}=0`;
+  }
+  // Parábola desde vértice (h,k), p y orientación ("v" abre arriba/abajo, "h" derecha/izquierda)
+  function parabolaElementos(h, k, pp, ori, P) {
+    const cuatro = pp.por(4);
+    const ord = ori === "v" ? `${binom("x", h)}=${coefTex(cuatro)}${lin("y", k)}` : `${binom("y", k)}=${coefTex(cuatro)}${lin("x", h)}`;
+    const gen = ori === "v" ? generalDe({ x2: F(1), y2: F(0), x: h.por(-2), y: cuatro.por(-1), c: h.por(h).mas(cuatro.por(k)) }) : generalDe({ x2: F(0), y2: F(1), x: cuatro.por(-1), y: k.por(-2), c: k.por(k).mas(cuatro.por(h)) });
+    const foco = ori === "v" ? `(${L(h)},\\,${L(k.mas(pp))})` : `(${L(h.mas(pp))},\\,${L(k)})`;
+    const dir = ori === "v" ? `y=${L(k.menos(pp))}` : `x=${L(h.menos(pp))}`, eje = ori === "v" ? `x=${L(h)}` : `y=${L(k)}`;
+    const abre = ori === "v" ? (pp.n > 0 ? "hacia arriba" : "hacia abajo") : pp.n > 0 ? "hacia la derecha" : "hacia la izquierda";
+    P("Elementos de la parábola", `El parámetro p es la distancia (con signo) del vértice al foco. Como p ${pp.n > 0 ? "> 0" : "< 0"}, abre ${abre}.`, [`V=(${L(h)},\\,${L(k)}),\\quad p=${L(pp)}`, `F=${foco},\\quad ${tx("directriz: ")}${dir}`, `${tx("eje: ")}${eje},\\quad ${tx("lado recto")}=|4p|=${L(F(Math.abs(cuatro.n), cuatro.d))}`]);
+    return { ord, gen, foco, dir, eje, abre };
+  }
+  // Elipse/hipérbola: (x-h)^2/Pp + (y-k)^2/Qq = 1 (Qq o Pp negativos en la hipérbola)
+  function centradaElementos(h, k, Pp, Qq, P) {
+    const hip = Pp.n * Qq.n < 0;
+    let a2, b2, ori;
+    if (!hip) { ori = Pp.v >= Qq.v ? "h" : "v"; a2 = ori === "h" ? Pp : Qq; b2 = ori === "h" ? Qq : Pp; }
+    else { ori = Pp.n > 0 ? "h" : "v"; a2 = ori === "h" ? Pp : Qq; b2 = (ori === "h" ? Qq : Pp).por(-1); }
+    const c2 = hip ? a2.mas(b2) : a2.menos(b2), a = rz(a2), b = rz(b2), c = rz(c2);
+    const pt = (r, sg, sobreX) => (sobreX ? `(${sumT(h, r, sg)},\\,${L(k)})` : `(${L(h)},\\,${sumT(k, r, sg)})`);
+    const H = ori === "h";
+    const vs = [pt(a, 1, H), pt(a, -1, H)], fs = [pt(c, 1, H), pt(c, -1, H)], cvs = [pt(b, 1, !H), pt(b, -1, !H)];
+    const e = a.fr && c.fr ? L(c.fr.entre(a.fr)) : `\\frac{${c.tex}}{${a.tex}}\\approx ${d2(c.v / a.v)}`;
+    const lr = a.fr ? L(b2.por(2).entre(a.fr)) : `\\frac{${L(b2.por(2))}}{${a.tex}}`;
+    const nombre = hip ? "hipérbola" : "elipse";
+    P(`Identificamos a, b y c`, hip ? "En la hipérbola, a² va con el término positivo (eje transverso) y c² = a² + b²." : "En la elipse, a² es el denominador mayor (eje mayor) y c² = a² − b².", [`a^2=${L(a2)},\\; b^2=${L(b2)}\\Rightarrow a=${a.tex},\\; b=${b.tex}`, `c^2=${hip ? "a^2+b^2" : "a^2-b^2"}=${L(c2)}\\Rightarrow c=${c.tex}`]);
+    P(`Elementos de la ${nombre}`, `Eje ${hip ? "transverso" : "mayor"} ${H ? "horizontal (paralelo al eje X)" : "vertical (paralelo al eje Y)"}.`, [`${tx("Centro: ")}(${L(h)},\\,${L(k)})`, `${tx("Vértices: ")}${vs.join(",\\;")}`, `${tx("Focos: ")}${fs.join(",\\;")}`, hip ? `${tx("Extremos del eje conjugado: ")}${cvs.join(",\\;")}` : `${tx("Covértices: ")}${cvs.join(",\\;")}`, `e=\\frac{c}{a}=${e},\\quad ${tx("lado recto")}=\\frac{2b^2}{a}=${lr}`]);
+    let asin = "";
+    if (hip) { const m = H ? (a.fr && b.fr ? L(b.fr.entre(a.fr)) : `\\frac{${b.tex}}{${a.tex}}`) : a.fr && b.fr ? L(a.fr.entre(b.fr)) : `\\frac{${a.tex}}{${b.tex}}`; asin = `${lin("y", k)}=\\pm ${m}\\,${lin("x", h)}`; P("Asíntotas", "Son las rectas a las que se acerca la hipérbola.", [asin]); }
+    return { hip, ori, a2, b2, c2, vs, fs, asin, nombre };
+  }
+  const fracTerm = (v, h, d) => `\\frac{${binom(v, h)}}{${L(d)}}`;
+
+  function conicas(orig, p) {
+    const cual = (p.match(/parabola|elipse|hiperbola/) || [])[0];
+    if (!cual) return null;
+    const o = orig.replace(/[−–—]/g, "-").replace(/\(\s*±\s*(\d+(?:[.,]\d+)?)\s*[,;]\s*(-?\d+(?:[.,]\d+)?)\s*\)/g, "($1, $2) y (-$1, $2)").replace(/\(\s*(-?\d+(?:[.,]\d+)?)\s*[,;]\s*±\s*(\d+(?:[.,]\d+)?)\s*\)/g, "($1, $2) y ($1, -$2)");
+    const ecs = ecuacionesEn(o), cuad = ecs.find((e) => e.grado === 2 && e.xy.cero());
+    const { p: ps, P } = pasos();
+    const res = (metodo, resultado) => ({ tema: "conicas", metodo, pasos: ps, resultado, area: "geo" });
+    // ---- A) desde la ecuación: elementos ----
+    if (cuad) {
+      const c = cuad;
+      P("Leemos la ecuación", "La pasamos a la forma general Ax² + Cy² + Dx + Ey + F = 0.", [`${polyTex([[c.x2, "x^2"], [c.y2, "y^2"], [c.x, "x"], [c.y, "y"], [c.c, ""]])}=0`]);
+      if (c.x2.cero() !== c.y2.cero()) {      // parábola
+        const ori = c.x2.cero() ? "h" : "v";
+        const A = ori === "v" ? c.x2 : c.y2, D = (ori === "v" ? c.x : c.y).entre(A), E = (ori === "v" ? c.y : c.x).entre(A), Fc = c.c.entre(A);
+        if (E.cero()) throw problema("Esa ecuación no es una parábola (falta el término lineal en la otra variable).");
+        const h = D.entre(-2), k = h.por(h).menos(Fc).entre(E), pp = E.por(-1).entre(4);
+        const V = ori === "v" ? [h, k] : [k, h];
+        P("Completamos cuadrados", `Agrupamos la variable al cuadrado y completamos el trinomio cuadrado perfecto.`, [ori === "v" ? `${binom("x", h)}=${coefTex(pp.por(4))}${lin("y", k)}` : `${binom("y", h)}=${coefTex(pp.por(4))}${lin("x", k)}`]);
+        const el = parabolaElementos(V[0], V[1], pp, ori, P);
+        P("Respondemos", `Es una parábola con vértice ${m$(`(${L(V[0])},\\,${L(V[1])})`)}, foco ${m$(el.foco)}, directriz ${m$(el.dir)} y eje ${m$(el.eje)}; abre ${el.abre}.`);
+        return res("Parábola: elementos desde la ecuación", `V=(${R(V[0])};\\,${R(V[1])}),\\;F=${el.foco.replace(/\\,/g, "")}`);
+      }
+      const A = c.x2, C = c.y2, h = c.x.entre(A.por(-2)), k = c.y.entre(C.por(-2)), Rr = A.por(h).por(h).mas(C.por(k).por(k)).menos(c.c);
+      if (Rr.cero()) throw problema("Al completar cuadrados el segundo miembro da 0: es una cónica degenerada (un punto o dos rectas).");
+      const Pp = Rr.entre(A), Qq = Rr.entre(C);
+      if (Pp.n < 0 && Qq.n < 0) throw problema("Al completar cuadrados queda una suma de cuadrados igual a un número negativo: no hay ningún punto real.");
+      P("Completamos cuadrados y dividimos", "Agrupamos x con x e y con y, completamos cuadrados y dividimos para que el segundo miembro sea 1.", [`${L(A)}${binom("x", h)}+${par(C)}${binom("y", k)}=${L(Rr)}`, `${fracTerm("x", h, Pp)}${Qq.n < 0 ? "-" : "+"}${fracTerm("y", k, F(Math.abs(Qq.n), Qq.d))}=1`.replace("+-", "-")]);
+      if (Pp.v === Qq.v) { P("Respondemos", `Es una circunferencia de centro ${m$(`(${L(h)},\\,${L(k)})`)} y radio ${m$(rz(Pp).tex)}.`); return res("Cónica desde la ecuación", tx("circunferencia")); }
+      const el = centradaElementos(h, k, Pp, Qq, P);
+      P("Respondemos", `Es una ${el.nombre} de centro ${m$(`(${L(h)},\\,${L(k)})`)}, vértices ${m$(el.vs.join(";\\;"))} y focos ${m$(el.fs.join(";\\;"))}${el.hip ? `; asíntotas ${m$(el.asin)}` : ""}.`);
+      return res(`${el.hip ? "Hipérbola" : "Elipse"}: elementos desde la ecuación`, `C=(${R(h)};\\,${R(k)}),\\;a=${rz(el.a2).tex},\\;b=${rz(el.b2).tex},\\;c=${rz(el.c2).tex}`);
+    }
+    // ---- B) desde los datos: la ecuación ----
+    const pts = puntos(o).map((q) => {
+      const antes = plano(o.slice(Math.max(0, q.i - 45), q.i)), last = (re) => { let m, i = -1; const r = new RegExp(re, "g"); while ((m = r.exec(antes))) i = m.index; return i; };
+      const opciones = [["V", last("vertice")], ["F", last("foco")], ["C", last("centro")], ["P", last("pasa|punto")], ["D", last("directriz")]];
+      const tipo = opciones.reduce((a, b) => (b[1] > a[1] ? b : a), ["?", -1]);
+      return { ...q, tipo: q.nombre === "V" ? "V" : q.nombre === "F" ? "F" : tipo[1] >= 0 ? tipo[0] : "?" };
+    });
+    const origen = (w) => new RegExp(`${w}[^.]{0,20}origen`).test(p);
+    if (cual === "parabola") {
+      let V = pts.find((q) => q.tipo === "V") || (origen("vertice") ? { nombre: "V", x: F(0), y: F(0) } : null);
+      const Fo = pts.find((q) => q.tipo === "F") || (origen("foco") ? { nombre: "F", x: F(0), y: F(0) } : null);
+      const dir = ecs.find((e) => e.grado === 1 && (e.x.cero() || e.y.cero()));
+      const Pq = pts.find((q) => q.tipo === "P" || (q.tipo === "?" && q !== V && q !== Fo));
+      let ori, pp;
+      if (V && Fo) {
+        if (V.x.v === Fo.x.v) { ori = "v"; pp = Fo.y.menos(V.y); } else if (V.y.v === Fo.y.v) { ori = "h"; pp = Fo.x.menos(V.x); } else throw problema("El vértice y el foco no están alineados vertical ni horizontalmente: el eje sería oblicuo.");
+        P("Leemos el problema y anotamos los datos", `Vértice ${m$(`(${L(V.x)},\\,${L(V.y)})`)} y foco ${m$(`(${L(Fo.x)},\\,${L(Fo.y)})`)}.`, [`p=${tx("distancia del vértice al foco (con signo)")}=${L(pp)}`]);
+      } else if (Fo && dir) {
+        const d = dir.c.por(-1).entre(dir.x.cero() ? dir.y : dir.x);
+        if (dir.y.cero()) { ori = "h"; V = { nombre: "V", x: Fo.x.mas(d).entre(2), y: Fo.y }; pp = Fo.x.menos(V.x); }
+        else { ori = "v"; V = { nombre: "V", x: Fo.x, y: Fo.y.mas(d).entre(2) }; pp = Fo.y.menos(V.y); }
+        P("Leemos el problema y anotamos los datos", `Foco ${m$(`(${L(Fo.x)},\\,${L(Fo.y)})`)} y directriz ${m$(`${ori === "h" ? "x" : "y"}=${L(d)}`)}.`);
+        P("El vértice está a mitad de camino entre el foco y la directriz", "", [`V=(${L(V.x)},\\,${L(V.y)}),\\quad p=${L(pp)}`]);
+      } else if (V && dir) {
+        const d = dir.c.por(-1).entre(dir.x.cero() ? dir.y : dir.x);
+        if (dir.y.cero()) { ori = "h"; pp = V.x.menos(d); } else { ori = "v"; pp = V.y.menos(d); }
+        P("Leemos el problema y anotamos los datos", `Vértice ${m$(`(${L(V.x)},\\,${L(V.y)})`)} y directriz ${m$(`${ori === "h" ? "x" : "y"}=${L(d)}`)}.`, [`p=${tx("distancia de la directriz al vértice (con signo)")}=${L(pp)}`]);
+      } else if (V && Pq && /eje/.test(p)) {
+        const ejeX = /eje\s*(?:focal\s*)?(?:es\s*)?(?:paralelo\s*al\s*|sobre\s*el\s*|el\s*)?(?:eje\s*)?(?:de\s*las\s*)?(x|abscisas)\b/.test(p) || /eje x/.test(p);
+        ori = ejeX ? "h" : "v";
+        const num = ori === "h" ? Pq.y.menos(V.y) : Pq.x.menos(V.x), den = ori === "h" ? Pq.x.menos(V.x) : Pq.y.menos(V.y);
+        if (den.cero()) throw problema("Con ese punto no se puede determinar p (quedaría dividir por cero).");
+        pp = num.por(num).entre(den.por(4));
+        P("Leemos el problema y anotamos los datos", `Vértice ${m$(`(${L(V.x)},\\,${L(V.y)})`)}, eje ${ori === "h" ? "horizontal" : "vertical"} y pasa por ${m$(Lp(Pq))}.`);
+        P("Reemplazamos el punto en la ecuación", "Así despejamos 4p.", [ori === "h" ? `(${L(Pq.y)}-${par(V.y)})^2=4p\\,(${L(Pq.x)}-${par(V.x)})\\Rightarrow p=${L(pp)}` : `(${L(Pq.x)}-${par(V.x)})^2=4p\\,(${L(Pq.y)}-${par(V.y)})\\Rightarrow p=${L(pp)}`]);
+      } else return null;
+      if (pp.cero()) throw problema("El vértice y el foco coinciden: no hay parábola.");
+      const el = parabolaElementos(V.x, V.y, pp, ori, P);
+      P("Escribimos la ecuación", "Forma ordinaria y forma general.", [ori === "v" ? `(x-h)^2=4p\\,(y-k)` : `(y-k)^2=4p\\,(x-h)`, el.ord, el.gen]);
+      P("Respondemos", `La parábola es ${m$(el.ord)}, o en forma general ${m$(el.gen)}.`);
+      return res("Parábola: ecuación desde los datos", el.ord);
+    }
+    // elipse / hipérbola
+    const hip = cual === "hiperbola";
+    const Vs = pts.filter((q) => q.tipo === "V"), Fs = pts.filter((q) => q.tipo === "F");
+    let C = pts.find((q) => q.tipo === "C") || (origen("centro") ? { x: F(0), y: F(0) } : null);
+    if (!C && Vs.length >= 2) C = medio(Vs[0], Vs[1]);
+    if (!C && Fs.length >= 2) C = medio(Fs[0], Fs[1]);
+    if (!C) return null;
+    const num = (re) => { const m = p.match(re); return m ? leerCoord(m[1]) : null; };
+    const ejeMay = num(/eje (?:mayor|transverso|real)\D{0,25}?(\d+(?:[.,]\d+)?(?:\/\d+)?)/), ejeMen = num(/eje (?:menor|conjugado|imaginario)\D{0,25}?(\d+(?:[.,]\d+)?(?:\/\d+)?)/), exc = num(/excentricidad\D{0,15}?(\d+(?:[.,]\d+)?(?:\/\d+)?)/);
+    let ori = null, a2 = null, b2 = null, c2 = null;
+    const dist = (q) => { if (q.x.v === C.x.v) { ori = ori || "v"; const d = q.y.menos(C.y); return d.por(d); } if (q.y.v === C.y.v) { ori = ori || "h"; const d = q.x.menos(C.x); return d.por(d); } throw problema("Un vértice o foco no está sobre un eje paralelo a los ejes coordenados: el caso oblicuo no lo resuelvo."); };
+    const covert = pts.find((q) => /covertice|extremo del eje menor|extremos del eje menor/.test(plano(o.slice(Math.max(0, q.i - 40), q.i))));
+    if (Vs.length && Vs[0] !== covert) a2 = dist(Vs[0]);
+    if (Fs.length) c2 = dist(Fs[0]);
+    if (!a2 && ejeMay) a2 = ejeMay.entre(2).por(ejeMay.entre(2));
+    if (ejeMen) b2 = ejeMen.entre(2).por(ejeMen.entre(2));
+    if (exc && a2 && !c2) c2 = exc.por(exc).por(a2);
+    if (exc && c2 && !a2) a2 = c2.entre(exc.por(exc));
+    if (!a2 && c2 && b2) a2 = hip ? c2.menos(b2) : c2.mas(b2);
+    if (!b2 && a2 && c2) b2 = hip ? c2.menos(a2) : a2.menos(c2);
+    if (!c2 && a2 && b2) c2 = hip ? a2.mas(b2) : a2.menos(b2);
+    if (!ori) ori = /(eje (?:de las )?(?:x|abscisas)|horizontal)/.test(p) ? "h" : /(eje (?:de las )?(?:y|ordenadas)|vertical)/.test(p) ? "v" : null;
+    if (!a2 || !b2 || !ori) return null;
+    if (b2.n <= 0) throw problema(hip ? "En la hipérbola c tiene que ser mayor que a: revisá los datos." : "En la elipse a tiene que ser mayor que c: revisá los datos.");
+    P("Leemos el problema y anotamos los datos", "Ubicamos el centro y medimos desde él: a hasta un vértice, c hasta un foco.", [`${tx("Centro: ")}(${L(C.x)},\\,${L(C.y)})`, `a^2=${L(a2)},\\quad c^2=${L(c2)}`]);
+    P(hip ? "Calculamos b (c² = a² + b²)" : "Calculamos b (a² = b² + c²)", "", [hip ? `b^2=c^2-a^2=${L(c2)}-${L(a2)}=${L(b2)}` : `b^2=a^2-c^2=${L(a2)}-${L(c2)}=${L(b2)}`]);
+    const Pp = ori === "h" ? a2 : hip ? b2.por(-1) : b2, Qq = ori === "h" ? (hip ? b2.por(-1) : b2) : a2;
+    const ord = hip ? (ori === "h" ? `${fracTerm("x", C.x, a2)}-${fracTerm("y", C.y, b2)}=1` : `${fracTerm("y", C.y, a2)}-${fracTerm("x", C.x, b2)}=1`) : ori === "h" ? `${fracTerm("x", C.x, a2)}+${fracTerm("y", C.y, b2)}=1` : `${fracTerm("x", C.x, b2)}+${fracTerm("y", C.y, a2)}=1`;
+    // general: Qq(x-h)^2 + Pp(y-k)^2 - PpQq = 0
+    const gen = generalDe({ x2: Qq, y2: Pp, x: Qq.por(C.x).por(-2), y: Pp.por(C.y).por(-2), c: Qq.por(C.x).por(C.x).mas(Pp.por(C.y).por(C.y)).menos(Pp.por(Qq)) });
+    P("Escribimos la ecuación", `Eje ${hip ? "transverso" : "mayor"} ${ori === "h" ? "horizontal" : "vertical"}: ${ori === "h" ? "a² va debajo de (x − h)²" : "a² va debajo de (y − k)²"}.`, [ord, gen]);
+    centradaElementos(C.x, C.y, Pp, Qq, P);
+    P("Respondemos", `La ${hip ? "hipérbola" : "elipse"} es ${m$(ord)}, o en forma general ${m$(gen)}.`);
+    return res(`${hip ? "Hipérbola" : "Elipse"}: ecuación desde los datos`, ord);
+  }
+
   /* ---------- detección ---------- */
-  const TIPOS = [transformacion, circunferencia, geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
+  const TIPOS = [transformacion, conicas, circunferencia, recta, geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
     (o, p) => fraccionesDelTotal(p), dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
   function resolver(texto) {
     const orig = String(texto || "").replace(/\s+/g, " ").trim();
@@ -1147,7 +1427,7 @@
       if (er) er.textContent = "";
       mostrarExito(texto, r, metodo);
       // si los temas del área todavía no cargaron, mostramos el nombre lindo del tema
-      const NOMBRES = { circunferencia: "Circunferencia", transformacion: "Transformación de coordenadas", rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
+      const NOMBRES = { conicas: "Cónicas: parábola, elipse e hipérbola", circunferencia: "Circunferencia", transformacion: "Transformación de coordenadas", rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
       const cab = document.querySelector("#cabecera b");
       if (cab && cab.textContent === r.tema && NOMBRES[r.tema]) cab.textContent = NOMBRES[r.tema];
     })();
