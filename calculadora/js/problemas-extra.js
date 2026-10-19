@@ -1427,7 +1427,7 @@
       if (er) er.textContent = "";
       mostrarExito(texto, r, metodo);
       // si los temas del área todavía no cargaron, mostramos el nombre lindo del tema
-      const NOMBRES = { conicas: "Cónicas: parábola, elipse e hipérbola", circunferencia: "Circunferencia", transformacion: "Transformación de coordenadas", rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
+      const NOMBRES = { recta: "Línea recta", pendiente: "Pendiente de una recta", conicas: "Cónicas: parábola, elipse e hipérbola", circunferencia: "Circunferencia", transformacion: "Transformación de coordenadas", rectangulos: "Triángulos rectángulos", oblicuangulos: "Triángulos oblicuángulos", uni: "Geometría analítica unidimensional", problemas: "Problemas con enunciado", proporciones: "Razones y proporciones", razonamiento: "Razonamiento aritmético" };
       const cab = document.querySelector("#cabecera b");
       if (cab && cab.textContent === r.tema && NOMBRES[r.tema]) cab.textContent = NOMBRES[r.tema];
     })();
