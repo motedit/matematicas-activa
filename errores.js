@@ -60,6 +60,8 @@
     // Errores de carga de recursos (imagen, script, css que no existe)
     var t = ev.target;
     if (t && t !== window && (t.src || t.href)) {
+      // imágenes vacías que meten los bloqueadores de contenido del navegador (no son del sitio)
+      if (/^(data|blob|about):/i.test(t.src || t.href || "")) return;
       enviar("No cargó el recurso: " + (t.tagName || "").toLowerCase(), t.src || t.href, null, null, null);
       return;
     }
