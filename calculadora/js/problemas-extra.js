@@ -1384,9 +1384,64 @@
     return res(`${hip ? "Hipérbola" : "Elipse"}: ecuación desde los datos`, ord);
   }
 
+  /* =====================================================================
+     15) Mezclas: dos ingredientes de distinto precio (o concentración) que forman una mezcla
+     ===================================================================== */
+  function mezcla(orig, p) {
+    if (!/mezcl|combina|aleaci/.test(p)) return null;
+    const ns = numeros(p).filter((n) => !n.frac);
+    const UNID = /^\s*(kg|kilos?|kilogramos?|litros?|l\b|lts?|toneladas?|tn|gramos?|gr?\b|ml|bolsas?|unidades|quintales?|metros?)/;
+    const esPrecio = (n) => n.dinero || n.pct || /^\s*(pesos\s*)?(el|por|cada|x|\/)\s*(kg|kilo|litro|l\b|tonelada|gramo|unidad|bolsa)/.test(n.despues);
+    const precios = ns.filter(esPrecio), cants = ns.filter((n) => !esPrecio(n) && UNID.test(n.despues));
+    const pct = precios.some((n) => n.pct);
+    const u = cants.length ? (cants[0].despues.match(UNID)[1].replace(/^kilos?$|^kilogramos?$/, "kg").replace(/^l$|^lts?$/, "litros")) : "kg";
+    const uo = u === "kg" || u === "litros" ? u : u;
+    const precioTex = (f) => (pct ? `${L(f)}\\%` : PESO + L(f));
+    const { p: ps, P } = pasos();
+    const res = (metodo, resultado) => ({ tema: "problemas", metodo, pasos: ps, resultado, area: "alg" });
+    const dato = pct ? "concentración" : "precio";
+    // (iii) dos precios y dos cantidades → precio de la mezcla
+    if (precios.length === 2 && cants.length === 2) {
+      const [p1, p2] = precios.map((n) => n.v), [q1, q2] = cants.map((n) => n.v), tot = q1.mas(q2), pm = q1.por(p1).mas(q2.por(p2)).entre(tot);
+      P("Leemos el problema y anotamos los datos", `Dos ${pct ? "soluciones" : "productos"} con distinto ${dato}, y cuánto se usa de cada uno.`, [], tabla(["", "Cantidad", pct ? "Concentración" : "Precio"], [["1.º", m$(`${L(q1)}\\,${tx(uo)}`), m$(precioTex(p1))], ["2.º", m$(`${L(q2)}\\,${tx(uo)}`), m$(precioTex(p2))]]));
+      P("Planteamos", pct ? "La cantidad de sustancia pura de la mezcla es la suma de la de cada parte." : "El valor total de la mezcla es la suma de lo que vale cada parte; lo dividimos por la cantidad total.", [`${tx(dato)}=\\frac{${L(q1)}\\cdot ${L(p1)}+${L(q2)}\\cdot ${L(p2)}}{${L(q1)}+${L(q2)}}=\\frac{${L(q1.por(p1).mas(q2.por(p2)))}}{${L(tot)}}=${aprox(pm)}`]);
+      P("Respondemos con una oración", `La mezcla queda a ${m$(pct ? aprox(pm) + "\\%" : PESO + aprox(pm))}${pct ? "" : ` el ${u === "kg" ? "kg" : u.replace(/s$/, "")}`}.`);
+      return res("Mezcla: precio (o concentración) promedio", `${R(pm)}`);
+    }
+    if (precios.length !== 3 || cants.length !== 1) return null;
+    const ord = precios.map((n) => n).sort((a, b) => a.v.v - b.v.v);
+    const pm = ord[1], [pa, pb] = [precios.find((n) => n !== pm), precios.filter((n) => n !== pm)[1]];
+    if (pa.v.v === pm.v.v || pb.v.v === pm.v.v) return null;
+    const Q = cants[0];
+    // ¿la cantidad es de uno de los componentes? ("tiene 20 kg de la de $3")
+    const comp = [pa, pb].find((n) => n.i > Q.i && n.i - Q.fin < 35 && !/(mezcla|total|obtener|resultante)/.test(p.slice(Q.fin, n.i)));
+    const lab = (n) => { const m = orig.slice(Math.max(0, n.i - 40), n.i).match(/(?:de|semilla|tipo|calidad|clase|variedad)\s+([A-Za-zÁ-úñ]+)\s*(?:de|a|que cuesta|que vale|cuesta|vale|al?)?\s*\$?\s*$/); return m && !/^(la|el|los|las|una|un|otra|otro|de|a|que|cuesta|vale|tipo|al)$/i.test(m[1]) ? m[1] : null; };
+    const nom = (n) => (lab(n) ? `${lab(n)} (${m$(precioTex(n.v))})` : `la de ${m$(precioTex(n.v))}`);
+    if (comp) {
+      const otro = comp === pa ? pb : pa, a = Q.v, x = a.por(comp.v.menos(pm.v)).entre(pm.v.menos(otro.v));
+      P("Leemos el problema y anotamos los datos", `Ya tenemos ${m$(`${L(a)}\\,${tx(uo)}`)} de ${nom(comp)} y queremos que la mezcla quede a ${m$(precioTex(pm.v))}.`);
+      P("Elegimos la incógnita", `$x$ = cantidad de ${nom(otro)} que hay que agregar.`);
+      P("Planteamos la ecuación", pct ? "Sustancia pura de cada parte = sustancia pura de la mezcla." : "Lo que vale cada parte, sumado, es lo que vale la mezcla.", [`${L(a)}\\cdot ${L(comp.v)}+${L(otro.v)}\\,x=${L(pm.v)}\\,(${L(a)}+x)`]);
+      P("Resolvemos", "Distribuimos y despejamos x.", [`${L(a.por(comp.v))}+${L(otro.v)}x=${L(pm.v.por(a))}+${L(pm.v)}x`, `${L(otro.v.menos(pm.v))}x=${L(pm.v.por(a).menos(a.por(comp.v)))}`, `x=${aprox(x)}`]);
+      P("Verificamos en el enunciado", "", [`\\frac{${L(a)}\\cdot ${L(comp.v)}+${aprox(x)}\\cdot ${L(otro.v)}}{${L(a)}+${aprox(x)}}=${aprox(a.por(comp.v).mas(x.por(otro.v)).entre(a.mas(x)))}${ok}`]);
+      P("Respondemos con una oración", `Hay que agregar ${m$(aprox(x))} ${uo} de ${nom(otro)}.`);
+      return res("Mezcla: cuánto agregar", `x=${R(x)}`);
+    }
+    // (i) cantidad total → cuánto de cada uno
+    const N = Q.v, p1 = pa.v, p2 = pb.v, m = pm.v;
+    const x = N.por(m.menos(p2)).entre(p1.menos(p2)), y = N.menos(x);
+    P("Leemos el problema y anotamos los datos", `Se mezclan dos ${pct ? "soluciones" : "tipos"} y se quiere obtener ${m$(`${L(N)}\\,${tx(uo)}`)} a ${m$(precioTex(m))}.`, [], tabla(["", pct ? "Concentración" : "Precio"], [[nom(pa), m$(precioTex(p1))], [nom(pb), m$(precioTex(p2))], ["Mezcla", m$(precioTex(m))]]));
+    P("Elegimos las incógnitas", `$x$ = ${uo} de ${nom(pa)}, $y$ = ${uo} de ${nom(pb)}.`);
+    P("Planteamos el sistema de ecuaciones", pct ? "Una ecuación suma las cantidades; la otra, la sustancia pura." : "Una ecuación suma las cantidades; la otra suma lo que vale cada parte (cantidad por precio).", [`\\begin{cases}x+y=${L(N)}\\\\ ${L(p1)}\\,x+${L(p2)}\\,y=${L(m)}\\cdot ${L(N)}=${L(m.por(N))}\\end{cases}`]);
+    P("Resolvemos por sustitución", "Despejamos y de la primera y reemplazamos en la segunda.", [`y=${L(N)}-x`, `${L(p1)}\\,x+${L(p2)}\\,(${L(N)}-x)=${L(m.por(N))}`, `${L(p1.menos(p2))}\\,x=${L(m.por(N).menos(p2.por(N)))}`, `x=${aprox(x)},\\quad y=${L(N)}-${aprox(x)}=${aprox(y)}`]);
+    P("Verificamos en el enunciado", "", [`${aprox(x)}+${aprox(y)}=${L(N)}${ok}`, `${L(p1)}\\cdot ${aprox(x)}+${L(p2)}\\cdot ${aprox(y)}=${aprox(x.por(p1).mas(y.por(p2)))}=${L(m.por(N))}${ok}`]);
+    P("Respondemos con una oración", `Hay que mezclar ${m$(aprox(x))} ${uo} de ${nom(pa)} y ${m$(aprox(y))} ${uo} de ${nom(pb)}.`);
+    return res("Sistema de ecuaciones (mezclas)", `x=${R(x)},\\;y=${R(y)}`);
+  }
+
   /* ---------- detección ---------- */
   const TIPOS = [transformacion, conicas, circunferencia, recta, geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
-    (o, p) => fraccionesDelTotal(p), dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
+    (o, p) => fraccionesDelTotal(p), mezcla, dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
   function resolver(texto) {
     const orig = String(texto || "").replace(/\s+/g, " ").trim();
     if (orig.split(" ").length < 5) return null;
@@ -1398,6 +1453,27 @@
     return null;
   }
   window.MA_PROBLEMAS = { resolver, Fr };
+
+  /* ---------- si escribieron un problema en palabras y no se reconoció: mensaje claro ---------- */
+  (function () {
+    const err = document.getElementById && document.getElementById("error");
+    if (!err || !window.MutationObserver) return;
+    let cambiando = false;
+    new MutationObserver(() => {
+      if (cambiando) return;
+      const msg = err.textContent.trim();
+      if (!/^No (reconozco|entiendo|pude leer)/i.test(msg)) return;
+      let t = ""; try { t = leerEntrada(); } catch (e) { return; }
+      const palabras = (t.match(/[A-Za-zÁ-úñÑ]{3,}/g) || []).length;
+      if (palabras < 5) return;
+      cambiando = true;
+      err.textContent = "No reconocí este problema escrito. Revisá que esté completo (con todos los números y la pregunta). " +
+        "Entiendo, por ejemplo: edades, números consecutivos, mezclas, porcentajes, regla de tres, repartos, móviles, " +
+        "trabajo conjunto, cabezas y patas, entradas de dos precios, dos compras, fracciones de un total, ángulos, " +
+        "triángulos, sombras y alturas, rectas, circunferencias y cónicas. Si es de otro tipo, planteá la ecuación y escribila (por ejemplo 3x + 5 = 20).";
+      setTimeout(() => { cambiando = false; }, 0);
+    }).observe(err, { childList: true, characterData: true, subtree: true });
+  })();
 
   /* ---------- enganche con la calculadora ---------- */
   if (typeof window.resolverAhora !== "function") return;
