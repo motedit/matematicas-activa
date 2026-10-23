@@ -270,10 +270,34 @@
     Pasar("Dividimos paso a paso", "En cada paso dividimos el término de mayor grado del resto por el de mayor grado del divisor, multiplicamos y restamos.", lineas);
     return { q: Q, r: R };
   }
+  // División "común" en la disposición clásica (dividendo | divisor, cociente abajo del divisor)
+  function galera(P, D, v) {
+    const grados = []; for (let g = P.g; g >= 0; g--) grados.push(g);
+    const termino = (c, g, primero) => { if (c === undefined) return ""; const neg = c.n < 0, ab = F(Math.abs(c.n), c.d); const coef = g > 0 && ab.n === 1 && ab.d === 1 ? "" : Lfr(ab); return (neg ? "-" : primero ? "" : "+") + coef + (g === 0 ? "" : g === 1 ? v : `${v}^{${g}}`); };
+    const fila = (pol, desde, hasta, primeroSigno) => grados.map((g) => (g <= desde && g >= hasta ? termino(pol.c[g] || F(0), g, primeroSigno && g === desde) : ""));
+    const filas = [];
+    let R = new Pol(P.c.slice()), Q = Pol.k(0), paso = 0;
+    filas.push({ celdas: fila(P, P.g, 0, true), linea: false });
+    while (!R.cero() && R.g >= D.g) {
+      const k = R.lider().entre(D.lider()), d = R.g - D.g, t = new Pol(Array(d).fill(0).map(() => F(0)).concat([k]));
+      Q = Q.mas(t);
+      const resta = D.por(t).por(Pol.k(-1));
+      filas.push({ celdas: fila(resta, R.g, d, false), linea: false });
+      R = R.menos(D.por(t));
+      const hasta = Math.max(0, R.g - D.g >= 0 ? 0 : 0);
+      filas.push({ celdas: fila(R.cero() ? Pol.k(0) : R, R.cero() ? 0 : Math.min(R.g, P.g), hasta, true).map((c, i) => (R.cero() && grados[i] === 0 ? "0" : c)), linea: true });
+      paso++;
+    }
+    const der = [`${polTex(D, v)}`, `${polTex(Q, v)}`];
+    const html = `<table class="tabla galera">${filas.map((f, i) => `<tr class="${f.linea ? "res" : ""}">${f.celdas.map((c) => `<td>${c ? "$" + c + "$" : ""}</td>`).join("")}<td class="${i === 0 ? "div" : i === 1 ? "coc" : ""}">${i < 2 ? "$" + der[i] + "$" : ""}</td></tr>`).join("")}</table>`;
+    return { q: Q, r: R, html };
+  }
   function resolverDivision(texto, metodo) {
     let s = String(texto || "").replace(/[−–—]/g, "-").replace(/[·×]/g, "*").replace(/÷/g, ":").replace(/²/g, "^2").replace(/³/g, "^3").replace(/⁴/g, "^4");
     const palabras = /(dividir|divid|division|división|ruffini|cociente|resto)/i.test(s);
     s = s.replace(/\b(por|usando|aplicando|con|mediante)\s+(la\s+)?((regla|m[eé]todo|teorema)\s+(de\s+)?)?ruffini\b/gi, " ");
+    const pideComun = metodo === "div-larga" || metodo !== "div-ruffini" && /(sin\s+(usar\s+|utilizar\s+)?ruffini|divisi[oó]n\s+(larga|com[uú]n|tradicional|cl[aá]sica|entera)|galera|m[eé]todo\s+(tradicional|cl[aá]sico|com[uú]n))/i.test(s);
+    s = s.replace(/\bsin\s+(usar\s+|utilizar\s+)?ruffini\b/gi, " ").replace(/\b(larga|com[uú]n|tradicional|cl[aá]sica|cl[aá]sico|entera|galera|m[eé]todo|usar|utilizar|utilizando)\b/gi, " ");
     s = s.replace(/\b(calcular|calcul[aá]|resolver|resolv[eé]|hallar|hall[aá]|realizar|realiz[aá]|hacer|hac[eé]|efectuar|efectu[aá]|el|la|los|las|de|del|polinomio|polinomios|division|división|dividir|divid[ií]|dividiendo|cociente|y|resto|usando|aplicando|con|por la regla de|regla de|ruffini|método de|metodo de)\b/gi, " ");
     // "P por Q", "P entre Q", "P : Q" → (P):(Q)
     const partes = s.split(/\s+(?:por|entre|en|sobre)\s+|:|÷/i);
@@ -294,16 +318,27 @@
     const faltan = P.c.some((c) => c.cero());
     Pp("Ordenamos y completamos el dividendo", faltan ? "Escribimos los términos de mayor a menor grado y completamos con 0 los que faltan (es clave para no correr las columnas)." : "Los términos ya están ordenados de mayor a menor grado y completos.", [`P(${v})=${polTex(P, v)}`, `${tx("coeficientes: ")}${P.c.slice().reverse().map(Lfr).join(",\\;")}`, `Q(${v})=${polTex(D, v)}`]);
     let q, r, a = null;
-    if (D.g === 1 && D.lider().v === 1) {
+    let alternativas = [];
+    if (D.g === 1 && pideComun) {
+      a = D.c[0].por(-1).entre(D.lider());
+      const gl = galera(P, D, v); q = gl.q; r = gl.r;
+      Pp("Hacemos la división común", "En cada paso dividimos el primer término del resto por el primer término del divisor, multiplicamos ese resultado por todo el divisor, lo escribimos con el signo cambiado y sumamos.", [], gl.html);
+      divisionPasos(P, D, v, (t, x, m) => Pp("Los pasos, uno por uno", x, m));
+      alternativas = [{ nombre: "Ver con Ruffini", metodo: "div-ruffini" }];
+    } else if (D.g === 1 && D.lider().v === 1) {
       a = D.c[0].por(-1);
+      alternativas = [{ nombre: "Ver con división común (sin Ruffini)", metodo: "div-larga" }];
       const rf = ruffini(P, a); q = rf.q; r = Pol.k(rf.r);
       Pp("Aplicamos la regla de Ruffini", `El divisor es ${v} − a con a = ${Lfr(a)}: bajamos el primer coeficiente, lo multiplicamos por a, lo sumamos al siguiente, y así hasta el final. El último número es el resto.`.replace("− a con a = -", "+ a con a = -"), [], rf.tabla);
     } else if (D.g === 1) {
       a = D.c[0].por(-1).entre(D.lider());
       const rf = ruffini(P, a); q = rf.q.por(Pol.k(F(1).entre(D.lider()))); r = Pol.k(rf.r);
+      alternativas = [{ nombre: "Ver con división común (sin Ruffini)", metodo: "div-larga" }];
       Pp("Aplicamos Ruffini con el divisor dividido por su coeficiente", `Como el divisor es ${polTex(D, v)}, usamos Ruffini con a = ${Lfr(a)} y después dividimos el cociente por ${Lfr(D.lider())}.`, [], rf.tabla);
     } else {
-      const dv = divisionPasos(P, D, v, Pp); q = dv.q; r = dv.r;
+      const gl = galera(P, D, v); q = gl.q; r = gl.r;
+      Pp("Hacemos la división", "En cada paso dividimos el primer término del resto por el primer término del divisor, multiplicamos ese resultado por todo el divisor, lo escribimos con el signo cambiado y sumamos.", [], gl.html);
+      divisionPasos(P, D, v, (t, x, m) => Pp("Los pasos, uno por uno", x, m));
     }
     Pp("Cociente y resto", "", [`C(${v})=${polTex(q, v)}`, `R(${v})=${polTex(r, v)}`]);
     if (a !== null) Pp("Comprobamos con el teorema del resto", `El resto de dividir por ${polTex(D, v)} es el valor del polinomio en ${v} = ${Lfr(a)}.`, [`P(${Lfr(a)})=${Lfr(P.val(a))}`]);
@@ -315,7 +350,7 @@
       resultado = `C(${v})=${polTex(q, v)},\\;R=0`;
       Pp("Resultado", "", [`C(${v})=${polTex(q, v)},\\quad R=0`, `P(${v})=${factTex(fz, v)}`]);
     } else Pp("Resultado", "La división no es exacta: el divisor no es factor del polinomio.", [`P(${v})=(${polTex(D, v)})(${polTex(q, v)})+(${polTex(r, v)})`]);
-    return { tema: "polinomios", metodo: a !== null ? "División de polinomios (Ruffini)" : "División de polinomios", pasos, resultado };
+    return { tema: "polinomios", metodo: alternativas[0] && alternativas[0].metodo === "div-larga" ? "División de polinomios (Ruffini)" : "División de polinomios (división común)", pasos, resultado, alternativas };
   }
   // Factorizar por Ruffini (o Gauss): divisiones sucesivas por cada raíz racional
   function resolverFactorRuffini(texto) {
@@ -361,14 +396,14 @@
   window.resolverAhora = function (metodo) {
     let texto = ""; try { texto = leerEntrada(); pendiente = !metodo && texto ? { t: texto, cuando: Date.now(), area } : null; } catch (e) { pendiente = null; }
     // División de polinomios: la resolvemos directamente (con Ruffini cuando se puede)
-    let rd = null; try { rd = !metodo && texto ? resolverDivision(texto) : null; } catch (e) { rd = null; }
-    if (rd) { pendiente = null; mostrarPropio(texto, rd, "alg"); return; }
+    let rd = null; try { rd = texto && (!metodo || /^div-/.test(metodo)) ? resolverDivision(texto, metodo) : null; } catch (e) { rd = null; }
+    if (rd) { pendiente = null; mostrarPropio(texto, rd, "alg", !!metodo); return; }
     return anterior.apply(this, arguments);
   };
   const NOMBRE = { fracciones: "Fracciones algebraicas", polinomios: "Polinomios", factorizacion: "Factorización" };
-  async function mostrarPropio(texto, r, destino) {
+  async function mostrarPropio(texto, r, destino, sinCobrar) {
     const er = document.getElementById("error");
-    if (window.MA_CALC && typeof MA_CALC.usar === "function") { try { if (!(await MA_CALC.usar())) return; } catch (e) { if (er) er.textContent = e.message; return; } }
+    if (!sinCobrar && window.MA_CALC && typeof MA_CALC.usar === "function") { try { if (!(await MA_CALC.usar())) return; } catch (e) { if (er) er.textContent = e.message; return; } }
     if (destino && area !== destino && typeof cambiarArea === "function") { cambiarArea(destino); campoTexto.value = texto; }
     if (er) er.textContent = "";
     ultimaEntrada = texto;

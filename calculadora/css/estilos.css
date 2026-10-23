@@ -26,3 +26,10 @@
 .tabla.ruffini tr td:first-child{border-right:2px solid currentColor}
 .tabla.ruffini tr:last-child td{border-top:2px solid currentColor;font-weight:700}
 .tabla.ruffini tr:last-child td:last-child{outline:2px solid #e5604a;outline-offset:-3px;border-radius:6px}
+
+/* División común (galera) */
+.tabla.galera{border-collapse:collapse;margin:10px 0;width:auto}
+.tabla.galera td{padding:4px 8px;text-align:right;border:0;background:none;white-space:nowrap}
+.tabla.galera tr.res td:not(:last-child):not(:empty){border-top:2px solid currentColor}
+.tabla.galera td.div{border-left:2px solid currentColor;border-bottom:2px solid currentColor;text-align:left;padding-left:12px}
+.tabla.galera td.coc{border-left:2px solid currentColor;text-align:left;padding-left:12px;font-weight:700}
