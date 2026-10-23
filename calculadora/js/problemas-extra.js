@@ -1456,7 +1456,7 @@
 
   /* ---------- si escribieron un problema en palabras y no se reconoció: mensaje claro ---------- */
   (function () {
-    const err = document.getElementById && document.getElementById("error");
+    const err = typeof document !== "undefined" && document.getElementById("error");
     if (!err || !window.MutationObserver) return;
     let cambiando = false;
     new MutationObserver(() => {

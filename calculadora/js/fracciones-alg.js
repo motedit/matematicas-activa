@@ -246,16 +246,136 @@
     return { tema: "fracciones", metodo: "Operaciones con fracciones algebraicas", pasos, resultado: final };
   }
   const tx = (s) => `\\text{${s}}`;
-  window.MA_FRACCIONES = { resolver: resolverFracciones };
+  /* ---------- división de polinomios (Ruffini o división larga) y factorización ---------- */
+  const tablaR = (filas) => `<table class="tabla ruffini">${filas.map((f) => `<tr>${f.map((c) => `<td>${c === "" ? "" : "$" + c + "$"}</td>`).join("")}</tr>`).join("")}</table>`;
+  function ruffini(P, a) {          // divide P por (x − a); devuelve {q, r, tabla}
+    const co = P.c.slice().reverse();  // de mayor a menor grado
+    const baja = [co[0]], prod = [""];
+    for (let i = 1; i < co.length; i++) { const m = baja[i - 1].por(a); prod.push(m); baja.push(co[i].mas(m)); }
+    const r = baja[baja.length - 1], q = new Pol(baja.slice(0, -1).reverse());
+    const tabla = tablaR([["", ...co.map(Lfr)], [Lfr(a), ...prod.map((v) => (v === "" ? "" : Lfr(v)))], ["", ...baja.map(Lfr)]]);
+    return { q, r, tabla };
+  }
+  function divisionPasos(P, D, v, Pasar) {
+    let R = new Pol(P.c.slice()); const lineas = [];
+    let Q = Pol.k(0);
+    while (!R.cero() && R.g >= D.g) {
+      const k = R.lider().entre(D.lider()), d = R.g - D.g;
+      const t = new Pol(Array(d).fill(0).map(() => F(0)).concat([k]));
+      Q = Q.mas(t);
+      const nuevo = R.menos(D.por(t));
+      lineas.push(`\\frac{${polTex(new Pol(Array(R.g).fill(0).map(() => F(0)).concat([R.lider()])), v)}}{${polTex(new Pol(Array(D.g).fill(0).map(() => F(0)).concat([D.lider()])), v)}}=${polTex(t, v)}\\;\\Rightarrow\\;(${polTex(R, v)})-${polTex(t, v) === "1" ? "" : `(${polTex(t, v)})\\cdot`}(${polTex(D, v)})=${polTex(nuevo, v)}`);
+      R = nuevo;
+    }
+    Pasar("Dividimos paso a paso", "En cada paso dividimos el término de mayor grado del resto por el de mayor grado del divisor, multiplicamos y restamos.", lineas);
+    return { q: Q, r: R };
+  }
+  function resolverDivision(texto, metodo) {
+    let s = String(texto || "").replace(/[−–—]/g, "-").replace(/[·×]/g, "*").replace(/÷/g, ":").replace(/²/g, "^2").replace(/³/g, "^3").replace(/⁴/g, "^4");
+    const palabras = /(dividir|divid|division|división|ruffini|cociente|resto)/i.test(s);
+    s = s.replace(/\b(por|usando|aplicando|con|mediante)\s+(la\s+)?((regla|m[eé]todo|teorema)\s+(de\s+)?)?ruffini\b/gi, " ");
+    s = s.replace(/\b(calcular|calcul[aá]|resolver|resolv[eé]|hallar|hall[aá]|realizar|realiz[aá]|hacer|hac[eé]|efectuar|efectu[aá]|el|la|los|las|de|del|polinomio|polinomios|division|división|dividir|divid[ií]|dividiendo|cociente|y|resto|usando|aplicando|con|por la regla de|regla de|ruffini|método de|metodo de)\b/gi, " ");
+    // "P por Q", "P entre Q", "P : Q" → (P):(Q)
+    const partes = s.split(/\s+(?:por|entre|en|sobre)\s+|:|÷/i);
+    if (partes.length === 2 && partes[0].trim() && partes[1].trim()) s = `(${partes[0]}):(${partes[1]})`;
+    s = s.replace(/\s+/g, "");
+    if (/[=<>]/.test(s)) return null;
+    const letras = [...new Set((s.match(/[a-zA-Z]/g) || []))];
+    if (letras.length !== 1) return null;
+    const v = letras[0];
+    let ast; try { ast = parse(tokens(s, v)); } catch (e) { return null; }
+    if (ast.o !== "/" || !esPol(ast.a) || !esPol(ast.b)) return null;
+    const P = valor(ast.a).n, D = valor(ast.b).n;
+    if (D.g < 1 || P.g < D.g) return null;
+    const conDosPuntos = /:/.test(s) || palabras;
+    if (!conDosPuntos && !(D.g === 1)) return null;  // "P/Q" solo si el divisor es de grado 1 (Ruffini)
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    const completo = new Pol(P.c);  // ya incluye los ceros
+    const faltan = P.c.some((c) => c.cero());
+    Pp("Ordenamos y completamos el dividendo", faltan ? "Escribimos los términos de mayor a menor grado y completamos con 0 los que faltan (es clave para no correr las columnas)." : "Los términos ya están ordenados de mayor a menor grado y completos.", [`P(${v})=${polTex(P, v)}`, `${tx("coeficientes: ")}${P.c.slice().reverse().map(Lfr).join(",\\;")}`, `Q(${v})=${polTex(D, v)}`]);
+    let q, r, a = null;
+    if (D.g === 1 && D.lider().v === 1) {
+      a = D.c[0].por(-1);
+      const rf = ruffini(P, a); q = rf.q; r = Pol.k(rf.r);
+      Pp("Aplicamos la regla de Ruffini", `El divisor es ${v} − a con a = ${Lfr(a)}: bajamos el primer coeficiente, lo multiplicamos por a, lo sumamos al siguiente, y así hasta el final. El último número es el resto.`.replace("− a con a = -", "+ a con a = -"), [], rf.tabla);
+    } else if (D.g === 1) {
+      a = D.c[0].por(-1).entre(D.lider());
+      const rf = ruffini(P, a); q = rf.q.por(Pol.k(F(1).entre(D.lider()))); r = Pol.k(rf.r);
+      Pp("Aplicamos Ruffini con el divisor dividido por su coeficiente", `Como el divisor es ${polTex(D, v)}, usamos Ruffini con a = ${Lfr(a)} y después dividimos el cociente por ${Lfr(D.lider())}.`, [], rf.tabla);
+    } else {
+      const dv = divisionPasos(P, D, v, Pp); q = dv.q; r = dv.r;
+    }
+    Pp("Cociente y resto", "", [`C(${v})=${polTex(q, v)}`, `R(${v})=${polTex(r, v)}`]);
+    if (a !== null) Pp("Comprobamos con el teorema del resto", `El resto de dividir por ${polTex(D, v)} es el valor del polinomio en ${v} = ${Lfr(a)}.`, [`P(${Lfr(a)})=${Lfr(P.val(a))}`]);
+    Pp("Verificamos", "Dividendo = divisor · cociente + resto.", [`(${polTex(D, v)})(${polTex(q, v)})${r.cero() ? "" : `+(${polTex(r, v)})`}=${polTex(D.por(q).mas(r), v)}\\;\\checkmark`]);
+    let resultado = `C(${v})=${polTex(q, v)},\\;R=${polTex(r, v)}`;
+    if (r.cero()) {
+      const fq = factorizar(q), fD = factorizar(D), fz = factorizar(P);
+      Pp("Factorizamos", `El resto es 0: la división es exacta, así que ${polTex(D, v)} es un factor de P(${v}). Seguimos factorizando el cociente (buscando sus raíces).`, [`P(${v})=(${polTex(D, v)})(${polTex(q, v)})`, q.g >= 1 ? `=${factTex(fz, v)}` : ""].filter(Boolean));
+      resultado = `C(${v})=${polTex(q, v)},\\;R=0`;
+      Pp("Resultado", "", [`C(${v})=${polTex(q, v)},\\quad R=0`, `P(${v})=${factTex(fz, v)}`]);
+    } else Pp("Resultado", "La división no es exacta: el divisor no es factor del polinomio.", [`P(${v})=(${polTex(D, v)})(${polTex(q, v)})+(${polTex(r, v)})`]);
+    return { tema: "polinomios", metodo: a !== null ? "División de polinomios (Ruffini)" : "División de polinomios", pasos, resultado };
+  }
+  // Factorizar por Ruffini (o Gauss): divisiones sucesivas por cada raíz racional
+  function resolverFactorRuffini(texto) {
+    let s = String(texto || "").replace(/[−–—]/g, "-").replace(/²/g, "^2").replace(/³/g, "^3").replace(/⁴/g, "^4");
+    if (!/factori/i.test(s)) return null;
+    s = s.replace(/\b(factorizar|factoriza|factorizá|factorizacion|factorización|el|polinomio|por|usando|aplicando|con|ruffini|gauss|la|regla|de|teorema|metodo|método)\b/gi, " ").replace(/\s+/g, "");
+    const letras = [...new Set((s.match(/[a-zA-Z]/g) || []))];
+    if (letras.length !== 1) return null;
+    const v = letras[0];
+    let ast; try { ast = parse(tokens(s, v)); } catch (e) { return null; }
+    if (!esPol(ast)) return null;
+    let P = valor(ast).n;
+    if (P.g < 3) return null;
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    const pr = primitivo(P);
+    Pp("Ordenamos y completamos el polinomio", "De mayor a menor grado, con 0 en los términos que faltan.", [`P(${v})=${polTex(P, v)}`]);
+    let q = pr.p, raices = [];
+    let cx = 0; while (q.g > 0 && q.c[0].cero()) { q = new Pol(q.c.slice(1)); cx++; }
+    if (cx) Pp("Sacamos factor común", "", [`P(${v})=${Lfr(pr.k) === "1" ? "" : Lfr(pr.k)}${v}${cx > 1 ? `^{${cx}}` : ""}(${polTex(q, v)})`]);
+    const cand = () => { const a0 = Math.abs(q.c[0].n), an = Math.abs(q.lider().n), out = []; divisores(a0).forEach((pp) => divisores(an).forEach((qq) => [1, -1].forEach((sg) => { const r = F(sg * pp, qq); if (!out.some((o) => o.v === r.v)) out.push(r); }))); return out; };
+    if (q.g >= 2) Pp("Posibles raíces (teorema de Gauss)", "Las raíces racionales están entre los divisores del término independiente sobre los divisores del coeficiente principal.", [`\\pm ${tx("divisores de ")}${Math.abs(q.c[0].n)}\\;/\\;${tx("divisores de ")}${Math.abs(q.lider().n)}:\\;${cand().map(Lfr).slice(0, 16).join(",\\;")}`]);
+    let encontro = true;
+    while (q.g >= 2 && encontro) {
+      encontro = false;
+      for (const r of cand()) if (q.val(r).cero()) {
+        const rf = ruffini(q, r);
+        Pp(`Dividimos por (${polTex(new Pol([r.por(-1), F(1)]), v)})`, `P(${Lfr(r)}) = 0, así que ${Lfr(r)} es raíz. Dividimos por Ruffini.`, [], rf.tabla);
+        raices.push(r); q = rf.q; encontro = true; break;
+      }
+    }
+    if (!raices.length) return null;
+    const fz = factorizar(P);
+    Pp("Resultado", q.g >= 2 ? "El último cociente no tiene raíces racionales: queda así." : "", [`P(${v})=${factTex(fz, v)}`]);
+    return { tema: "factorizacion", metodo: "Factorización por Ruffini (Gauss)", pasos, resultado: `P(${v})=${factTex(fz, v)}` };
+  }
+
+  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini };
 
   /* ---------- enganche: el motor primero; si no puede, este ---------- */
   if (typeof window.resolverAhora !== "function") return;
   const anterior = window.resolverAhora;
   let pendiente = null;
   window.resolverAhora = function (metodo) {
-    try { const t = leerEntrada(); pendiente = !metodo && t ? { t, cuando: Date.now(), area } : null; } catch (e) { pendiente = null; }
+    let texto = ""; try { texto = leerEntrada(); pendiente = !metodo && texto ? { t: texto, cuando: Date.now(), area } : null; } catch (e) { pendiente = null; }
+    // División de polinomios: la resolvemos directamente (con Ruffini cuando se puede)
+    let rd = null; try { rd = !metodo && texto ? resolverDivision(texto) : null; } catch (e) { rd = null; }
+    if (rd) { pendiente = null; mostrarPropio(texto, rd, "alg"); return; }
     return anterior.apply(this, arguments);
   };
+  const NOMBRE = { fracciones: "Fracciones algebraicas", polinomios: "Polinomios", factorizacion: "Factorización" };
+  async function mostrarPropio(texto, r, destino) {
+    const er = document.getElementById("error");
+    if (window.MA_CALC && typeof MA_CALC.usar === "function") { try { if (!(await MA_CALC.usar())) return; } catch (e) { if (er) er.textContent = e.message; return; } }
+    if (destino && area !== destino && typeof cambiarArea === "function") { cambiarArea(destino); campoTexto.value = texto; }
+    if (er) er.textContent = "";
+    ultimaEntrada = texto;
+    mostrarExito(texto, r);
+    const cab = document.querySelector("#cabecera b");
+    if (cab && NOMBRE[cab.textContent]) cab.textContent = NOMBRE[cab.textContent];
+  }
   const err = document.getElementById("error");
   if (!err || !window.MutationObserver) return;
   new MutationObserver(() => {
@@ -263,7 +383,7 @@
     if (!msg || !pendiente || Date.now() - pendiente.cuando > 60000) return;
     if (/(sesi[oó]n|gratis|plan|conectar|servidor|cancel|tarda demasiado)/i.test(msg)) { pendiente = null; return; }
     const texto = pendiente.t; pendiente = null;
-    let r = null; try { r = resolverFracciones(texto); } catch (e) { r = null; }
+    let r = null; try { r = resolverFactorRuffini(texto) || resolverFracciones(texto); } catch (e) { r = null; }
     if (!r) return;
     (async () => {
       if (window.MA_CALC && typeof MA_CALC.usar === "function" && area !== "arit") { try { if (!(await MA_CALC.usar())) return; } catch (e) { return; } }
