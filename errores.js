@@ -12,6 +12,9 @@
   var MAX_POR_PAGINA = 5;
   var enviados = 0;
   var vistos = {};
+  var saliendo = false;
+  window.addEventListener("pagehide", function () { saliendo = true; });
+  window.addEventListener("beforeunload", function () { saliendo = true; });
 
   // Solo se registra en el sitio real (no al probar en tu compu)
   var host = location.hostname;
@@ -60,6 +63,8 @@
     // Errores de carga de recursos (imagen, script, css que no existe)
     var t = ev.target;
     if (t && t !== window && (t.src || t.href)) {
+      // la página se está cerrando o recargando: las cargas que quedan a medio camino se cortan solas
+      if (saliendo) return;
       // imágenes vacías que meten los bloqueadores de contenido del navegador (no son del sitio)
       if (/^(data|blob|about):/i.test(t.src || t.href || "")) return;
       enviar("No cargó el recurso: " + (t.tagName || "").toLowerCase(), t.src || t.href, null, null, null);
