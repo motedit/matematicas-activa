@@ -387,7 +387,246 @@
     return { tema: "factorizacion", metodo: "Factorización por Ruffini (Gauss)", pasos, resultado: `P(${v})=${factTex(fz, v)}` };
   }
 
-  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini };
+  /* =====================================================================
+     Casos de factoreo: factor común, factor común por grupos, diferencia de cuadrados,
+     suma o diferencia de cubos, trinomio cuadrado perfecto, trinomio x²+bx+c, trinomio ax²+bx+c
+     (también con varias letras: 9a² − 25b², x² + 5xy + 6y², …) y, si no alcanza, Ruffini.
+     ===================================================================== */
+  // Polinomio en varias letras: Map "a:2,b:1" → coeficiente
+  const claveDe = (e) => Object.keys(e).filter((k) => e[k]).sort().map((k) => `${k}:${e[k]}`).join(",");
+  const expDe = (k) => { const e = {}; if (k) k.split(",").forEach((p) => { const [l, n] = p.split(":"); e[l] = +n; }); return e; };
+  class MP {
+    constructor(m) { this.m = new Map(); if (m) for (const [k, v] of m) if (!v.cero()) this.m.set(k, v); }
+    static k(v) { const p = new MP(); if (!Fr.de(v).cero()) p.m.set("", Fr.de(v)); return p; }
+    static letra(l) { const p = new MP(); p.m.set(`${l}:1`, F(1)); return p; }
+    mas(o) { const r = new MP(this.m); for (const [k, v] of o.m) { const n = (r.m.get(k) || F(0)).mas(v); if (n.cero()) r.m.delete(k); else r.m.set(k, n); } return r; }
+    por(o) {
+      if (!(o instanceof MP)) o = MP.k(o);
+      let r = new MP();
+      for (const [k1, v1] of this.m) for (const [k2, v2] of o.m) {
+        const e = expDe(k1), e2 = expDe(k2); for (const l in e2) e[l] = (e[l] || 0) + e2[l];
+        r = r.mas(new MP(new Map([[claveDe(e), v1.por(v2)]])));
+      }
+      return r;
+    }
+    menos(o) { return this.mas(o.por(MP.k(-1))); }
+    cero() { return this.m.size === 0; }
+    terminos() { return [...this.m].map(([k, v]) => ({ k: v, e: expDe(k) })).sort(ordenTerm); }
+    letras() { return [...new Set([...this.m.keys()].flatMap((k) => Object.keys(expDe(k))))].sort(); }
+    grado() { return Math.max(0, ...[...this.m.keys()].map((k) => Object.values(expDe(k)).reduce((a, b) => a + b, 0))); }
+    igual(o) { return this.menos(o).cero(); }
+  }
+  const gradoT = (t) => Object.values(t.e).reduce((a, b) => a + b, 0);
+  const ordenTerm = (a, b) => {
+    const d = gradoT(b) - gradoT(a); if (d) return d;
+    const L = [...new Set([...Object.keys(a.e), ...Object.keys(b.e)])].sort();
+    for (const l of L) { const x = (b.e[l] || 0) - (a.e[l] || 0); if (x) return -x < 0 ? 1 : -1; }
+    return 0;
+  };
+  const mon = (k, e) => new MP(new Map([[claveDe(e), Fr.de(k)]]));
+  function monoTex(t, primero, conSigno = true) {
+    const neg = t.k.n < 0, ab = F(Math.abs(t.k.n), t.k.d), letras = Object.keys(t.e).filter((l) => t.e[l]).sort();
+    const lt = letras.map((l) => (t.e[l] === 1 ? l : `${l}^{${t.e[l]}}`)).join("");
+    const co = lt && ab.n === 1 && ab.d === 1 ? "" : Lfr(ab);
+    return (neg ? "-" : primero || !conSigno ? "" : "+") + co + lt;
+  }
+  const mpTex = (p) => (p.cero() ? "0" : p.terminos().map((t, i) => monoTex(t, i === 0)).join(""));
+  // análisis de texto en varias letras
+  function parseMP(s) {
+    const tk = []; let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (/\d/.test(c)) { const m = s.slice(i).match(/^\d+(?:[.,]\d+)?/); const [e, d = ""] = m[0].replace(",", ".").split("."); tk.push({ t: "n", v: F(parseInt(e + d, 10), 10 ** d.length) }); i += m[0].length; continue; }
+      if (/[a-zA-Z]/.test(c)) { tk.push({ t: "l", v: c }); i++; continue; }
+      if ("+-*/^()".includes(c)) { tk.push({ t: c }); i++; continue; }
+      throw new Error("símbolo");
+    }
+    let p = 0;
+    const tomar = (t) => (tk[p] && tk[p].t === t ? (p++, true) : false), empieza = (k) => k && (k.t === "n" || k.t === "l" || k.t === "(");
+    function suma() { let a = prod(); for (;;) { if (tomar("+")) a = a.mas(prod()); else if (tomar("-")) a = a.menos(prod()); else return a; } }
+    function prod() { let a = signo(); for (;;) { if (tomar("*")) a = a.por(signo()); else if (tomar("/")) { const b = signo(); if (b.m.size !== 1 || !b.m.has("")) throw new Error("div"); a = a.por(MP.k(F(1).entre(b.m.get("")))); } else if (empieza(tk[p])) a = a.por(pot()); else return a; } }
+    function signo() { if (tomar("-")) return signo().por(MP.k(-1)); if (tomar("+")) return signo(); return pot(); }
+    function pot() { const b = atomo(); if (tomar("^")) { const e = atomo(); if (e.m.size !== 1 || !e.m.has("")) throw new Error("exp"); const n = e.m.get(""); if (n.d !== 1 || n.n < 0 || n.n > 12) throw new Error("exp"); let r = MP.k(1); for (let j = 0; j < n.n; j++) r = r.por(b); return r; } return b; }
+    function atomo() { const k = tk[p++]; if (!k) throw new Error("fin"); if (k.t === "n") return MP.k(k.v); if (k.t === "l") return MP.letra(k.v); if (k.t === "(") { const a = suma(); if (!tomar(")")) throw new Error(")"); return a; } throw new Error("tok"); }
+    const r = suma(); if (p < tk.length) throw new Error("sobra"); return r;
+  }
+  // raíz entera exacta de un monomio (cuadrada o cúbica)
+  function raizMono(t, n) {
+    const ab = Math.abs(t.k.n), d = t.k.d;
+    if (n === 2 && t.k.n < 0) return null;
+    const r1 = Math.round(Math.pow(ab, 1 / n)), r2 = Math.round(Math.pow(d, 1 / n));
+    if (r1 ** n !== ab || r2 ** n !== d) return null;
+    const e = {}; for (const l in t.e) { if (t.e[l] % n) return null; e[l] = t.e[l] / n; }
+    return { k: F((n === 3 && t.k.n < 0 ? -1 : 1) * r1, r2), e };
+  }
+  const monoMP = (t) => mon(t.k, t.e);
+  const enParen = (p) => (p.m.size > 1 ? `(${mpTex(p)})` : mpTex(p));
+
+  // un paso de factorización: devuelve {caso, explicacion, mates, factores:[MP...], constante?} o null
+  function pasoFactor(P, preferido) {
+    const T = P.terminos();
+    if (T.length < 2) return null;
+    // 1) factor común
+    const ints = T.every((t) => t.k.d === 1);
+    let g = ints ? T.reduce((a, t) => mcd(a, t.k.n), 0) : 1;
+    if (T[0].k.n < 0 && T.every((t) => t.k.n < 0)) g = -g;
+    const eMin = {}; P.letras().forEach((l) => { eMin[l] = Math.min(...T.map((t) => t.e[l] || 0)); });
+    const hayLetra = Object.values(eMin).some((v) => v > 0);
+    if (Math.abs(g) > 1 || g < 0 || hayLetra) {
+      const fc = mon(g, eMin), resto = new MP(); let r = resto;
+      for (const t of T) { const e = {}; for (const l in t.e) e[l] = t.e[l] - (eMin[l] || 0); r = r.mas(mon(t.k.entre(g), e)); }
+      return { caso: "Factor común", explicacion: "Buscamos lo que se repite en todos los términos: el mayor divisor común de los números y cada letra con su menor exponente. Lo sacamos afuera y dividimos cada término por él.", mates: [`${mpTex(P)}=${mpTex(fc)}\\,(${mpTex(r)})`], factores: [fc, r] };
+    }
+    // 2) factor común por grupos (4 o 6 términos)
+    if (T.length === 4 || T.length === 6) {
+      const n = T.length, grupos = n === 4 ? [[[0, 1], [2, 3]], [[0, 2], [1, 3]], [[0, 3], [1, 2]]] : [[[0, 1, 2], [3, 4, 5]], [[0, 1], [2, 3], [4, 5]]];
+      for (const gr of grupos) {
+        const partes = gr.map((idx) => idx.reduce((a, i) => a.mas(monoMP(T[i])), new MP()));
+        const pasos = partes.map((q) => pasoFactor(q, null)).map((ps, i) => (ps && ps.caso === "Factor común" ? ps : { factores: [MP.k(1), partes[i]] }));
+        let base = pasos[0].factores[1];
+        const ok = pasos.every((ps) => { const b = ps.factores[1]; if (b.igual(base)) return true; if (b.igual(base.por(MP.k(-1)))) { ps.factores = [ps.factores[0].por(MP.k(-1)), base]; return true; } return false; });
+        if (ok && base.m.size > 1) {
+          const otro = pasos.reduce((a, ps) => a.mas(ps.factores[0]), new MP());
+          return { caso: "Factor común por grupos", explicacion: "Armamos grupos de términos que tengan algo en común, sacamos factor común en cada grupo y aparece un paréntesis repetido, que sacamos como factor común.", mates: [`${mpTex(P)}=${partes.map((q) => `(${mpTex(q)})`).join("+")}`, `=${pasos.map((ps) => `${enParen(ps.factores[0])}\\,(${mpTex(base)})`).join("+")}`, `=(${mpTex(base)})(${mpTex(otro)})`], factores: [base, otro] };
+        }
+      }
+    }
+    // 3) binomios: diferencia de cuadrados / suma o diferencia de cubos
+    if (T.length === 2) {
+      const [t1, t2] = T;
+      const cuad = () => {
+        const pos = T.find((t) => t.k.n > 0), neg = T.find((t) => t.k.n < 0);
+        if (!pos || !neg) return null;
+        const A = raizMono(pos, 2), B = raizMono({ k: neg.k.por(-1), e: neg.e }, 2);
+        if (!A || !B) return null;
+        const a = monoMP(A), b = monoMP(B);
+        return { caso: "Diferencia de cuadrados", explicacion: "Es una resta de dos cuadrados perfectos: a² − b² = (a − b)(a + b). Sacamos la raíz cuadrada de cada término.", mates: [`${tx("raíces: ")}\\sqrt{${monoTex(pos, true)}}=${mpTex(a)},\\quad \\sqrt{${monoTex({ k: neg.k.por(-1), e: neg.e }, true)}}=${mpTex(b)}`, `${mpTex(P)}=(${mpTex(a.menos(b))})(${mpTex(a.mas(b))})`], factores: [a.menos(b), a.mas(b)] };
+      };
+      const cub = () => {
+        const A = raizMono(t1, 3), B = raizMono(t2, 3);
+        if (!A || !B) return null;
+        const a = monoMP(A), b = monoMP(B);           // t1 + t2 = a³ + b³ (b ya trae el signo)
+        const f1 = a.mas(b), f2 = a.por(a).menos(a.por(b)).mas(b.por(b));
+        const sumaC = B.k.n > 0;
+        return { caso: sumaC ? "Suma de cubos" : "Diferencia de cubos", explicacion: sumaC ? "Es una suma de cubos perfectos: a³ + b³ = (a + b)(a² − ab + b²). Sacamos la raíz cúbica de cada término." : "Es una resta de cubos perfectos: a³ − b³ = (a − b)(a² + ab + b²). Sacamos la raíz cúbica de cada término.", mates: [`${tx("raíces cúbicas: ")}${mpTex(a)}\\;${tx("y")}\\;${mpTex(sumaC ? b : b.por(MP.k(-1)))}`, `${mpTex(P)}=(${mpTex(f1)})(${mpTex(f2)})`], factores: [f1, f2] };
+      };
+      const orden = preferido === "cubos" ? [cub, cuad] : [cuad, cub];
+      for (const f of orden) { const r = f(); if (r) return r; }
+      if (T.every((t) => t.k.n > 0) && raizMono(t1, 2) && raizMono(t2, 2)) return { caso: "Suma de cuadrados", explicacion: "Una suma de dos cuadrados no se puede factorizar con números reales.", mates: [mpTex(P)], factores: [P], final: true };
+    }
+    // 4) trinomios
+    if (T.length === 3) {
+      const [t1, t2, t3] = T;
+      // trinomio cuadrado perfecto
+      const A = raizMono(t1, 2), C = raizMono(t3, 2);
+      if (A && C) {
+        const a = monoMP(A), c = monoMP(C), dob = a.por(c).por(MP.k(2));
+        const sg = monoMP(t2).igual(dob) ? 1 : monoMP(t2).igual(dob.por(MP.k(-1))) ? -1 : 0;
+        if (sg) {
+          const base = sg > 0 ? a.mas(c) : a.menos(c);
+          return { caso: "Trinomio cuadrado perfecto", explicacion: "El primer y el último término son cuadrados perfectos y el del medio es el doble producto de sus raíces: a² ± 2ab + b² = (a ± b)².", mates: [`\\sqrt{${monoTex(t1, true)}}=${mpTex(a)},\\quad \\sqrt{${monoTex(t3, true)}}=${mpTex(c)}`, `2\\cdot ${enParen(a)}\\cdot ${enParen(c)}=${mpTex(dob)}\\;${tx("(coincide con el término del medio)")}`, `${mpTex(P)}=(${mpTex(base)})^{2}`], factores: [base, base] };
+        }
+      }
+      // trinomio de la forma ax² + bx + c en U (y V): t1 = a·U², t2 = b·U·V, t3 = c·V²
+      const U = raizMono({ k: F(1), e: t1.e }, 2), V = raizMono({ k: F(1), e: t3.e }, 2);
+      if (U && V && t1.k.d === 1 && t2.k.d === 1 && t3.k.d === 1) {
+        const uv = {}; for (const l of new Set([...Object.keys(U.e), ...Object.keys(V.e)])) uv[l] = (U.e[l] || 0) + (V.e[l] || 0);
+        if (claveDe(uv) === claveDe(t2.e)) {
+          const a = t1.k.n, b = t2.k.n, c = t3.k.n, u = monoMP(U), v = monoMP(V), ac = a * c;
+          let par = null;
+          for (let m = -Math.abs(ac) - Math.abs(b); m <= Math.abs(ac) + Math.abs(b) && !par; m++) { const n = b - m; if (m * n === ac) par = [m, n]; }
+          const uT = mpTex(u), vT = mpTex(v) === "1" ? "" : mpTex(v);
+          if (par && a === 1) {
+            const [p1, p2] = par.sort((x, y) => y - x);
+            const f1 = u.mas(v.por(MP.k(p1))), f2 = u.mas(v.por(MP.k(p2)));
+            return { caso: "Trinomio de la forma x² + bx + c", explicacion: `Buscamos dos números que multiplicados den ${c} y sumados den ${b}.`, mates: [`${p1}\\cdot ${p2 < 0 ? `(${p2})` : p2}=${c},\\qquad ${p1}${p2 < 0 ? "" : "+"}${p2}=${b}`, `${mpTex(P)}=(${mpTex(f1)})(${mpTex(f2)})`], factores: [f1, f2] };
+          }
+          if (par) {
+            const [m, n] = par;
+            // a t² + m t + n t + c  →  agrupamos
+            const g1 = mcd(a, m) * (a < 0 ? -1 : 1), A1 = a / g1, M1 = m / g1;
+            const g2 = A1 !== 0 && n % A1 === 0 ? n / A1 : null;
+            if (g2 !== null && M1 * g2 === c) {
+              const f1 = u.por(MP.k(A1)).mas(v.por(MP.k(M1))), f2 = u.por(MP.k(g1)).mas(v.por(MP.k(g2)));
+              const tt = (k, s) => (k === 1 ? s : k === -1 ? `-${s}` : `${k}${s}`);
+              return { caso: "Trinomio de la forma ax² + bx + c", explicacion: `Multiplicamos a·c = ${a}·${c} = ${ac} y buscamos dos números que multiplicados den ${ac} y sumados den ${b}: son ${m} y ${n}. Con ellos partimos el término del medio y factorizamos por grupos.`, mates: [`${mpTex(P)}=${tt(a, `${uT}^{2}`).replace(`${uT}^{2}`, uT.includes("^") || uT.length > 1 ? `(${uT})^{2}` : `${uT}^{2}`)}${m < 0 ? "" : "+"}${tt(m, uT + vT)}${n < 0 ? "" : "+"}${tt(n, uT + vT)}${c < 0 ? "" : "+"}${mpTex(monoMP(t3))}`, `=${enParen(u.por(MP.k(g1)))}(${mpTex(f1)})${g2 < 0 ? "" : "+"}${mpTex(v.por(MP.k(g2)))}(${mpTex(f1)})`, `=(${mpTex(f1)})(${mpTex(f2)})`], factores: [f1, f2] };
+            }
+          }
+          if (!par && b * b - 4 * a * c < 0) return { caso: a === 1 ? "Trinomio de la forma x² + bx + c" : "Trinomio de la forma ax² + bx + c", explicacion: `No hay dos números enteros que sirvan: el discriminante b² − 4ac = ${b * b - 4 * a * c} es negativo, así que no se puede factorizar con números reales.`, mates: [`b^2-4ac=${b * b - 4 * a * c}<0`], factores: [P], final: true };
+          if (!par) return { caso: a === 1 ? "Trinomio de la forma x² + bx + c" : "Trinomio de la forma ax² + bx + c", explicacion: `No hay dos números enteros que sirvan (b² − 4ac = ${b * b - 4 * a * c} no es un cuadrado perfecto): no se puede factorizar con números racionales.`, mates: [`b^2-4ac=${b * b - 4 * a * c}`], factores: [P], final: true };
+        }
+      }
+    }
+    return null;
+  }
+
+  const CASOS = [["comun", /factor com[uú]n(?! por grupos)/i], ["grupos", /por grupos|agrupaci/i], ["cuadrados", /diferencia de cuadrados/i], ["cubos", /(suma|diferencia) de cubos/i], ["tcp", /trinomio cuadrado perfecto/i], ["trinomio", /trinomio de la forma|trinomio/i]];
+  function resolverCasos(texto) {
+    const t0 = String(texto || "");
+    if (!/factor|diferencia de cuadrados|(suma|diferencia) de cubos|trinomio/i.test(t0)) return null;
+    let s = t0.replace(/[−–—]/g, "-").replace(/[·×]/g, "*").replace(/²/g, "^2").replace(/³/g, "^3").replace(/⁴/g, "^4").replace(/⁵/g, "^5").replace(/⁶/g, "^6");
+    const pref = (CASOS.find(([, re]) => re.test(s)) || [])[0] || null;
+    s = s.replace(/\b(factorizar|factoriz[aá]|factorear|factore[aá]|factoreo|factorizaci[oó]n|factorizando|el|la|los|las|de|del|por|polinomio|expresi[oó]n|siguiente|siguientes|caso|casos|usando|aplicando|con|completamente|totalmente|al m[aá]ximo|factor|com[uú]n|grupos|agrupaci[oó]n|diferencia|suma|cuadrados|cubos|trinomio|cuadrado|perfecto|forma|ruffini|gauss)\b/gi, " ");
+    s = s.replace(/^[\s:,.]+|[\s:.,]+$/g, "").replace(/\s+/g, "");
+    if (!s || /[=<>]/.test(s) || !/[a-zA-Z]/.test(s)) return null;
+    let P; try { P = parseMP(s); } catch (e) { return null; }
+    if (P.m.size < 2 || P.grado() < 2 && P.m.size < 2) return null;
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    Pp("Ordenamos el polinomio", "Escribimos los términos de mayor a menor grado y nos fijamos cuántos términos tiene: eso orienta qué caso usar (1.º siempre el factor común).", [mpTex(P)]);
+    // factorización recursiva
+    const finales = [];   // MP irreducibles
+    const cola = [P];
+    let vueltas = 0, primero = true;
+    while (cola.length && vueltas++ < 30) {
+      const Q = cola.shift();
+      if (Q.m.size === 1 && Q.grado() === 0) { finales.push(Q); continue; }
+      const ps = pasoFactor(Q, primero ? pref : null);
+      primero = false;
+      if (!ps) {
+        // una sola letra y grado ≥ 3: Ruffini
+        const L = Q.letras();
+        if (L.length === 1 && Q.grado() >= 3) {
+          const v = L[0], co = []; for (const t of Q.terminos()) co[t.e[v] || 0] = t.k;
+          const pol = new Pol(Array.from({ length: Q.grado() + 1 }, (_, i) => co[i] || F(0)));
+          const cand = []; const a0 = Math.abs(pol.c[0].n), an = Math.abs(pol.lider().n);
+          if (a0) for (const pp of divisores(a0)) for (const qq of divisores(an)) for (const sg of [1, -1]) cand.push(F(sg * pp, qq));
+          const raiz = cand.find((r) => pol.val(r).cero());
+          if (raiz) {
+            const rf = ruffini(pol, raiz);
+            const lin = MP.letra(v).menos(MP.k(raiz)), coc = rf.q.c.reduce((acc, c, i) => acc.mas(mon(c, i ? { [v]: i } : {})), new MP());
+            Pp(`Ruffini (teorema de Gauss)`, `Ningún caso anterior sirve directamente. Probamos con los divisores del término independiente: ${v} = ${Lfr(raiz)} anula el polinomio, así que dividimos por (${mpTex(lin)}).`, [`${mpTex(Q)}=(${mpTex(lin)})(${mpTex(coc)})`], rf.tabla);
+            cola.unshift(lin, coc); continue;
+          }
+        }
+        finales.push(Q); continue;
+      }
+      Pp(`Caso: ${ps.caso}`, ps.explicacion, ps.mates);
+      if (ps.final) { finales.push(Q); continue; }
+      // los factores que todavía se pueden seguir factorizando vuelven a la cola
+      for (const f of ps.factores) cola.push(f);
+    }
+    if (pasos.length < 2) return null;
+    // armamos el resultado: constantes juntas, factores repetidos como potencia
+    let k = F(1); const lista = [];
+    for (const f of finales) {
+      if (f.m.size === 1 && f.m.has("")) { k = k.por(f.m.get("")); continue; }
+      // normalizamos el signo del primer término
+      let g = f; if (g.terminos()[0].k.n < 0) { g = g.por(MP.k(-1)); k = k.por(-1); }
+      const ex = lista.find((x) => x.p.igual(g)); if (ex) ex.e++; else lista.push({ p: g, e: 1 });
+    }
+    lista.sort((a, b) => a.p.m.size - b.p.m.size || a.p.grado() - b.p.grado());
+    const solo = lista.length === 1 && lista[0].e === 1 && k.v === 1;
+    const res = (k.v === 1 ? "" : k.v === -1 ? "-" : Lfr(k)) + lista.map(({ p, e }) => { const b = p.m.size > 1 && !solo ? `(${mpTex(p)})` : mpTex(p); return e > 1 ? (p.m.size > 1 ? `${b}^{${e}}` : `\\left(${b}\\right)^{${e}}`) : b; }).join("");
+    Pp("Resultado", "Lo dejamos como producto de factores que ya no se pueden descomponer más.", [`${mpTex(P)}=${res}`]);
+    // verificación: multiplicamos todo
+    let prod = MP.k(k); for (const { p, e } of lista) for (let i = 0; i < e; i++) prod = prod.por(p);
+    if (!prod.igual(P)) return null;
+    Pp("Verificamos", "Si multiplicamos todos los factores, tiene que volver a dar el polinomio original.", [`${res}=${mpTex(prod)}\\;\\checkmark`]);
+    return { tema: "factorizacion", metodo: "Casos de factoreo", pasos, resultado: res };
+  }
+
+  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini, casos: resolverCasos };
 
   /* ---------- enganche: el motor primero; si no puede, este ---------- */
   if (typeof window.resolverAhora !== "function") return;
@@ -396,7 +635,8 @@
   window.resolverAhora = function (metodo) {
     let texto = ""; try { texto = leerEntrada(); pendiente = !metodo && texto ? { t: texto, cuando: Date.now(), area } : null; } catch (e) { pendiente = null; }
     // División de polinomios: la resolvemos directamente (con Ruffini cuando se puede)
-    let rd = null; try { rd = texto && (!metodo || /^div-/.test(metodo)) ? resolverDivision(texto, metodo) : null; } catch (e) { rd = null; }
+    let rd = null; try { rd = texto && !metodo ? resolverCasos(texto) : null; } catch (e) { rd = null; }
+    if (!rd) try { rd = texto && (!metodo || /^div-/.test(metodo)) ? resolverDivision(texto, metodo) : null; } catch (e) { rd = null; }
     if (rd) { pendiente = null; mostrarPropio(texto, rd, "alg", !!metodo); return; }
     return anterior.apply(this, arguments);
   };
