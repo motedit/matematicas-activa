@@ -626,7 +626,103 @@
     return { tema: "factorizacion", metodo: "Casos de factoreo", pasos, resultado: res };
   }
 
-  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini, casos: resolverCasos };
+  /* =====================================================================
+     Radicales con letras: productos y cocientes de raíces (con distinto índice),
+     por potencias de exponente fraccionario. Ej.: √2·∛(x²y²)·√3 / (∛(x²y³)·⁴√(xy))
+     ===================================================================== */
+  const primos = (n) => { const r = {}; for (let p = 2; p * p <= n; p++) while (n % p === 0) { r[p] = (r[p] || 0) + 1; n /= p; } if (n > 1) r[n] = (r[n] || 0) + 1; return r; };
+  function resolverRadicales(texto) {
+    const s0 = String(texto || "").replace(/[−–—]/g, "-").replace(/[·×]/g, "*").replace(/÷/g, ":").replace(/²/g, "^2").replace(/³/g, "^3")
+      .replace(/\\sqrt\[(\d+)\]/g, "√[$1]").replace(/\\sqrt/g, "√").replace(/\braiz\b/gi, "√").replace(/[{]/g, "(").replace(/[}]/g, ")").replace(/\s+/g, "");
+    if (!/√/.test(s0) || !/[a-zA-Z]/.test(s0) || /[+=<>]|(?<![(^*/:√\]])-/.test(s0)) return null;
+    // tokens
+    const tk = []; let i = 0;
+    while (i < s0.length) {
+      const c = s0[i];
+      if (/\d/.test(c)) { const m = s0.slice(i).match(/^\d+/); tk.push({ t: "n", v: +m[0] }); i += m[0].length; continue; }
+      if (/[a-zA-Z]/.test(c)) { tk.push({ t: "l", v: c }); i++; continue; }
+      if (c === "√") { let n = 2; if (s0[i + 1] === "[") { const m = s0.slice(i + 2).match(/^(\d+)\]/); if (!m) return null; n = +m[1]; i += m[0].length + 1; } tk.push({ t: "r", n }); i++; continue; }
+      if ("*/:^()-".includes(c)) { tk.push({ t: c === ":" ? "/" : c }); i++; continue; }
+      if (c === "~") { i++; continue; }
+      return null;
+    }
+    // valor: Map base → [contribuciones Fr]; hojas: radicales para mostrar
+    const hojas = [];
+    const V = () => new Map();
+    const mul = (a, b, sg = 1) => { const r = new Map([...a].map(([k, v]) => [k, v.slice()])); for (const [k, v] of b) r.set(k, (r.get(k) || []).concat(v.map((x) => x.por(sg)))); return r; };
+    const esc = (a, f) => new Map([...a].map(([k, v]) => [k, v.map((x) => x.por(f))]));
+    const num = (n) => { const m = V(); for (const [p, e] of Object.entries(primos(n))) m.set(p, [F(e)]); return m; };
+    const tex = (a) => { const parts = []; for (const [k, v] of a) { const e = v.reduce((x, y) => x.mas(y), F(0)); if (e.cero()) continue; parts.push(e.v === 1 ? k : `${k}^{${Lfr(e)}}`); } return parts.join("\\cdot ") || "1"; };
+    let p = 0;
+    const tomar = (t) => (tk[p] && tk[p].t === t ? (p++, true) : false);
+    const empieza = (k) => k && ["n", "l", "(", "r"].includes(k.t);
+    function prod() { let a = pot(); for (;;) { if (tomar("*")) a = mul(a, pot()); else if (tomar("/")) a = mul(a, pot(), -1); else if (empieza(tk[p])) a = mul(a, pot()); else return a; } }
+    function pot() { let b = atomo(); if (tomar("^")) { let neg = tomar("-"); const k = tk[p++]; let e; if (k && k.t === "n") e = F(k.v); else if (k && k.t === "(") { const m = tk[p++]; if (!m || m.t !== "n") throw 0; let d = 1; if (tomar("/")) { const q = tk[p++]; d = q.v; } if (!tomar(")")) throw 0; e = F(m.v, d); } else throw 0; if (neg) e = e.por(-1); b = esc(b, e); } return b; }
+    function atomo() {
+      const k = tk[p++]; if (!k) throw 0;
+      if (k.t === "n") return num(k.v);
+      if (k.t === "l") return new Map([[k.v, [F(1)]]]);
+      if (k.t === "(") { const a = prod(); if (!tomar(")")) throw 0; return a; }
+      if (k.t === "r") {
+        const ini = p; const a = atomo();
+        const dentro = tex(a);
+        const r = esc(a, F(1, k.n));
+        hojas.push({ raiz: k.n === 2 ? `\\sqrt{${dentro}}` : `\\sqrt[${k.n}]{${dentro}}`, pot: tex(r) });
+        return r;
+      }
+      throw 0;
+    }
+    let val; try { val = prod(); if (p < tk.length) return null; } catch (e) { return null; }
+    if (!hojas.length) return null;
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    Pp("Pasamos cada raíz a potencia de exponente fraccionario", "Una raíz es una potencia con exponente fraccionario: el exponente de adentro va arriba y el índice va abajo.", [`\\sqrt[n]{a^{m}}=a^{\\frac{m}{n}}`, ...hojas.map((h) => `${h.raiz}=${h.pot}`)]);
+    // agrupamos por base
+    const filas = [], tot = new Map();
+    const orden = [...val.keys()].sort((a, b) => (isNaN(a) - isNaN(b)) || (isNaN(a) ? a.localeCompare(b) : a - b));
+    for (const k of orden) {
+      const cs = val.get(k), e = cs.reduce((x, y) => x.mas(y), F(0));
+      tot.set(k, e);
+      if (cs.length > 1) filas.push(`${k}^{${cs.map((c, i) => (i && c.n >= 0 ? "+" : "") + Lfr(c)).join("")}}=${e.cero() ? "1" : `${k}^{${Lfr(e)}}`}`);
+    }
+    if (filas.length) Pp("Agrupamos las potencias de igual base", "Al multiplicar potencias de igual base se suman los exponentes; al dividir, se restan.", filas);
+    const potTex = [...tot].filter(([, e]) => !e.cero()).map(([k, e]) => (e.v === 1 ? k : `${k}^{${Lfr(e)}}`)).join("\\cdot ");
+    Pp("Juntamos todo", "", [potTex || "1"]);
+    // volvemos a radical: parte entera afuera, el resto con índice común
+    let N = 1; const afueraN = [], afueraD = [], adentroN = [], adentroD = [];
+    for (const [, e] of tot) { const f = F(((e.n % e.d) + e.d) % e.d, e.d); if (!f.cero()) N = mcm(N, f.d); }
+    for (const [k, e] of tot) {
+      if (e.cero()) continue;
+      const ent = Math.floor(e.v + 1e-12), fr = e.menos(F(ent));
+      const exp = (n) => (n === 1 ? k : `${k}^{${n}}`);
+      if (e.n < 0) {
+        // exponente negativo: va al denominador
+        const pos = e.por(-1), ent2 = Math.floor(pos.v + 1e-12), fr2 = pos.menos(F(ent2));
+        if (ent2) afueraD.push([k, ent2]); if (!fr2.cero()) adentroD.push([k, fr2.por(N).n]);
+      } else { if (ent) afueraN.push([k, ent]); if (!fr.cero()) adentroN.push([k, fr.por(N).n]); }
+    }
+    const numeros = (lista) => { let prodN = 1, ok = true; const resto = []; for (const [k, n] of lista) { if (!isNaN(k)) { prodN *= Math.pow(+k, n); if (prodN > 1e9) ok = false; } else resto.push([k, n]); } return { prodN, ok, resto, lista }; };
+    const armar = (lista) => {
+      const nm = numeros(lista), letras = nm.resto.map(([k, n]) => (n === 1 ? k : `${k}^{${n}}`)).join("");
+      const ns = lista.filter(([k]) => !isNaN(k));
+      let nums = "";
+      if (ns.length) {
+        const g = ns.reduce((a, [, n]) => mcd(a, n), 0), base = ns.reduce((a, [k, n]) => a * Math.pow(+k, n / g), 1);
+        nums = g > 1 ? `${base}^{${g}}` : nm.ok ? String(nm.prodN) : ns.map(([k, n]) => (n === 1 ? k : `${k}^{${n}}`)).join("\\cdot ");
+      }
+      return (nums && letras ? nums + (/[}\d]$/.test(nums) && /^\d/.test(letras) ? "\\cdot " : "") + letras : nums + letras) || "1";
+    };
+    // cada parte (numerador y denominador) con su propio índice, el menor posible
+    const indice = (lista, NN) => { let g = NN; for (const [, n] of lista) g = mcd(g, n); return g; };
+    const rad = (lista) => { if (!lista.length) return ""; const g = indice(lista, N), n = N / g, l2 = lista.map(([k, e]) => [k, e / g]); return n === 1 ? armar(l2) : n === 2 ? `\\sqrt{${armar(l2)}}` : `\\sqrt[${n}]{${armar(l2)}}`; };
+    const numT = [afueraN.length ? armar(afueraN) : "", rad(adentroN)].filter(Boolean).join("\\,") || "1";
+    const denT = [afueraD.length ? armar(afueraD) : "", rad(adentroD)].filter(Boolean).join("\\,");
+    const final = denT ? `\\frac{${numT}}{${denT}}` : numT;
+    const unaRaiz = !afueraN.length && !afueraD.length && adentroN.length && adentroD.length ? `=\\sqrt[${N}]{\\frac{${armar(adentroN)}}{${armar(adentroD)}}}`.replace("\\sqrt[2]", "\\sqrt") : "";
+    Pp("Volvemos a escribirlo con raíces", `Los exponentes negativos pasan al denominador con exponente positivo. Las partes enteras de los exponentes quedan fuera de la raíz, y las fracciones se llevan a común índice ${N} (el mínimo común múltiplo de los denominadores).`, [`${potTex || "1"}=${final}${unaRaiz}`]);
+    return { tema: "radicacion", metodo: "Radicales: potencias de exponente fraccionario", pasos, resultado: final + unaRaiz };
+  }
+
+  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini, casos: resolverCasos, radicales: resolverRadicales };
 
   /* ---------- enganche: el motor primero; si no puede, este ---------- */
   if (typeof window.resolverAhora !== "function") return;
@@ -635,12 +731,25 @@
   window.resolverAhora = function (metodo) {
     let texto = ""; try { texto = leerEntrada(); pendiente = !metodo && texto ? { t: texto, cuando: Date.now(), area } : null; } catch (e) { pendiente = null; }
     // División de polinomios: la resolvemos directamente (con Ruffini cuando se puede)
-    let rd = null; try { rd = texto && !metodo ? resolverCasos(texto) : null; } catch (e) { rd = null; }
+    let rd = null; try { rd = texto && !metodo ? (resolverRadicales(texto) || resolverCasos(texto)) : null; } catch (e) { rd = null; }
+    // En Aritmética no hay letras: si el ejercicio tiene variables, lo pasamos a Álgebra
+    if (!rd && !metodo && texto && area === "arit" && pareceAlgebra(texto) && typeof cambiarArea === "function") {
+      cambiarArea("alg"); campoTexto.value = texto;
+      if (typeof avisar === "function") avisar("Tiene letras (variables): lo resolvemos en Álgebra.");
+      return window.resolverAhora(metodo);
+    }
     if (!rd) try { rd = texto && (!metodo || /^div-/.test(metodo)) ? resolverDivision(texto, metodo) : null; } catch (e) { rd = null; }
     if (rd) { pendiente = null; mostrarPropio(texto, rd, "alg", !!metodo); return; }
     return anterior.apply(this, arguments);
   };
-  const NOMBRE = { fracciones: "Fracciones algebraicas", polinomios: "Polinomios", factorizacion: "Factorización" };
+  function pareceAlgebra(t) {
+    const u = String(t).replace(/√|\\sqrt|\b(raiz|sqrt|log|ln|sen|sin|cos|tg|tan|pi|mcd|mcm|dcm|mcm)\b/gi, " ");
+    if (/[a-záéíóúñ]{3,}/i.test(u)) return false;                       // hay palabras: es una consigna en palabras
+    const sinUnid = u.replace(/\b(km|hm|dam|dm|cm|mm|kg|hg|mg|ml|cl|dl|m|g|l|h|s|a)\b(?![\^(])/gi, " ");
+    if (!/[a-zA-Z]/.test(sinUnid)) return false;
+    return /\d\s*[a-zA-Z]|[a-zA-Z]\s*[\^(*/]|[(*/^+\-=]\s*[a-zA-Z]/.test(sinUnid);
+  }
+  const NOMBRE = { radicacion: "Radicación", fracciones: "Fracciones algebraicas", polinomios: "Polinomios", factorizacion: "Factorización" };
   async function mostrarPropio(texto, r, destino, sinCobrar) {
     const er = document.getElementById("error");
     if (!sinCobrar && window.MA_CALC && typeof MA_CALC.usar === "function") { try { if (!(await MA_CALC.usar())) return; } catch (e) { if (er) er.textContent = e.message; return; } }
