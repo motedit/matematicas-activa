@@ -764,11 +764,12 @@
   if (!err || !window.MutationObserver) return;
   new MutationObserver(() => {
     const msg = err.textContent.trim();
+    if (/^(null|undefined)$/i.test(msg) && (!pendiente || Date.now() - pendiente.cuando > 60000)) { err.textContent = "No pude resolver este ejercicio. Revisá que esté bien escrito o elegí el tema a mano y probá de nuevo."; return; }
     if (!msg || !pendiente || Date.now() - pendiente.cuando > 60000) return;
     if (/(sesi[oó]n|gratis|plan|conectar|servidor|cancel|tarda demasiado)/i.test(msg)) { pendiente = null; return; }
     const texto = pendiente.t; pendiente = null;
-    let r = null; try { r = resolverFactorRuffini(texto) || resolverFracciones(texto); } catch (e) { r = null; }
-    if (!r) return;
+    let r = null; try { r = resolverRadicales(texto) || resolverFactorRuffini(texto) || resolverFracciones(texto); } catch (e) { r = null; }
+    if (!r) { if (/^(null|undefined|\[object Object\])$/i.test(msg)) err.textContent = "No pude resolver este ejercicio. Revisá que esté bien escrito o elegí el tema a mano y probá de nuevo."; return; }
     (async () => {
       if (window.MA_CALC && typeof MA_CALC.usar === "function" && area !== "arit") { try { if (!(await MA_CALC.usar())) return; } catch (e) { return; } }
       err.textContent = "";
