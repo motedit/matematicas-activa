@@ -206,11 +206,16 @@
   }
   function cantidadesPorUnidad(orig, p) {
     // "360 plantas entre lechugas y acelgas. Cada lechuga necesita 40 g y cada acelga 90 g. En total 21,4 kg"
-    const mN = p.match(/(\d+(?:\.\d{3})*)\s+([a-z]+)\s+(?:entre|de dos tipos|en total)/);
-    const mc = [...p.matchAll(/cada\s+([a-z]+)[^.]{0,40}?(\d+(?:[.,]\d+)?)\s*([a-z]+)/g)];
-    const mt = p.match(/(?:en total|total de|se usaron|se utilizaron|se gastaron|suman|pesan|en conjunto)[^0-9]{0,30}(\d+(?:[.,]\d+)?)\s*([a-z]+)/);
-    if (!mN || mc.length < 2 || !mt) return null;
     const conv = (u) => UNIDADES[u] || [u, F(1)];
+    const mN = p.match(/(\d+(?:\.\d{3})*)\s+([a-z]+)\s+(?:entre|de dos tipos|en total)/) || p.match(/(?:en total|un total de)\s+(?:se\s+\w+\s+|hay\s+|habia\s+|tiene\s+)?(\d+(?:\.\d{3})*)\s+([a-z]+)/);
+    let mc = [...p.matchAll(/cada\s+([a-z]+)[^.]{0,40}?(\d+(?:[.,]\d+)?)\s*([a-z]+)/g)];
+    // "cada planta de tomate necesita 60 g … la planta de pimiento requiere 160 g": el nombre es la palabra antes del verbo
+    const VERBO = "necesita|necesitan|requiere|requieren|lleva|llevan|usa|usan|utiliza|consume|consumen|gasta|pesa|pesan|ocupa|ocupan|cuesta|cuestan|recibe|reciben";
+    const mc2 = [...p.matchAll(new RegExp(`([a-z]+)\\s+(?:${VERBO})\\s+(?:de\\s+)?(\\d+(?:[.,]\\d+)?)\\s*([a-z]+)`, "g"))].filter((m) => UNIDADES[m[3]]);
+    if ((mc.length < 2 || mc[0][1] === mc[1][1] || !UNIDADES[mc[0][3]] || !UNIDADES[mc[1][3]]) && mc2.length === 2 && mc2[0][1] !== mc2[1][1]) mc = mc2;
+    const totales = [...p.matchAll(/(?:en total|total de|se usaron|se utilizaron|se gastaron|se emplearon|suman|pesan|en conjunto)[^0-9]{0,30}(\d+(?:[.,]\d+)?)\s*([a-z]+)/g)];
+    const mt = mc.length >= 2 ? totales.find((m) => conv(m[2])[0] === conv(mc[0][3])[0]) : null;
+    if (!mN || mc.length < 2 || !mt) return null;
     const [u1, f1] = conv(mc[0][3]), [u2, f2] = conv(mc[1][3]), [ut, ft] = conv(mt[2]);
     if (u1 !== u2 || u1 !== ut) return null;
     const N = leerNum(mN[1]), v1 = leerNum(mc[0][2]).por(f1), v2 = leerNum(mc[1][2]).por(f2), T = leerNum(mt[1]).por(ft);
@@ -222,7 +227,7 @@
     P("Leemos el problema y elegimos las incógnitas", `$x$ = cantidad de ${A}, $y$ = cantidad de ${B}.${pasoU.length ? " Antes pasamos todo a la misma unidad." : ""}`, pasoU);
     const { x, y } = sistema([F(1), F(1), N], [v1, v2, T], P);
     if (!x.entero || !y.entero || x.n < 0 || y.n < 0) throw problema("Con esos datos no sale una cantidad entera: revisá el enunciado.");
-    P("Respondemos con una oración", `Hay ${m$(L(x))} de ${A} y ${m$(L(y))} de ${B}.`);
+    P("Respondemos con una oración", `Hay ${m$(L(x))} de ${A} y ${m$(L(y))} de ${B}. Conjunto solución: ${m$(`S=\\{(${L(x)};\\,${L(y)})\\}`)}.`);
     return res("Sistema de ecuaciones (cantidad y total)", `x=${R(x)},\\;y=${R(y)}`, ps);
   }
 
