@@ -1448,16 +1448,23 @@
     const orig = String(texto || "").replace(/\s+/g, " ").trim().replace(/\$\s*(\d{1,3}(?: \d{3})+)(?!\d)/g, (m, n) => "$" + n.replace(/ /g, ""));
     if (orig.split(" ").length < 5) return null;
     const p = plano(orig);
+    // si un tipo reconoce el problema pero no puede resolverlo (lanza un aviso), probamos los demás
+    // antes de mostrar ese aviso: otro tipo (o el planteo general) puede leerlo bien
+    let aviso = null;
     for (const t of TIPOS) {
-      const r = t(orig, p);
+      let r;
+      try { r = t(orig, p); } catch (e) { if (!aviso) aviso = e; continue; }
       if (r) return r;
     }
+    if (aviso) throw aviso;
     return null;
   }
   window.MA_PROBLEMAS = {
     resolver, Fr,
     // otros módulos pueden sumar tipos de problemas (se prueban antes que los de acá)
     agregar: (fn) => TIPOS.unshift(fn),
+    // o al final (se prueban sólo si ningún otro tipo reconoció el problema)
+    alFinal: (fn) => TIPOS.push(fn),
     h: { F, leerNum, L, aprox, R, PESO, din, tx, m$, ok, tabla, esc, pasos, problema, plano, numeros, PALABRAS, raizFr, puntos, d2, g2, SEN, TG, sen, cos, tg, asen, acos, atg, resolverTriangulo, angulosEn, largosEn, numT, mcd },
   };
 

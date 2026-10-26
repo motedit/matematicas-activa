@@ -188,7 +188,7 @@
   /* =====================================================================
      Examen con puntos a favor y en contra / dos tipos con cantidad total y valor por unidad
      ===================================================================== */
-  const UNIDADES = { g: ["g", F(1)], gr: ["g", F(1)], gramo: ["g", F(1)], gramos: ["g", F(1)], kg: ["g", F(1000)], kilo: ["g", F(1000)], kilos: ["g", F(1000)], kilogramos: ["g", F(1000)], ml: ["ml", F(1)], l: ["ml", F(1000)], litro: ["ml", F(1000)], litros: ["ml", F(1000)], cm: ["cm", F(1)], m: ["cm", F(100)], metro: ["cm", F(100)], metros: ["cm", F(100)], min: ["min", F(1)], minutos: ["min", F(1)], h: ["min", F(60)], horas: ["min", F(60)] };
+  const UNIDADES = { g: ["g", F(1)], gr: ["g", F(1)], gramo: ["g", F(1)], gramos: ["g", F(1)], kg: ["g", F(1000)], kilo: ["g", F(1000)], kilos: ["g", F(1000)], kilogramos: ["g", F(1000)], ml: ["ml", F(1)], l: ["ml", F(1000)], litro: ["ml", F(1000)], litros: ["ml", F(1000)], cm: ["cm", F(1)], m: ["cm", F(100)], metro: ["cm", F(100)], metros: ["cm", F(100)], min: ["min", F(1)], minutos: ["min", F(1)], h: ["min", F(60)], hs: ["min", F(60)], hora: ["min", F(60)], horas: ["min", F(60)], t: ["g", F(1000000)], tn: ["g", F(1000000)], tonelada: ["g", F(1000000)], toneladas: ["g", F(1000000)], km: ["cm", F(100000)], kilometros: ["cm", F(100000)], cc: ["ml", F(1)], cl: ["ml", F(10)], litro: ["ml", F(1000)], lt: ["ml", F(1000)], lts: ["ml", F(1000)] };
   function examen(orig, p) {
     if (!/(correct|bien|acierto)/.test(p) || !/(incorrect|mal|error|equivoc)/.test(p) || !/punto/.test(p)) return null;
     const val = (re) => { const m = p.match(re); if (!m) return null; const w = m[1]; return /^\d/.test(w) ? leerNum(w) : w === "medio" ? F(1, 2) : PAL[w] ? Fr.de(PAL[w]) : null; };
@@ -461,7 +461,133 @@
     return res("Inecuación (figura)", resT, ps, "alg", "desigualdades");
   }
 
+  /* =====================================================================
+     GENERAL: dos categorías (A y B) con un valor por unidad cada una (g, $, horas, puntos…),
+     un total de ese valor y, además, el total de unidades o una relación entre ellas
+     ("20 más que", "el doble"). Se prueba al final, si ningún otro tipo lo reconoció.
+     ===================================================================== */
+  const NO_CAT = new Set(["los", "las", "el", "la", "un", "una", "unos", "unas", "de", "del", "para", "por", "con", "que", "cada", "otro", "otra", "otros", "otras", "ambos", "ambas", "tipo", "tipos", "precio", "precios", "total", "cuantos", "cuantas", "cuanto", "cuanta", "cual", "cuales", "sus", "su", "mas", "menos", "hay", "es", "son", "se", "y", "o", "en", "al", "a", "kg", "g", "l", "ml", "pesos", "gramos", "kilos", "litros", "horas", "minutos", "metros", "plata", "dinero", "costo", "valor", "resto", "mismo", "misma", "igual", "dos", "tres", "ademas", "luego", "tambien", "pero", "mientras", "si", "no", "le", "lo", "les", "este", "esta", "ese", "esa", "uno"]);
+  const LETRA_CAT = "(?:modelo|tipo|clase|variedad|marca|producto|fondo|categoria|maquina|caja|grupo|calidad|plan|opcion|paquete|articulo|ruta|linea|turno|sector|lote)s?";
+  const T_PAL = /(total|en conjunto|entre (?:los|las|ambos|ambas) |ambas|ambos|todo|todas|todos|recaud|se pag|pago|pagaron|gasto|gastaron|cobro|cobraron|suman|sumaron|se usaron|se utilizaron|utilizaron|se emplearon|se consumieron|obtuvo|obtuvieron|junto|reunio|reunieron)/;
+  function dimension(n) {
+    if (n.dinero) return ["$", F(1), "$"];
+    const w = (n.despues.match(/^\s*(?:de\s+)?([a-z]+)/) || [, ""])[1];
+    if (!w) return null;
+    if (UNIDADES[w]) return [UNIDADES[w][0], UNIDADES[w][1], w];
+    return null;
+  }
+  function sustantivo(n) { return (n.despues.match(/^\s*([a-z]{3,})/) || [, ""])[1]; }
+  const raizC = (w) => (w.length === 1 ? null : (w.length > 4 ? w.replace(/(?<=[^aeiou])es$|s$/, "") : w).slice(0, 6));
+  function patronCat(w) { return w.length === 1 ? new RegExp(`\\b${LETRA_CAT}\\s+${w}\\b`, "g") : new RegExp(`\\b${raizC(w)}[a-z]*`, "g"); }
+  function paresCandidatos(p) {
+    const pares = [], vistos = new Set();
+    let deLetras = false;
+    const add = (a, b) => { if (!a || !b || a === b) return; const letras = a.length === 1 && b.length === 1; if (!letras && (NO_CAT.has(a) || NO_CAT.has(b))) return; if ((a.length === 1) !== (b.length === 1)) return; if (letras && !deLetras) return; if (a.length > 1 && raizC(a) === raizC(b)) return; const k = a + "|" + b; if (!vistos.has(k)) { vistos.add(k); pares.push([a, b]); } };
+    const ART = "(?:(?:los|las|el|la|un|una|unos|unas)\\s+)?";
+    let m;
+    // "socios activos y socios vitalicios", "viajes urbanos y viajes interurbanos"
+    const r0 = new RegExp(`\\b([a-z]{3,})\\s+([a-z]{3,})\\s*,?\\s+(?:y|e)\\s+${ART}(?:de\\s+)?\\1\\s+([a-z]{3,})`, "g");
+    while ((m = r0.exec(p))) { add(m[2], m[3]); r0.lastIndex = m.index + 1; }
+    const r1 = new RegExp(`\\b([a-z]+)\\s*,?\\s+(?:y|e)\\s+(?:(?:de|para|en|con)\\s+)?${ART}([a-z]+)\\b`, "g");
+    while ((m = r1.exec(p))) { add(m[1], m[2]); r1.lastIndex = m.index + m[1].length; }
+    const r2 = new RegExp(`(?:para|de|cada|por)\\s+${ART}([a-z]+)[^.]{0,60}?\\s(?:y|e|mientras que|en cambio)\\s+${ART}(?:(?:para|de|cada|por|del|de la)\\s+)?${ART}([a-z]+)`, "g");
+    while ((m = r2.exec(p))) { add(m[1], m[2]); r2.lastIndex = m.index + 1; }
+    const r3 = /(?:modelos?|tipos?|clases?|variedad(?:es)?|marcas?|productos?|fondos?|categorias?|maquinas?|cajas?|grupos?|calidad(?:es)?|planes|opcion(?:es)?|paquetes?|lotes?)[\s,:]+([a-z])\s*(?:,\s*|\s+)(?:y|e)\s+([a-z])\b/g;
+    deLetras = true; while ((m = r3.exec(p))) add(m[1], m[2]);
+    return pares;
+  }
+  function general(orig, p) {
+    // sinónimos de resultados de partidos: "ganó / partido ganado / victoria", "empató / empate"
+    const p2 = p.replace(/\b(?:partidos?\s+)?(?:ganad[oa]s?|gano|ganaron|victorias?)\b/g, "ganados").replace(/\b(?:partidos?\s+)?(?:empatad[oa]s?|empato|empataron|empates?)\b/g, "empates").replace(/\b(?:partidos?\s+)?(?:perdid[oa]s?|perdio|perdieron|derrotas?)\b/g, "perdidos");
+    if (p2 !== p) { orig = p2; p = p2; }
+    const ns = numeros(p).filter((n) => !n.frac && !n.pct && n.v.v > 0);
+    if (ns.length < 3) return null;
+    for (const [a, b] of paresCandidatos(p)) {
+      const r = generalCon(orig, p, ns, a, b);
+      if (r) return r;
+    }
+    return null;
+  }
+  function generalCon(orig, p, ns, a, b) {
+    const pa = patronCat(a), pb = patronCat(b);
+    const pos = (re, txt) => { const out = []; let m; re.lastIndex = 0; while ((m = re.exec(txt))) out.push(m.index); return out; };
+    if (!pos(pa, p).length || !pos(pb, p).length) return null;
+    // a qué categoría pertenece cada número: la más cercana antes (o justo después: "40 g por cada lechuga")
+    // palabras que acompañan a 3 o más números (2 puntos, 5 puntos, 64 puntos) funcionan como unidad
+    const cuentaS = {}; for (const n of ns) { const w = sustantivo(n); if (w && !dimension(n)) { const k = raizC(w); cuentaS[k] = (cuentaS[k] || 0) + 1; } }
+    const dimOf = (n) => { const d = dimension(n); if (d) return d; const w = sustantivo(n); return w && cuentaS[raizC(w)] >= 3 ? ["~" + raizC(w), F(1), w] : null; };
+    const info = ns.map((n, k) => {
+      const ini = k ? ns[k - 1].fin : 0, ventana = p.slice(ini, n.i);
+      const la = pos(pa, ventana), lb = pos(pb, ventana);
+      const ua = la.length ? la[la.length - 1] : -1, ub = lb.length ? lb[lb.length - 1] : -1;
+      let cat = ua < 0 && ub < 0 ? null : ua > ub ? "a" : "b";
+      if (cat) { const desde = Math.max(ua, ub); if (T_PAL.test(ventana.slice(desde))) cat = null; }
+      if (!cat && dimOf(n)) { const sig = p.slice(n.fin, Math.min(p.length, k + 1 < ns.length ? ns[k + 1].i : p.length, n.fin + 40)); const m = sig.match(/^\s*(?:[a-z]+\s+){0,3}?(?:por|cada|el|la|de)\s+(?:cada\s+)?/); if (m) { const resto = sig.slice(m[0].length); const fa = pos(pa, resto)[0], fb = pos(pb, resto)[0]; if (fa === 0) cat = "a"; else if (fb === 0) cat = "b"; } }
+      const amb = la.length && lb.length && !T_PAL.test(ventana) ? false : true;
+      return { n, cat, dim: dimOf(n), sust: sustantivo(n), conTotal: T_PAL.test(p.slice(Math.max(0, n.i - 45), n.i)) || T_PAL.test(n.despues), amb };
+    });
+    // valores por unidad: uno para A y otro para B, con la misma dimensión
+    const porUnidad = (c) => info.filter((q) => q.cat === c && q.dim);
+    let va = null, vb = null;
+    for (const qa of porUnidad("a")) for (const qb of porUnidad("b")) if (!va && qa.dim[0] === qb.dim[0]) { va = qa; vb = qb; }
+    // monedas y billetes: "monedas de $10 y de $5" (el valor es el nombre de la categoría)
+    if (!va) return null;
+    const D = va.dim[0];
+    const totales = info.filter((q) => q !== va && q !== vb && q.dim && q.dim[0] === D && !q.cat);
+    const total = totales.length === 1 ? totales[0] : totales.filter((q) => q.conTotal).length === 1 ? totales.find((q) => q.conTotal) : null;
+    if (!total) return null;
+    // cantidad total de unidades, o una relación entre A y B
+    const libres = info.filter((q) => q !== va && q !== vb && q !== total && !(q.dim && q.dim[0] === D));
+    const sinCat = libres.filter((q) => !q.dim && !q.cat), cuenta = sinCat.length ? sinCat : libres.filter((q) => !q.dim);
+    let eq2 = null, desc2 = "";
+    const A = nombreCat(orig, p, a), B = nombreCat(orig, p, b);
+    // relación: "N (A) más que (B)", "el doble de A que de B"
+    const rel = relacion(p, a, b);
+    if (rel) { eq2 = rel.eq; desc2 = rel.desc; }
+    else {
+      const cand = cuenta.length === 1 ? cuenta[0] : cuenta.filter((q) => q.conTotal || /^\s*(entre|en total)/.test(q.n.despues) || /(hay|tiene|son|se \w+ron)\s*$/.test(q.n.antes)).length === 1 ? cuenta.find((q) => q.conTotal || /^\s*(entre|en total)/.test(q.n.despues) || /(hay|tiene|son|se \w+ron)\s*$/.test(q.n.antes)) : null;
+      if (!cand) return null;
+      eq2 = [F(1), F(1), cand.n.v];
+      desc2 = `${tx(`total de unidades: `)}x+y=${L(cand.n.v)}`;
+    }
+    const v1 = va.n.v.por(va.dim[1]), v2 = vb.n.v.por(vb.dim[1]), T = total.n.v.por(total.dim[1]);
+    if (v1.v === v2.v && !rel) return null;
+    const U = D === "$" ? "" : D[0] === "~" ? va.dim[2] : D;
+    const uTx = (x) => (D === "$" ? `${PESO}${aprox(x)}` : `${aprox(x)}\\,${tx(U)}`);
+    const { p: ps, P } = pasos();
+    const conv = [va, vb, total].filter((q) => q.dim[1].v !== 1).map((q) => `${L(q.n.v)}\\,${tx(q.dim[2])}=${L(q.n.v.por(q.dim[1]))}\\,${tx(U)}`);
+    P("Leemos el problema y elegimos las incógnitas", `$x$ = cantidad de ${A}, $y$ = cantidad de ${B}. Cada una de ${A} aporta ${m$(uTx(v1))} y cada una de ${B} aporta ${m$(uTx(v2))}; entre todas suman ${m$(uTx(T))}.${conv.length ? " Antes pasamos todo a la misma unidad." : ""}`, [desc2, `${tx("total: ")}${L(v1)}x+${L(v2)}y=${L(T)}`, ...conv]);
+    const { x, y } = sistema(eq2, [v1, v2, T], P);
+    if (x.n < 0 || y.n < 0) throw problema("Con esos datos una de las cantidades da negativa: revisá el enunciado.");
+    const enteros = x.entero && y.entero;
+    P("Respondemos con una oración", `Hay ${m$(aprox(x))} de ${A} y ${m$(aprox(y))} de ${B}. Conjunto solución: ${m$(`S=\\{(${aprox(x)};\\,${aprox(y)})\\}`)}.${enteros ? "" : " Ojo: no da un número entero; si se cuentan unidades (plantas, entradas, personas), revisá los datos del enunciado."}`);
+    return res("Sistema de ecuaciones (planteo general)", `x=${R(x)},\\;y=${R(y)}`, ps);
+  }
+  function nombreCat(orig, p, w) {
+    if (w.length === 1) { const m = p.match(new RegExp(`\\b(${LETRA_CAT})\\s+${w}\\b`)); return m ? `${m[1].replace(/s$/, "")} ${w.toUpperCase()}` : w.toUpperCase(); }
+    const re = patronCat(w); re.lastIndex = 0; const ms = [...p.matchAll(re)].map((m) => m[0]);
+    const pl = ms.find((x) => /s$/.test(x)) || ms[0] || w;
+    const i = p.indexOf(pl); return i >= 0 ? orig.substr(i, pl.length).toLowerCase() : pl;
+  }
+  function relacion(p, a, b) {
+    const ca = a.length === 1 ? `${LETRA_CAT}\\s+${a}` : `${raizC(a)}[a-z]*`, cb = b.length === 1 ? `${LETRA_CAT}\\s+${b}` : `${raizC(b)}[a-z]*`;
+    const C = (s) => `(?:(?:de|los|las|el|la)\\s+){0,2}${s}`;
+    // "N A más que B" / "N más de A que de B"
+    for (const [x1, x2, sg] of [[ca, cb, 1], [cb, ca, -1]]) {
+      let m = p.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s+${C(x1)}\\s+(mas|menos)\\s+(?:que|de)\\s+${C(x2)}`)) || p.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s+(mas|menos)\\s+${C(x1)}\\s+que\\s+${C(x2)}`));
+      if (m) {
+        const nn = m[1], mm = m[2] || m[3]; let d = leerNum(nn); if (/menos/.test(m[0])) d = d.por(-1);
+        // x − y = d (si x1 es A) o y − x = d
+        return sg === 1 ? { eq: [F(1), F(-1), d], desc: `x-y=${L(d)}` } : { eq: [F(-1), F(1), d], desc: `y-x=${L(d)}` };
+      }
+      m = p.match(new RegExp(`(doble|triple|cuadruple|mitad)\\s+(?:de\\s+)?${C(x1)}\\s+que\\s+${C(x2)}`)) || p.match(new RegExp(`${C(x1)}(?:\\s+[a-z]+){0,3}?\\s+(?:el|la)\\s+(doble|triple|cuadruple|mitad)\\s+(?:de\\s+)?(?:que\\s+)?${C(x2)}`));
+      if (m) { const k = frDe(veces(m[1])); return sg === 1 ? { eq: [F(1), k.por(-1), F(0)], desc: `x=${L(k)}\\,y` } : { eq: [k.por(-1), F(1), F(0)], desc: `y=${L(k)}\\,x` }; }
+    }
+    return null;
+  }
+
   // registramos (el último agregado se prueba primero)
   [sobraFalta, rectaNumerica, cuantosEntran, inecuacionFigura, globo, condicional, reparto, fracciones, mezclaCostoTotal, cantidadesPorUnidad, examen, rectangulo, idaVuelta, inversion, edades].forEach((fn) => PR.agregar((o, p) => fn(o, p)));
-  window.MA_PROBLEMAS_MAS = { edades, inversion, idaVuelta, rectangulo, examen, cantidadesPorUnidad, mezclaCostoTotal, fracciones, reparto, sobraFalta, cuantosEntran, rectaNumerica, condicional, globo, inecuacionFigura };
+  if (PR.alFinal) PR.alFinal((o, p) => general(o, p));
+  window.MA_PROBLEMAS_MAS = { general, edades, inversion, idaVuelta, rectangulo, examen, cantidadesPorUnidad, mezclaCostoTotal, fracciones, reparto, sobraFalta, cuantosEntran, rectaNumerica, condicional, globo, inecuacionFigura };
 })();
