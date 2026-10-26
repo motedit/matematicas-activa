@@ -744,6 +744,7 @@
       const mh = p.match(/hipotenusa\s*(?:mide|de|es|=)?\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/);
       if (mh) { const m1 = p.match(/cateto\s*(?:mide|de|es|=)?\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/); if (m1) datos = { A: 90, a: numT(mh[1]), b: numT(m1[1]) }; }
       else if (mc) datos = { A: 90, b: numT(mc[1]), c: numT(mc[2]) };
+      else { const m1 = p.match(/catetos\s*(?:miden|de|iguales a|que miden)\s*(\d+(?:[.,]\d+)?)/); if (m1) datos = { A: 90, b: numT(m1[1]), c: numT(m1[1]) }; }   // "cuyos catetos miden 1 cm" (los dos iguales)
       if (datos.A === 90 && !datos.B && angs.length === 1 && Object.keys(datos).length === 2) { const ml = longs[0]; if (ml) datos.b = ml.v; }
     }
     const HIPOT = /(cuerda|escalera|cable|hilo|rampa|tobogan|tirante|soga|cometa|barrilete|piolin|alambre|viga|tabla|sombra)/;
@@ -1443,7 +1444,8 @@
   const TIPOS = [transformacion, conicas, circunferencia, recta, geometria, trigonometria, (o, p) => angulos(p), (o, p) => cabezasPatas(p), (o, p) => persecucion(p), (o, p) => promedioFaltante(p),
     (o, p) => fraccionesDelTotal(p), mezcla, dosArticulos, dosPrecios, (o, p) => quePorcentaje(p), reglaDeTres];
   function resolver(texto) {
-    const orig = String(texto || "").replace(/\s+/g, " ").trim();
+    // "$975 000" → "$975000" (miles separados con espacio)
+    const orig = String(texto || "").replace(/\s+/g, " ").trim().replace(/\$\s*(\d{1,3}(?: \d{3})+)(?!\d)/g, (m, n) => "$" + n.replace(/ /g, ""));
     if (orig.split(" ").length < 5) return null;
     const p = plano(orig);
     for (const t of TIPOS) {
@@ -1452,7 +1454,12 @@
     }
     return null;
   }
-  window.MA_PROBLEMAS = { resolver, Fr };
+  window.MA_PROBLEMAS = {
+    resolver, Fr,
+    // otros módulos pueden sumar tipos de problemas (se prueban antes que los de acá)
+    agregar: (fn) => TIPOS.unshift(fn),
+    h: { F, leerNum, L, aprox, R, PESO, din, tx, m$, ok, tabla, esc, pasos, problema, plano, numeros, PALABRAS, raizFr, puntos, d2, g2, SEN, TG, sen, cos, tg, asen, acos, atg, resolverTriangulo, angulosEn, largosEn, numT, mcd },
+  };
 
   /* ---------- si escribieron un problema en palabras y no se reconoció: mensaje claro ---------- */
   (function () {

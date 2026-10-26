@@ -237,6 +237,12 @@
     const final = fracTex(res.n, res.d, v);
     const expand = res.d.g === 0 ? polTex(res.n.por(Pol.k(F(1).entre(res.d.c[0]))), v) : `\\frac{${polTex(res.n, v)}}{${polTex(res.d, v)}}`;
     P("Resultado", prohibidos.length ? `Recordá que vale para ${v} distinto de ${prohibidos.map((q) => "$" + Lfr(q) + "$").join(", ")}.` : "", [final === expand ? final : `${final}=${expand}`]);
+    // raíces del resultado (ceros del numerador que no estén excluidos)
+    if (res.n.g >= 1) {
+      const fzN = factorizar(res.n), rr = [];
+      fzN.fs.forEach((f) => { if (f.p.g === 1) { const r = f.p.c[0].por(-1).entre(f.p.c[1]); if (!prohibidos.some((q) => q.v === r.v) && !rr.some((q) => q.v === r.v)) rr.push(r); } });
+      P("Raíces", "Son los valores que anulan el numerador (y que no están excluidos).", [rr.length ? `${v}=${rr.map(Lfr).join(",\\;")}` : tx("no tiene raíces (ningún valor permitido anula el numerador)")]);
+    }
     // verificación numérica en un valor permitido
     const prueba = [F(2), F(5), F(7, 2), F(-3), F(11)].find((t) => !prohibidos.some((q) => q.v === t.v) && !res.d.val(t).cero());
     if (prueba) {
@@ -623,6 +629,18 @@
     let prod = MP.k(k); for (const { p, e } of lista) for (let i = 0; i < e; i++) prod = prod.por(p);
     if (!prod.igual(P)) return null;
     Pp("Verificamos", "Si multiplicamos todos los factores, tiene que volver a dar el polinomio original.", [`${res}=${mpTex(prod)}\\;\\checkmark`]);
+    // raíces (si hay una sola letra)
+    const letrasP = P.letras();
+    if (letrasP.length === 1) {
+      const v0 = letrasP[0], raices = [], sinRaiz = [];
+      for (const { p: f, e } of lista) {
+        const T = f.terminos();
+        if (f.grado() === 1) { const a = T.find((t) => t.e[v0] === 1).k, c = (T.find((t) => !t.e[v0]) || { k: F(0) }).k; raices.push({ r: c.por(-1).entre(a), e }); }
+        else if (f.m.size === 1 && f.grado() >= 1) raices.push({ r: F(0), e: e * f.grado() });
+        else sinRaiz.push(mpTex(f));
+      }
+      if (raices.length || sinRaiz.length) Pp("Raíces", "Igualamos cada factor a cero (un producto da 0 si algún factor es 0). Si un factor está elevado a una potencia, la raíz es doble, triple…", [raices.map(({ r, e }) => `${v0}=${Lfr(r)}${e === 2 ? `\\;${tx("(doble)")}` : e === 3 ? `\\;${tx("(triple)")}` : e > 3 ? `\\;${tx(`(de orden ${e})`)}` : ""}`).join(",\\quad ") || tx("no tiene raíces reales")].concat(sinRaiz.map((t) => `${t}=0\\;${tx("no tiene raíces reales")}`)));
+    }
     return { tema: "factorizacion", metodo: "Casos de factoreo", pasos, resultado: res };
   }
 
@@ -722,7 +740,216 @@
     return { tema: "radicacion", metodo: "Radicales: potencias de exponente fraccionario", pasos, resultado: final + unaRaiz };
   }
 
-  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini, casos: resolverCasos, radicales: resolverRadicales };
+  const m$ = (x) => `$${x}$`;
+  const leerN = (t) => { const [e, d = ""] = String(t).replace(",", ".").split("."); return F(parseInt(e + d, 10), 10 ** d.length); };
+  /* =====================================================================
+     Más ejercicios de Álgebra (a partir de guías reales)
+     ===================================================================== */
+  // separa una expresión en términos de nivel superior (+ y − fuera de paréntesis), con su signo
+  function terminosTop(s) {
+    const out = []; let d = 0, ini = 0;
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (c === "(" || c === "[" || c === "{") d++;
+      else if (c === ")" || c === "]" || c === "}") d--;
+      else if ((c === "+" || c === "-") && d === 0 && i > 0 && !/[\^*/(+\-]/.test(s[i - 1])) { out.push(s.slice(ini, i)); ini = i; }
+    }
+    out.push(s.slice(ini));
+    return out.filter((t) => t.trim());
+  }
+  const norm = (t) => String(t || "").replace(/∛/g, "√⦃3⦄").replace(/∜/g, "√⦃4⦄").replace(/√\[(\d+)\]/g, "√⦃$1⦄").replace(/[−–—]/g, "-").replace(/[·×]/g, "*").replace(/÷/g, ":").replace(/²/g, "^2").replace(/³/g, "^3").replace(/⁴/g, "^4").replace(/⁵/g, "^5").replace(/½/g, "(1/2)").replace(/\[/g, "(").replace(/\]/g, ")").replace(/\{/g, "(").replace(/\}/g, ")").replace(/√⦃(\d+)⦄/g, "√[$1]");
+  // desarrolla cada término y junta semejantes, con pasos
+  function desarrollarConPasos(expr, Pp, titulo) {
+    const tt = terminosTop(expr.replace(/\s+/g, ""));
+    const lineas = []; let total = new MP();
+    for (const t of tt) {
+      let v; try { v = parseMP(t); } catch (e) { return null; }
+      total = total.mas(v);
+      const limpio = t.replace(/^\+/, "");
+      const nombre = /^\(?[+-]?\(([^()]+)\)\^2$/.test(limpio) ? tx(" (cuadrado de un binomio)") : /\)\^3$/.test(limpio) ? tx(" (cubo de un binomio)") : "";
+      if (/^[+-]?\([^()]*\)$/.test(limpio)) continue;
+      if (/[()^]/.test(limpio)) lineas.push(`${limpio.replace(/\*/g, "\\cdot ").replace(/\^(\d+)/g, "^{$1}")}=${mpTex(v)}${nombre}`);
+    }
+    if (lineas.length) Pp(titulo || "Resolvemos productos y potencias", "Aplicamos la propiedad distributiva y los productos notables término por término. En el cuadrado de un binomio: (a ± b)² = a² ± 2ab + b².", lineas);
+    return total;
+  }
+
+  // a) Polinomios dados: A(x) = …, B(x) = …  y una operación entre ellos
+  function resolverPolinomiosDados(texto) {
+    const s0 = norm(texto);
+    const defs = {}, re = /([A-Z])\s*\(\s*([a-z])\s*\)\s*=\s*([^;=\n]+?)(?=\s*[,;]?\s*(?:y\s+)?[A-Z]\s*\(\s*[a-z]\s*\)\s*=|\s*[;\n.]|\s+(?:calcular|calcul[aá]|hallar|resolver|resolv[eé]|obtener|efectuar|realizar|operar)\b|$)/gi;
+    let m, v = null;
+    while ((m = re.exec(s0))) { defs[m[1].toUpperCase()] = m[3].trim().replace(/[,.]$/, ""); v = m[2]; }
+    if (Object.keys(defs).length < 2) return null;
+    let resto = s0.replace(re, " ").replace(/\b(dados|dado|los|las|polinomios|polinomio|calcular|calcul[aá]|hallar|resolver|resolv[eé]|obtener|efectuar|realizar|operar|siguiente|siguientes|y|el|la|de)\b/gi, " ").replace(/[;:,]/g, " ").trim();
+    resto = resto.replace(/^[\s.]+|[\s.?=]+$/g, "");
+    resto = resto.replace(/(\d)\s*\.\s*(?=[A-Z]\s*\()/g, "$1*").replace(/\)\s*\.\s*(?=[A-Z]\s*\()/g, ")*").replace(/\s+/g, "");
+    if (!/[A-Z]\([a-z]\)/.test(resto)) return null;
+    const usados = [...new Set((resto.match(/[A-Z](?=\([a-z]\))/g) || []))];
+    if (usados.some((L0) => !defs[L0])) return null;
+    const sust = resto.replace(/([A-Z])\(([a-z])\)/g, (mm, L0) => `(${defs[L0].replace(/\s+/g, "")})`);
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    let polys; try { polys = Object.fromEntries(Object.entries(defs).map(([k, e]) => [k, parseMP(e.replace(/\s+/g, ""))])); } catch (e) { return null; }
+    Pp("Anotamos los polinomios", "", Object.entries(polys).map(([k, p]) => `${k}(${v})=${mpTex(p)}`));
+    Pp("Reemplazamos cada polinomio en la operación", "Cada polinomio va entre paréntesis.", [`${resto.replace(/\*/g, "\\cdot ").replace(/\^(\d+)/g, "^{$1}")}=${sust.replace(/\*/g, "\\cdot ").replace(/\^(\d+)/g, "^{$1}")}`]);
+    const total = desarrollarConPasos(sust, Pp, "Resolvemos multiplicaciones y potencias");
+    if (!total) return null;
+    Pp("Sumamos y restamos los términos semejantes", "Juntamos los términos que tienen la misma letra con el mismo exponente.", [`${resto.replace(/\*/g, "\\cdot ").replace(/\^(\d+)/g, "^{$1}")}=${mpTex(total)}`]);
+    return { tema: "basicos", metodo: "Operaciones con polinomios", pasos, resultado: mpTex(total) };
+  }
+
+  // b) Expresión mínima (desarrollar y reducir)
+  function resolverExpandir(texto, forzado) {
+    const t0 = norm(texto);
+    if (!forzado && !/(expresi[oó]n m[ií]nima|reduc[ií]|reducir|desarroll|simplific[aá]r? la expresi|opera[rá]? y reduc)/i.test(t0)) return null;
+    let s = t0.replace(/\b(obtener|obten[eé]|hallar|calcular|calcul[aá]|la|el|expresi[oó]n|m[ií]nima|reducir|reduc[ií]|al|m[aá]ximo|desarrollar|desarroll[aá]|y|simplificar|simplific[aá]|operar|oper[aá]|resolver|resolv[eé])\b/gi, " ").replace(/^[\s:.,a-z)]{0,3}(?=[(\d\-+])/i, "").replace(/[=:]\s*$/, "").replace(/\s+/g, "");
+    if (!s || /[=<>]/.test(s) || !/[a-zA-Z]/.test(s)) return null;
+    let P0; try { P0 = parseMP(s); } catch (e) { return null; }
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    Pp("Escribimos la expresión", "Primero resolvemos potencias y productos (cada término por separado), después juntamos los términos semejantes.", [s.replace(/\*/g, "\\cdot ").replace(/\^(\d+)/g, "^{$1}")]);
+    const total = desarrollarConPasos(s, Pp);
+    if (!total) return null;
+    Pp("Juntamos términos semejantes", "Sumamos los coeficientes de los términos que tienen la misma parte literal.", [`=${mpTex(total)}`]);
+    return { tema: "notables", metodo: "Expresión mínima (desarrollar y reducir)", pasos, resultado: mpTex(total) };
+  }
+
+  // c) Números complejos: (1 − 2i)³/(2 + i) + i^42 …
+  class C {
+    constructor(re, im) { this.re = Fr.de(re); this.im = Fr.de(im); }
+    mas(o) { return new C(this.re.mas(o.re), this.im.mas(o.im)); }
+    menos(o) { return new C(this.re.menos(o.re), this.im.menos(o.im)); }
+    por(o) { return new C(this.re.por(o.re).menos(this.im.por(o.im)), this.re.por(o.im).mas(this.im.por(o.re))); }
+    conj() { return new C(this.re, this.im.por(-1)); }
+    mod2() { return this.re.por(this.re).mas(this.im.por(this.im)); }
+    entre(o) { const n = this.por(o.conj()), d = o.mod2(); if (d.cero()) throw new Error("div0"); return new C(n.re.entre(d), n.im.entre(d)); }
+  }
+  const cTex = (z) => {
+    const a = z.re, b = z.im;
+    if (b.cero()) return Lfr(a);
+    const bi = b.v === 1 ? "i" : b.v === -1 ? "-i" : `${Lfr(b)}i`;
+    if (a.cero()) return bi;
+    return `${Lfr(a)}${b.n < 0 ? "" : "+"}${bi}`;
+  };
+  const cParen = (z) => (z.re.cero() || z.im.cero() ? (z.re.n < 0 || z.im.n < 0 ? `(${cTex(z)})` : cTex(z)) : `(${cTex(z)})`);
+  function resolverComplejos(texto) {
+    const s = norm(texto).replace(/\b(resolver|resolv[eé]|calcular|calcul[aá]|y|expres[aá]|expresar|el|resultado|en|forma|bin[oó]mica|a\+bi)\b/gi, " ").replace(/\s+/g, "");
+    if (!/i/.test(s) || /[a-hj-zA-HJ-Z]/.test(s) || /[=<>]/.test(s) || !/\d/.test(s)) return null;
+    const tk = []; let i = 0;
+    while (i < s.length) { const c = s[i]; if (/\d/.test(c)) { const m = s.slice(i).match(/^\d+(?:[.,]\d+)?/); const [e, d = ""] = m[0].replace(",", ".").split("."); tk.push({ t: "n", v: F(parseInt(e + d, 10), 10 ** d.length) }); i += m[0].length; continue; } if (c === "i") { tk.push({ t: "i" }); i++; continue; } if ("+-*/:^()".includes(c)) { tk.push({ t: c === ":" ? "/" : c }); i++; continue; } if (c === "~") { i++; continue; } return null; }
+    const sub = [];
+    let p = 0; const tomar = (t) => (tk[p] && tk[p].t === t ? (p++, true) : false), emp = (k) => k && (k.t === "n" || k.t === "i" || k.t === "(");
+    const esReal = (z) => z.im.cero(), esI = (z) => z.re.cero() && z.im.v === 1;
+    function suma() { let a = prod(); for (;;) { if (tomar("+")) a = a.mas(prod()); else if (tomar("-")) a = a.menos(prod()); else return a; } }
+    function prod() { let a = signo(); for (;;) { if (tomar("*")) a = a.por(signo()); else if (tomar("/")) { const b = signo(); const r = a.entre(b); if (!esReal(b)) sub.push({ t: "div", tex: `\\frac{${cTex(a)}}{${cTex(b)}}=\\frac{${cParen(a)}\\cdot ${cParen(b.conj())}}{${cParen(b)}\\cdot ${cParen(b.conj())}}=\\frac{${cTex(a.por(b.conj()))}}{${Lfr(b.mod2())}}=${cTex(r)}` }); a = r; } else if (emp(tk[p])) a = a.por(pot()); else return a; } }
+    function signo() { if (tomar("-")) return signo().por(new C(-1, 0)); if (tomar("+")) return signo(); return pot(); }
+    function pot() {
+      const b = atomo();
+      if (tomar("^")) {
+        let e; const k = tk[p++]; if (k && k.t === "n") e = k.v; else if (k && k.t === "(") { const x = suma(); if (!tomar(")") || !esReal(x)) throw 0; e = x.re; } else throw 0;
+        if (e.d !== 1 || e.n < 0 || e.n > 200) throw 0;
+        let r = new C(1, 0); for (let j = 0; j < e.n; j++) r = r.por(b);
+        if (esI(b)) sub.push({ t: "i", tex: `i^{${e.n}}=i^{${e.n % 4}}=${cTex(r)}\\quad ${`\\quad(${e.n}=4\\cdot ${Math.floor(e.n / 4)}+${e.n % 4})`}` });
+        else if (!esReal(b)) sub.push({ t: "pot", tex: e.n === 2 ? `${cParen(b)}^{2}=${cTex(b.re.cero() ? new C(0, 0) : new C(b.re.por(b.re), 0))}${b.re.cero() ? "" : `+2\\cdot ${cParen(new C(b.re, 0))}\\cdot ${cParen(new C(0, b.im))}`}+${cParen(new C(0, b.im))}^{2}=${cTex(r)}` : `${cParen(b)}^{${e.n}}=${cTex(r)}` });
+        return r;
+      }
+      return b;
+    }
+    function atomo() { const k = tk[p++]; if (!k) throw 0; if (k.t === "n") { if (tk[p] && tk[p].t === "i") { p++; return new C(0, k.v); } return new C(k.v, 0); } if (k.t === "i") return new C(0, 1); if (k.t === "(") { const a = suma(); if (!tomar(")")) throw 0; return a; } throw 0; }
+    let z; try { z = suma(); if (p < tk.length) return null; } catch (e) { return null; }
+    if (!sub.length && !/[*/^]|\)\(|\)[+-]\(/.test(s)) return null;
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    Pp("Escribimos el ejercicio", "Recordá: i² = −1. Resolvemos primero las potencias, después productos y cocientes, y al final sumas y restas.", [s.replace(/\*/g, "\\cdot ").replace(/\^\((\d+)\)/g, "^{$1}").replace(/\^(\d+)/g, "^{$1}").replace(/\(\(([^()]+)\)\/\(([^()]+)\)\)/g, "\\frac{$1}{$2}")]);
+    const pi = sub.filter((x) => x.t === "i"), pp = sub.filter((x) => x.t === "pot"), pd = sub.filter((x) => x.t === "div");
+    if (pp.length) Pp("Calculamos las potencias", "Desarrollamos como un binomio y reemplazamos i² = −1 (e i³ = −i).", pp.map((x) => x.tex));
+    if (pi.length) Pp("Potencias de i", "Las potencias de i se repiten de 4 en 4: i⁰ = 1, i¹ = i, i² = −1, i³ = −i. Dividimos el exponente por 4 y miramos el resto.", pi.map((x) => x.tex));
+    if (pd.length) Pp("Dividimos multiplicando por el conjugado", "Para dividir, multiplicamos arriba y abajo por el conjugado del denominador (cambiamos el signo de la parte imaginaria): abajo queda un número real.", pd.map((x) => x.tex));
+    Pp("Resultado en forma binómica", "Juntamos parte real con parte real e imaginaria con imaginaria.", [`=${cTex(z)}`]);
+    return { tema: "complejos", metodo: "Operaciones con números complejos", pasos, resultado: cTex(z) };
+  }
+
+  // d) Racionalización de denominadores
+  function resolverRacionalizar(texto) {
+    let s = norm(texto).replace(/\b(racionalizar|racionaliz[aá]|el|los|denominador|denominadores|la|expresi[oó]n|siguiente)\b/gi, " ").replace(/\\sqrt\[(\d+)\]/g, "√[$1]").replace(/\\sqrt/g, "√").replace(/\braiz\b/gi, "√").replace(/\s+/g, "").replace(/^:/, "");
+    while (/^\((.*)\)$/.test(s) && (() => { let d = 0; for (let i = 0; i < s.length - 1; i++) { if (s[i] === "(") d++; else if (s[i] === ")") d--; if (d === 0) return false; } return true; })()) s = s.slice(1, -1);
+    const forz = /racionaliz/i.test(texto);
+    const num = "\\(?(\\d+)\\)?", rad = "√(?:\\[(\\d+)\\])?\\(?(\\d+)(?:\\^\\(?(\\d+)\\)?)?\\)?";
+    let m;
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    const rTex = (n, r, e) => (r === 2 ? `\\sqrt{${e > 1 ? `${n}^{${e}}` : n}}` : `\\sqrt[${r}]{${e > 1 ? `${n}^{${e}}` : n}}`);
+    const simpl = (a, b) => { const g = mcd(a, b) || 1; return [a / g, b / g]; };
+    // k / (c · ⁿ√(n^e))
+    if ((m = s.match(new RegExp(`^${num}\\/\\(?(\\d*)\\*?${rad}\\)?$`)))) {
+      const k = +m[1], c = m[2] ? +m[2] : 1, r = m[3] ? +m[3] : 2, n = +m[4], e = m[5] ? +m[5] : 1;
+      if (e >= r) return null;
+      const falta = r - e, den = c * n;
+      Pp("Buscamos por qué multiplicar", r === 2 ? `Multiplicamos arriba y abajo por ${m$(`\\sqrt{${n}}`)}: así abajo queda ${m$(`(\\sqrt{${n}})^2=${n}`)}, sin raíz.` : `Multiplicamos arriba y abajo por ${m$(rTex(n, r, falta))}: así abajo el exponente llega a ${r} y la raíz se va.`, [`\\frac{${k}}{${c > 1 ? c : ""}${rTex(n, r, e)}}\\cdot\\frac{${rTex(n, r, falta)}}{${rTex(n, r, falta)}}=\\frac{${k}${rTex(n, r, falta)}}{${c > 1 ? c + "\\cdot " : ""}${rTex(n, r, r)}}=\\frac{${k}${rTex(n, r, falta)}}{${den}}`]);
+      const [a, b] = simpl(k, den);
+      const fin = `${b === 1 ? "" : "\\frac{"}${a === 1 ? "" : a}${rTex(n, r, falta)}${b === 1 ? "" : `}{${b}}`}`;
+      if (a !== k) Pp("Simplificamos", "", [`\\frac{${k}${rTex(n, r, falta)}}{${den}}=${fin}`]);
+      Pp("Resultado", "", [fin]);
+      return { tema: "radicacion", metodo: "Racionalización", pasos, resultado: fin };
+    }
+    // k / (a ± b·√n)  o  k / (√n ± a)
+    if ((m = s.match(/^\(?(\d+)\)?\/\((\d+)([+-])(\d*)\*?√\(?(\d+)\)?\)$/)) || (m = s.match(/^\(?(\d+)\)?\/\((\d*)\*?√\(?(\d+)\)?([+-])(\d+)\)$/))) {
+      let k, a, sg, b, n, primeroRaiz = false;
+      if (m.length === 6 && /^\(?\d+\)?\/\(\d+[+-]/.test(s)) { k = +m[1]; a = +m[2]; sg = m[3]; b = m[4] ? +m[4] : 1; n = +m[5]; }
+      else { k = +m[1]; b = m[2] ? +m[2] : 1; n = +m[3]; sg = m[4]; a = +m[5]; primeroRaiz = true; }
+      const R1 = `${b > 1 ? b : ""}\\sqrt{${n}}`, den = primeroRaiz ? `${R1}${sg}${a}` : `${a}${sg}${R1}`, conj = primeroRaiz ? `${R1}${sg === "+" ? "-" : "+"}${a}` : `${a}${sg === "+" ? "-" : "+"}${R1}`;
+      const dval = primeroRaiz ? b * b * n - a * a : a * a - b * b * n;
+      if (dval === 0) return null;
+      Pp("Multiplicamos por el conjugado", "El conjugado tiene el signo del medio cambiado. Así abajo queda una diferencia de cuadrados y la raíz desaparece.", [`\\frac{${k}}{${den}}\\cdot\\frac{${conj}}{${conj}}=\\frac{${k}\\,(${conj})}{${primeroRaiz ? `(${R1})^2-${a}^2` : `${a}^2-(${R1})^2`}}=\\frac{${k}\\,(${conj})}{${dval}}`]);
+      const g = mcd(k, Math.abs(dval)) || 1, k2 = k / g, d2 = dval / g;
+      let fin;
+      // si el denominador es negativo, el signo "−" se reparte en el conjugado
+      let cj = conj, neg = d2 < 0;
+      if (neg && !primeroRaiz && sg === "+") { cj = `${R1}-${a}`; neg = false; }
+      else if (neg && primeroRaiz && sg === "+") { cj = `${a}-${R1}`; neg = false; }
+      const enP = k2 === 1 ? cj : `${k2}(${cj})`;
+      if (Math.abs(d2) === 1) fin = `${neg ? "-" : ""}${k2 === 1 && !neg ? cj : enP.startsWith(cj) ? `(${cj})` : enP}`;
+      else fin = `${neg ? "-" : ""}\\frac{${enP}}{${Math.abs(d2)}}`;
+      Pp("Simplificamos", "", [`=${fin}`]);
+      return { tema: "radicacion", metodo: "Racionalización (conjugado)", pasos, resultado: fin };
+    }
+    return forz ? null : null;
+  }
+
+  // e) Logaritmos con propiedades: log A = 2 y log B = 3 → log(A·B²)
+  function resolverLogProp(texto) {
+    const t = norm(texto);
+    const dados = [...t.matchAll(/log\s*\(?\s*([A-Z])\s*\)?\s*=\s*(-?\d+(?:[.,]\d+)?)/g)];
+    if (dados.length < 1) return null;
+    const val = Object.fromEntries(dados.map((m) => [m[1], leerN(m[2].replace("-", "")).por(m[2].startsWith("-") ? -1 : 1)]));
+    const ult = [...t.matchAll(/log\s*\(([^=]+?)\)\s*(?:$|[?.,;]|=\s*$)/g)].pop() || [...t.matchAll(/log\s*\(([^)]*\([^)]*\)[^)]*)\)/g)].pop();
+    if (!ult) return null;
+    const ex = ult[1].replace(/\s+/g, "");
+    // exponentes por letra
+    const tk = []; let i = 0;
+    while (i < ex.length) { const c = ex[i]; if (/[A-Z]/.test(c)) { tk.push({ t: "l", v: c }); i++; continue; } if (/\d/.test(c)) { const m = ex.slice(i).match(/^\d+/); tk.push({ t: "n", v: +m[0] }); i += m[0].length; continue; } if (c === "√") { let r = 2; if (ex[i + 1] === "[") { const m = ex.slice(i + 2).match(/^(\d+)\]/); if (!m) return null; r = +m[1]; i += m[0].length + 1; } tk.push({ t: "r", r }); i++; continue; } if ("*/^()".includes(c)) { tk.push({ t: c }); i++; continue; } return null; }
+    let p = 0; const tomar = (x) => (tk[p] && tk[p].t === x ? (p++, true) : false);
+    const comb = (a, b, s) => { const r = { ...a }; for (const k in b) r[k] = (r[k] || F(0)).mas(b[k].por(s)); return r; };
+    const esc = (a, f) => Object.fromEntries(Object.entries(a).map(([k, v]) => [k, v.por(f)]));
+    function prod() { let a = pot(); for (;;) { if (tomar("*")) a = comb(a, pot(), 1); else if (tomar("/")) a = comb(a, pot(), -1); else if (tk[p] && ["l", "(", "r"].includes(tk[p].t)) a = comb(a, pot(), 1); else return a; } }
+    function pot() { let b = at(); if (tomar("^")) { let e; if (tomar("(")) { const n = tk[p++]; let d = 1; if (tomar("/")) d = tk[p++].v; if (!tomar(")")) throw 0; e = F(n.v, d); } else e = F(tk[p++].v); b = esc(b, e); } return b; }
+    function at() { const k = tk[p++]; if (!k) throw 0; if (k.t === "l") return { [k.v]: F(1) }; if (k.t === "n") { const l = Math.log10(k.v); if (Math.abs(l - Math.round(l)) > 1e-9) throw 0; return { "10": F(Math.round(l)) }; } if (k.t === "(") { const a = prod(); if (!tomar(")")) throw 0; return a; } if (k.t === "r") return esc(at(), F(1, k.r)); throw 0; }
+    let e; try { e = prod(); if (p < tk.length) return null; } catch (er) { return null; }
+    if (Object.keys(e).some((k) => k !== "10" && !val[k])) return null;
+    const pasos = []; const Pp = (titulo, texto, mates = [], html = "") => pasos.push({ titulo, texto, mates: [].concat(mates), html });
+    const exTex = ex.replace(/\*/g, "\\cdot ").replace(/\^\(?(\d+)\/(\d+)\)?/g, "^{\\frac{$1}{$2}}").replace(/\^\(?(\d+)\)?/g, "^{$1}").replace(/√\[(\d+)\]\(?([A-Z0-9^{}]+)\)?/g, "\\sqrt[$1]{$2}").replace(/√\(?([A-Z0-9^{}]+)\)?/g, "\\sqrt{$1}");
+    Pp("Anotamos los datos", "", dados.map((m) => `\\log ${m[1]}=${Lfr(val[m[1]])}`));
+    const terms = Object.entries(e).filter(([, v]) => !v.cero());
+    Pp("Aplicamos las propiedades de los logaritmos", "El logaritmo de un producto es la suma de los logaritmos; el de un cociente, la resta; y el exponente (o la raíz, como exponente fraccionario) pasa adelante multiplicando.", [`\\log\\left(${exTex}\\right)=${terms.map(([k, v], j) => `${v.n < 0 ? "-" : j ? "+" : ""}${Math.abs(v.v) === 1 ? "" : Lfr(F(Math.abs(v.n), v.d))}\\log ${k}`).join("")}`]);
+    let total = F(0); for (const [k, v] of terms) total = total.mas(v.por(k === "10" ? F(1) : val[k]));
+    Pp("Reemplazamos los valores", "", [`=${terms.map(([k, v], j) => `${v.n < 0 ? "-" : j ? "+" : ""}${Math.abs(v.v) === 1 ? "" : Lfr(F(Math.abs(v.n), v.d)) + "\\cdot "}${k === "10" ? "1" : `(${Lfr(val[k])})`}`).join("")}=${Lfr(total)}`]);
+    return { tema: "logaritmos", metodo: "Propiedades de los logaritmos", pasos, resultado: `x=${Lfr(total)}` };
+  }
+
+  // operación combinada con fracciones algebraicas (no una sola fracción para simplificar)
+  function esCombinada(t) {
+    const s0 = norm(t).replace(/\s+/g, "");
+    if (!/\//.test(s0) || !/[a-z]/i.test(s0) || /[=<>]/.test(s0)) return false;
+    return (s0.match(/[/:]/g) || []).length >= 2 || terminosTop(s0.replace(/^\((.*)\)$/, "$1")).length >= 2;
+  }
+  window.MA_FRACCIONES = { resolver: resolverFracciones, division: resolverDivision, factorRuffini: resolverFactorRuffini, casos: resolverCasos, radicales: resolverRadicales, polDados: resolverPolinomiosDados, expandir: resolverExpandir, complejos: resolverComplejos, racionalizar: resolverRacionalizar, logProp: resolverLogProp };
 
   /* ---------- enganche: el motor primero; si no puede, este ---------- */
   if (typeof window.resolverAhora !== "function") return;
@@ -731,7 +958,7 @@
   window.resolverAhora = function (metodo) {
     let texto = ""; try { texto = leerEntrada(); pendiente = !metodo && texto ? { t: texto, cuando: Date.now(), area } : null; } catch (e) { pendiente = null; }
     // División de polinomios: la resolvemos directamente (con Ruffini cuando se puede)
-    let rd = null; try { rd = texto && !metodo ? (resolverRadicales(texto) || resolverCasos(texto)) : null; } catch (e) { rd = null; }
+    let rd = null; try { rd = texto && !metodo ? (resolverRacionalizar(texto) || resolverRadicales(texto) || resolverCasos(texto) || resolverComplejos(texto) || resolverLogProp(texto) || resolverPolinomiosDados(texto) || resolverExpandir(texto) || (esCombinada(texto) ? resolverFracciones(texto) : null)) : null; } catch (e) { rd = null; }
     // En Aritmética no hay letras: si el ejercicio tiene variables, lo pasamos a Álgebra
     if (!rd && !metodo && texto && area === "arit" && pareceAlgebra(texto) && typeof cambiarArea === "function") {
       cambiarArea("alg"); campoTexto.value = texto;
@@ -749,7 +976,7 @@
     if (!/[a-zA-Z]/.test(sinUnid)) return false;
     return /\d\s*[a-zA-Z]|[a-zA-Z]\s*[\^(*/]|[(*/^+\-=]\s*[a-zA-Z]/.test(sinUnid);
   }
-  const NOMBRE = { radicacion: "Radicación", fracciones: "Fracciones algebraicas", polinomios: "Polinomios", factorizacion: "Factorización" };
+  const NOMBRE = { basicos: "Conceptos básicos", notables: "Productos notables", complejos: "Números complejos", logaritmos: "Logaritmos", radicacion: "Radicación", fracciones: "Fracciones algebraicas", polinomios: "Polinomios", factorizacion: "Factorización" };
   async function mostrarPropio(texto, r, destino, sinCobrar) {
     const er = document.getElementById("error");
     if (!sinCobrar && window.MA_CALC && typeof MA_CALC.usar === "function") { try { if (!(await MA_CALC.usar())) return; } catch (e) { if (er) er.textContent = e.message; return; } }
@@ -768,7 +995,7 @@
     if (!msg || !pendiente || Date.now() - pendiente.cuando > 60000) return;
     if (/(sesi[oó]n|gratis|plan|conectar|servidor|cancel|tarda demasiado)/i.test(msg)) { pendiente = null; return; }
     const texto = pendiente.t; pendiente = null;
-    let r = null; try { r = resolverRadicales(texto) || resolverFactorRuffini(texto) || resolverFracciones(texto); } catch (e) { r = null; }
+    let r = null; try { r = resolverRadicales(texto) || resolverFactorRuffini(texto) || resolverFracciones(texto) || resolverExpandir(texto, true); } catch (e) { r = null; }
     if (!r) { if (/^(null|undefined|\[object Object\])$/i.test(msg)) err.textContent = "No pude resolver este ejercicio. Revisá que esté bien escrito o elegí el tema a mano y probá de nuevo."; return; }
     (async () => {
       if (window.MA_CALC && typeof MA_CALC.usar === "function" && area !== "arit") { try { if (!(await MA_CALC.usar())) return; } catch (e) { return; } }
