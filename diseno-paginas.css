@@ -12,18 +12,15 @@ h1,h2,h3,h4{color:var(--ma-tinta)}
 .barra{background:rgba(7,10,25,.9)!important;backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:none!important}
 .barra-in{max-width:var(--ma-ancho)!important;padding:0 24px!important}
 .marca{font-weight:700!important;font-size:17px!important;letter-spacing:-.02em;color:#fff!important;gap:10px!important}
-.marca .sig{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;-webkit-text-fill-color:#fff;font-size:18px!important;font-weight:700}
+.marca .sig{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#2563eb!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;-webkit-text-fill-color:#fff;font-size:18px!important;font-weight:700}
 .marca strong{background:linear-gradient(90deg,#60a5fa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent!important;margin-left:4px}
 .barra nav a,.barra nav button{color:rgba(255,255,255,.8)!important;font-weight:500}
 .barra nav a:hover,.barra nav button:hover{background:rgba(255,255,255,.08)!important;color:#fff!important}
-.barra nav a.cta{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important;font-weight:600;border-radius:9px}
+.barra nav a.cta{background:#2563eb!important;color:#fff!important;font-weight:600;border-radius:9px}
 @media (max-width:600px){.barra-in{padding:0 16px!important}}
 
 /* ---------- portada de cada página ---------- */
-.hero{background:
-  radial-gradient(700px 380px at 15% 10%,rgba(47,107,255,.45),transparent 70%),
-  radial-gradient(600px 380px at 90% 30%,rgba(6,182,212,.35),transparent 70%),
-  radial-gradient(500px 300px at 60% 100%,rgba(139,92,246,.35),transparent 70%),#070a19!important;
+.hero{background:#030f37!important;
   color:#e2e8ff!important;text-align:left!important;
   padding:64px max(24px,calc((100% - var(--ma-ancho))/2 + 24px)) 64px!important}
 .hero h1{color:#fff!important;font-weight:800!important;letter-spacing:-.035em!important;margin-left:0!important;margin-right:0!important;line-height:1.08!important}
@@ -37,7 +34,7 @@ h1,h2,h3,h4{color:var(--ma-tinta)}
 /* ---------- botones ---------- */
 .btn{border-radius:10px!important;font-weight:600!important;box-shadow:none}
 .btn:hover{transform:none!important}
-.btn-amarillo,.btn-teal,.btn-primario{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important;box-shadow:0 10px 26px rgba(47,107,255,.3)!important}
+.btn-amarillo,.btn-teal,.btn-primario{background:#2563eb!important;color:#fff!important;box-shadow:none!important}
 .btn-claro{background:var(--ma-tarjeta)!important;color:var(--ma-tinta)!important;border:1px solid var(--ma-linea)!important}
 .btn-o{border-radius:10px!important}
 
@@ -53,14 +50,12 @@ h1,h2,h3,h4{color:var(--ma-tinta)}
 .h-card .que{color:var(--ma-suave)!important}
 .h-card .ir{background:var(--ma-tinta)!important;border-radius:9px!important}
 .h-card .ir:hover{background:var(--ma-primario)!important}
-.paso::before{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important}
+.paso::before{background:#2563eb!important}
 .rec .ri{display:grid;place-items:center;width:42px;height:42px;border-radius:10px;background:var(--ma-primario-suave);font-size:20px!important;flex:none}
 .plan{background:var(--ma-tarjeta)!important;border:1px solid var(--ma-linea)!important;border-radius:18px!important;box-shadow:var(--ma-sombra-alta)}
 .combo .desc{color:var(--ma-acento)!important}
-.micurso{background:
-  radial-gradient(500px 300px at 10% 0,rgba(47,107,255,.4),transparent 70%),
-  radial-gradient(500px 300px at 100% 100%,rgba(6,182,212,.3),transparent 70%),#070a19!important;border-radius:18px!important}
-.mc-tag{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important}
+.micurso{background:#030f37!important;border-radius:18px!important}
+.mc-tag{background:#2563eb!important;color:#fff!important}
 .rec-tit{font-size:15px!important;letter-spacing:.02em;color:var(--ma-tinta)!important}
 
 /* pestañas y chips (mapa curricular, mi curso) */
@@ -70,25 +65,21 @@ h1,h2,h3,h4{color:var(--ma-tinta)}
 .eje h3{color:var(--ma-tinta)!important}
 
 /* ---------- pie de página ---------- */
-.pie{background:#070a19!important;color:#8b93ad!important;padding:32px 20px!important;font-size:14px}
+.pie{background:#030f37!important;color:#8b93ad!important;padding:32px 20px!important;font-size:14px}
 .pie a{color:#e2e8ff!important;text-decoration:none}
 .pie a:hover{color:#fff!important;text-decoration:underline}
 .micurso h2,.micurso h3{color:#fff!important}
 
 /* ---------- índice de juegos ---------- */
-.jm-header{background:
-  radial-gradient(600px 160px at 10% 0,rgba(47,107,255,.45),transparent 70%),
-  radial-gradient(600px 160px at 90% 100%,rgba(6,182,212,.3),transparent 70%),#070a19!important;
+.jm-header{background:#030f37!important;
   padding:22px max(20px,calc((100% - 980px)/2 + 20px))!important;border-bottom:1px solid rgba(255,255,255,.08)}
 .jm-header h1{color:#fff!important;font-weight:800!important;letter-spacing:-.03em}
 .jm-header a{color:#bfdbfe!important}
 .jm-card{border-radius:14px!important;border:1px solid var(--ma-linea)!important;box-shadow:var(--ma-sombra)}
 .jm-card:hover{transform:translateY(-2px)!important;box-shadow:0 0 0 1.5px var(--ma-primario),0 14px 32px rgba(29,78,216,.14)!important}
-.jm-nuevo{background:
-  radial-gradient(260px 160px at 0 0,rgba(47,107,255,.55),transparent 70%),
-  radial-gradient(260px 160px at 100% 100%,rgba(6,182,212,.45),transparent 70%),#070a19!important;border-color:rgba(255,255,255,.08)!important;box-shadow:0 14px 34px rgba(7,10,25,.25)!important}
+.jm-nuevo{background:#030f37!important;border-color:rgba(255,255,255,.08)!important;box-shadow:0 14px 34px rgba(7,10,25,.25)!important}
 .jm-nuevo p{color:rgba(226,232,255,.78)!important}
-.jm-badge{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important}
+.jm-badge{background:#2563eb!important;color:#fff!important}
 .jm-btn{background:var(--ma-primario)!important;border-radius:9px!important;font-weight:600!important}
 .jm-btn.sec{background:var(--ma-fondo-2)!important;color:var(--ma-texto)!important}
 .jm-btn.ok{background:#15803d!important}
@@ -112,10 +103,15 @@ h1,h2,h3,h4{color:var(--ma-tinta)}
 @media(max-width:640px){.legal-wrap,.guia-wrap{margin:0 0 32px!important;border-radius:0;border-left:0;border-right:0;padding:28px 18px!important}}
 
 /* ---------- baja de correos ---------- */
-body:has(> main.tarjeta){background:
-  radial-gradient(700px 380px at 15% 10%,rgba(47,107,255,.35),transparent 70%),
-  radial-gradient(600px 380px at 90% 80%,rgba(6,182,212,.25),transparent 70%),#070a19!important}
+body:has(> main.tarjeta){background:#030f37!important}
 main.tarjeta{border-radius:18px!important;font-family:var(--ma-letra)}
 main.tarjeta button,main.tarjeta .btn,main.tarjeta a.boton{border-radius:10px!important}
 @media(max-width:480px){.barra nav a.volver{display:none}}
 body:has(.legal-wrap),body:has(.guia-wrap){background:var(--ma-fondo-2)!important}
+
+/* ---------- logo oficial y fondo azul marino liso ---------- */
+.marca .sig{background:url(img/logo-icono-96.png) center/cover no-repeat!important;color:transparent!important;-webkit-text-fill-color:transparent!important;font-size:0!important;width:36px!important;height:36px!important;border-radius:50%!important}
+.marca strong{background:none!important;color:#38bdf8!important;-webkit-text-fill-color:#38bdf8!important}
+.barra{background:#030f37!important;backdrop-filter:none}
+.hero h1 span,.hero h1 em{background:linear-gradient(90deg,#8b5cf6,#22b8f0 55%,#14c8c8);-webkit-background-clip:text;background-clip:text}
+@media(max-width:700px){.marca span:last-child{display:inline!important}.marca{font-size:16px!important}}

@@ -1,12 +1,14 @@
 /* Calculadora y ejercicios resueltos · estilo 2026 (H + A): barra azul noche con brillos,
    botones de acción en azul, títulos en Inter. El verde azulado se mantiene para "correcto". */
-:root{--bg-deep:#070a19;--bg-deep2:#0d1736;--teal-btn:#1d4ed8;--teal-btn-d:#0891b2;--blueprint-btn:#1d4ed8;--blueprint:#1d4ed8;--blueprint-d:#1e40af;--azul-texto:#1d4ed8}
+:root{--bg-deep:#030f37;--bg-deep2:#0d1736;--teal-btn:#1d4ed8;--teal-btn-d:#0891b2;--blueprint-btn:#1d4ed8;--blueprint:#1d4ed8;--blueprint-d:#1e40af;--azul-texto:#1d4ed8}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--teal-btn:#2f6bff;--teal-btn-d:#06b6d4;--blueprint-btn:#2f6bff;--blueprint:#6b9bff;--blueprint-d:#93b4ff;--azul-texto:#93b4ff}}
 :root[data-theme=dark]{--teal-btn:#2f6bff;--teal-btn-d:#06b6d4;--blueprint-btn:#2f6bff;--blueprint:#6b9bff;--blueprint-d:#93b4ff;--azul-texto:#93b4ff}
 h1,h2,h3,h4{font-family:Inter,system-ui,sans-serif!important;letter-spacing:-.02em}
-.topbar{background:
-  radial-gradient(520px 120px at 8% 0,rgba(47,107,255,.45),transparent 70%),
-  radial-gradient(520px 120px at 92% 100%,rgba(6,182,212,.3),transparent 70%),#070a19!important;
+.topbar{background:#030f37!important;
   border-bottom:1px solid rgba(255,255,255,.08);box-shadow:none!important}
 .resolver{box-shadow:0 6px 18px rgba(29,78,216,.32)!important}
-.pagina-tema .topbar .boton-barra{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important}
+.pagina-tema .topbar .boton-barra{background:#2563eb!important}
+/* logo oficial de la plataforma en lugar del ícono propio */
+.brand .mark{background:url(../../img/logo-icono-96.png) center/cover no-repeat!important;border-radius:50%!important;box-shadow:none!important}
+.brand .mark>*{visibility:hidden}
+.brand b{font-family:Inter,system-ui,sans-serif!important;letter-spacing:-.01em}

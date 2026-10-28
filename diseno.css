@@ -444,3 +444,28 @@ body.dark .pm-cab p,body.dark .plan-medida .pm-txt small{color:var(--ma-suave)!i
 }
 .dg-form input,.dg-form select{width:100%;min-width:0;box-sizing:border-box;margin:0}
 .dg-card *{box-sizing:border-box}
+
+/* ================================================================
+   FONDO AZUL MARINO LISO (color del logo) + LOGO OFICIAL
+   Reemplaza los brillos de colores por un azul marino sólido.
+================================================================ */
+:root{--ma-noche:#030f37;--ma-noche-2:#0a1a4a;--ma-logo:linear-gradient(180deg,#7c3ffb,#0dbfc5)}
+body .navbar{background:var(--ma-noche)!important;border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:none}
+body .ma-hero,.ma-brillos,.ma-cabecera{background:var(--ma-noche)!important}
+body .ma-hero h1 em{background:linear-gradient(90deg,#8b5cf6,#22b8f0 55%,#14c8c8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+body .ma-hero .ma-etiqueta{color:#7dd3fc;letter-spacing:.14em}
+body .ma-hero .ma-btn-primario,.ma-cabecera .ma-btn-primario{background:#2563eb!important;box-shadow:none!important}
+body .ma-hero .ma-btn-primario:hover,.ma-cabecera .ma-btn-primario:hover{background:#1d4ed8!important}
+body .ma-hero .ma-btn-borde{background:transparent;border-color:rgba(255,255,255,.28)}
+body .ma-hero .ma-btn-borde:hover{border-color:#fff;color:#fff!important}
+body .ma-demo{background:var(--ma-noche-2);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.35);backdrop-filter:none}
+body .ma-demo-cab{background:rgba(255,255,255,.03)}
+body .ma-hero-cifras{background:var(--ma-noche-2)}
+body .nav-cta-btn,body .navbar-links li a.nav-cta-btn{background:#2563eb!important}
+body .nav-cta-btn:hover{background:#1d4ed8!important}
+body .ma-tarjeta:hover{box-shadow:0 0 0 1.5px #2563eb,0 14px 34px rgba(3,15,55,.12)}
+body .footer{background:var(--ma-noche)!important}
+/* logo oficial en lugar de la Σ dibujada */
+body .navbar-brand .brand-icon,.marca .sig,body .mat-brand-icon{background:url(img/logo-icono-96.png) center/cover no-repeat!important;color:transparent!important;-webkit-text-fill-color:transparent!important;font-size:0!important;width:36px!important;height:36px!important;border-radius:50%!important;box-shadow:none!important}
+body .navbar-brand strong{background:none!important;-webkit-text-fill-color:#38bdf8!important;color:#38bdf8!important}
+body .navbar-brand{gap:11px}
