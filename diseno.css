@@ -1,0 +1,383 @@
+/* ================================================================
+   MATEMÁTICAS ACTIVAS — diseno.css (2026)
+   Estilo claro y académico, común a todo el sitio.
+   Se carga DESPUÉS de las hojas anteriores y las ordena encima,
+   sin cambiar los identificadores que usan los scripts.
+================================================================ */
+:root{
+  /* paleta */
+  --ma-tinta:#0f172a;        /* títulos */
+  --ma-texto:#334155;        /* texto común */
+  --ma-suave:#64748b;        /* texto secundario */
+  --ma-linea:#e2e8f0;        /* bordes */
+  --ma-fondo:#ffffff;
+  --ma-fondo-2:#f6f8fb;      /* secciones alternas */
+  --ma-tarjeta:#ffffff;
+  --ma-primario:#1d4ed8;     /* azul institucional */
+  --ma-primario-2:#1e40af;
+  --ma-primario-suave:#eef3ff;
+  --ma-acento:#0e7490;       /* celeste profundo (docentes) */
+  --ma-acento-suave:#e2f8fc;
+  --ma-ambar:#7c3aed;
+  --ma-ambar-suave:#f1ebff;
+  --ma-noche:#070a19;
+  --ma-radio:14px;
+  --ma-radio-s:10px;
+  --ma-sombra:0 1px 2px rgba(15,23,42,.05),0 4px 16px rgba(15,23,42,.06);
+  --ma-sombra-alta:0 2px 4px rgba(15,23,42,.06),0 16px 40px rgba(15,23,42,.10);
+  --ma-ancho:1160px;
+  --ma-letra:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  /* las hojas viejas usan estas variables: las alineamos */
+  --font:var(--ma-letra);--font-body:var(--ma-letra);
+  --blue:var(--ma-primario);--blue2:var(--ma-primario-2);
+  --navbar-h:64px;
+}
+body.dark{
+  --ma-tinta:#f1f5f9;--ma-texto:#cbd5e1;--ma-suave:#94a3b8;--ma-linea:#263247;
+  --ma-fondo:#0b1220;--ma-fondo-2:#0f172a;--ma-tarjeta:#111b2e;
+  --ma-primario:#6b9bff;--ma-primario-2:#93b4ff;--ma-primario-suave:#14223f;
+  --ma-acento:#2dd4bf;--ma-acento-suave:#0f2a2a;--ma-ambar:#fbbf24;--ma-ambar-suave:#2a2110;
+  --ma-sombra:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  --ma-sombra-alta:0 2px 4px rgba(0,0,0,.35),0 16px 40px rgba(0,0,0,.35);
+}
+
+/* ---------- base ---------- */
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:var(--ma-letra);color:var(--ma-texto);background:var(--ma-fondo);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4{font-family:var(--ma-letra);color:var(--ma-tinta);letter-spacing:-.015em}
+a{color:inherit}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--ma-primario) 55%,transparent);outline-offset:2px;border-radius:6px}
+.ma-contenedor{max-width:var(--ma-ancho);margin:0 auto;padding:0 24px}
+@media (max-width:600px){.ma-contenedor{padding:0 16px}}
+/* el contenido ya no aparece "de golpe" al hacer scroll: se ve siempre */
+.vfx-hidden{opacity:1!important;transform:none!important}
+.vfx-particles,#vfx-particles{display:none!important}
+
+/* ---------- botones ---------- */
+.ma-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 15px/1 var(--ma-letra);padding:13px 22px;border-radius:10px;border:1px solid transparent;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s,color .15s,box-shadow .15s;white-space:nowrap}
+.ma-btn-primario{background:var(--ma-primario);color:#fff!important}
+.ma-btn-primario:hover{background:var(--ma-primario-2)}
+.ma-btn-borde{background:var(--ma-tarjeta);color:var(--ma-tinta)!important;border-color:var(--ma-linea)}
+.ma-btn-borde:hover{border-color:var(--ma-primario);color:var(--ma-primario)!important}
+.ma-btn-acento{background:var(--ma-acento);color:#fff!important}
+.ma-btn-acento:hover{filter:brightness(.92)}
+.ma-btn-chico{font-size:14px;padding:9px 14px}
+.ma-enlace{color:var(--ma-primario)!important;font-weight:600;text-decoration:none}
+.ma-enlace:hover{text-decoration:underline}
+
+/* ---------- barra de navegación ---------- */
+body .navbar{background:color-mix(in srgb,var(--ma-fondo) 92%,transparent);border-bottom:1px solid var(--ma-linea);backdrop-filter:saturate(1.4) blur(12px);height:var(--navbar-h);box-shadow:none}
+body.dark .navbar{background:color-mix(in srgb,var(--ma-fondo) 92%,transparent);border-color:var(--ma-linea)}
+body .navbar-inner{max-width:var(--ma-ancho);padding:0 24px;gap:18px}
+body .navbar-brand{color:var(--ma-tinta);font:700 17px/1 var(--ma-letra);letter-spacing:-.02em;text-decoration:none;gap:10px}
+body .navbar-brand strong{color:var(--ma-primario);font-weight:700}
+body .navbar-brand .brand-icon{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--ma-primario);color:#fff;font-size:18px;font-weight:700;-webkit-text-fill-color:#fff;background-clip:padding-box}
+body .navbar-links li a{color:var(--ma-texto);font-size:14.5px;font-weight:500;padding:8px 12px;border-radius:8px}
+body .navbar-links li a:hover{color:var(--ma-tinta);background:var(--ma-fondo-2)}
+body .navbar-links li a.activo{color:var(--ma-primario);background:var(--ma-primario-suave)}
+body .nav-cta-btn,body .navbar-links li a.nav-cta-btn{background:var(--ma-primario)!important;color:#fff!important;border:0;font-weight:600;padding:8px 16px!important;border-radius:9px;box-shadow:none}
+body .nav-cta-btn:hover{background:var(--ma-primario-2)!important}
+body .navbar-search{background:var(--ma-fondo-2);border:1px solid var(--ma-linea);border-radius:10px}
+body .navbar-search input{color:var(--ma-tinta);background:transparent}
+body .navbar-search input::placeholder{color:var(--ma-suave)}
+body .navbar-search:focus-within{border-color:var(--ma-primario);box-shadow:0 0 0 3px var(--ma-primario-suave)}
+body .menu-toggle{color:var(--ma-tinta);border:1px solid var(--ma-linea);border-radius:9px;width:40px;height:40px;padding:0;font-size:18px}
+body .dark-toggle{background:transparent;border:1px solid var(--ma-linea);border-radius:9px;width:36px;height:36px;font-size:16px;color:var(--ma-tinta)}
+/* menús desplegables */
+body .nav-dd-menu{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);box-shadow:var(--ma-sombra-alta);border-radius:12px}
+body .navbar-links .nav-dd-menu li a{color:var(--ma-texto)!important}
+body .navbar-links .nav-dd-menu li a:hover{background:var(--ma-fondo-2)!important;color:var(--ma-tinta)!important}
+body .nav-dd-menu .dd-txt small{color:var(--ma-suave)}
+body .nav-dd-menu .dd-sep{background:var(--ma-linea)}
+body .nav-dd-menu .dd-destacado .dd-txt>span{color:var(--ma-primario)}
+/* puntos y vidas: discretos */
+body .nav-puntos{background:var(--ma-ambar-suave);color:var(--ma-ambar);border:1px solid color-mix(in srgb,var(--ma-ambar) 30%,transparent);font-weight:600}
+body.sin-vidas .vidas-container{display:none!important}
+body .vidas-container{background:var(--ma-fondo-2)!important;border:1px solid var(--ma-linea)!important}
+@media (max-width:1024px){
+  body .navbar-links{background:var(--ma-tarjeta);border-bottom:1px solid var(--ma-linea);box-shadow:var(--ma-sombra-alta)}
+  body .navbar-links li a{font-size:15.5px;padding:12px 14px}
+  body .nav-dd-menu{background:transparent;border:0;box-shadow:none}
+}
+@media (max-width:900px){
+  body .navbar-inner:has(.navbar-links.open) .navbar-search{background:var(--ma-fondo-2)}
+}
+
+/* ---------- secciones ---------- */
+body .section{background:var(--ma-fondo);padding:80px 0}
+body .section-alt{background:var(--ma-fondo-2)}
+body.dark .section{background:var(--ma-fondo)}
+body.dark .section-alt{background:var(--ma-fondo-2)}
+body .section-inner{max-width:var(--ma-ancho);padding:0 24px}
+body .section-header{text-align:left;max-width:720px;margin:0 0 36px}
+body .section-header.centro,body .ma-centro .section-header{text-align:center;margin-left:auto;margin-right:auto}
+body .section-title{font:700 clamp(26px,3.2vw,36px)/1.15 var(--ma-letra);color:var(--ma-tinta);letter-spacing:-.025em;margin:0 0 10px;background:none;-webkit-text-fill-color:currentColor}
+body .section-sub{font-size:17px;line-height:1.6;color:var(--ma-suave);margin:0}
+body .section-icon{display:none}
+.ma-etiqueta{display:inline-flex;align-items:center;gap:6px;font:600 12.5px/1 var(--ma-letra);letter-spacing:.06em;text-transform:uppercase;color:var(--ma-primario);margin-bottom:12px}
+@media (max-width:600px){body .section{padding:56px 0}body .section-inner{padding:0 16px}body .section-sub{font-size:16px}}
+
+/* ---------- tarjetas genéricas ---------- */
+.ma-tarjeta{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:var(--ma-radio);padding:24px;box-shadow:var(--ma-sombra)}
+.ma-grid{display:grid;gap:20px}
+.ma-grid-3{grid-template-columns:repeat(3,1fr)}
+.ma-grid-4{grid-template-columns:repeat(4,1fr)}
+@media (max-width:1000px){.ma-grid-4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){.ma-grid-3{grid-template-columns:1fr}}
+@media (max-width:520px){.ma-grid-4{grid-template-columns:1fr}}
+.ma-ico{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:11px;font-size:22px;background:var(--ma-primario-suave);color:var(--ma-primario);flex:none}
+.ma-ico.acento{background:var(--ma-acento-suave);color:var(--ma-acento)}
+.ma-ico.ambar{background:var(--ma-ambar-suave);color:var(--ma-ambar)}
+
+/* ---------- portada ---------- */
+.ma-hero{background:linear-gradient(180deg,var(--ma-fondo-2),var(--ma-fondo));border-bottom:1px solid var(--ma-linea);padding:calc(var(--navbar-h) + 64px) 0 72px}
+.ma-hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.ma-hero h1{font:800 clamp(34px,5vw,56px)/1.05 var(--ma-letra);letter-spacing:-.035em;color:var(--ma-tinta);margin:0 0 18px}
+.ma-hero h1 em{font-style:normal;color:var(--ma-primario)}
+.ma-hero-sub{font-size:18.5px;line-height:1.6;color:var(--ma-suave);margin:0 0 28px;max-width:560px}
+.ma-hero-btns{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px}
+.ma-hero-niveles{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
+.ma-hero-niveles li{font-size:13.5px;font-weight:500;color:var(--ma-texto);background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:99px;padding:6px 12px}
+.ma-hero-niveles li span{color:var(--ma-acento);font-weight:700;margin-right:4px}
+/* tarjeta de ejemplo: una resolución paso a paso */
+.ma-demo{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:18px;box-shadow:var(--ma-sombra-alta);overflow:hidden}
+.ma-demo-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--ma-linea);background:var(--ma-fondo-2)}
+.ma-demo-cab strong{font-size:14px;color:var(--ma-tinta)}
+.ma-demo-cab span{font-size:12px;font-weight:600;color:var(--ma-acento);background:var(--ma-acento-suave);padding:4px 9px;border-radius:99px}
+.ma-demo-enunciado{padding:16px 18px 6px;font-size:14.5px;color:var(--ma-texto);line-height:1.5}
+.ma-demo-pasos{list-style:none;margin:0;padding:8px 18px 18px;counter-reset:paso}
+.ma-demo-pasos li{position:relative;padding:12px 0 12px 40px;border-bottom:1px dashed var(--ma-linea)}
+.ma-demo-pasos li:last-child{border-bottom:0}
+.ma-demo-pasos li::before{counter-increment:paso;content:counter(paso);position:absolute;left:0;top:12px;width:26px;height:26px;border-radius:50%;background:var(--ma-primario-suave);color:var(--ma-primario);font:700 13px/26px var(--ma-letra);text-align:center}
+.ma-demo-pasos b{display:block;font-size:13.5px;color:var(--ma-tinta);margin-bottom:3px}
+.ma-demo-pasos code{font:500 16px/1.4 'Cambria Math','STIX Two Math','Times New Roman',serif;color:var(--ma-tinta);background:none;padding:0}
+.ma-demo-pasos li.final code{color:var(--ma-acento);font-weight:700}
+.ma-hero-cifras{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:56px;border:1px solid var(--ma-linea);border-radius:var(--ma-radio);background:var(--ma-tarjeta);overflow:hidden}
+.ma-hero-cifras div{padding:18px 20px;border-right:1px solid var(--ma-linea)}
+.ma-hero-cifras div:last-child{border-right:0}
+.ma-hero-cifras strong{display:block;font:800 26px/1.1 var(--ma-letra);color:var(--ma-tinta);letter-spacing:-.02em}
+.ma-hero-cifras span{font-size:13.5px;color:var(--ma-suave)}
+@media (max-width:900px){
+  .ma-hero{padding:calc(var(--navbar-h) + 36px) 0 48px}
+  .ma-hero-grid{grid-template-columns:1fr;gap:36px}
+  .ma-hero-sub{font-size:17px}
+  .ma-hero-cifras{grid-template-columns:repeat(2,1fr);margin-top:36px}
+  .ma-hero-cifras div:nth-child(2){border-right:0}
+  .ma-hero-cifras div:nth-child(-n+2){border-bottom:1px solid var(--ma-linea)}
+}
+@media (max-width:520px){.ma-hero-btns .ma-btn{flex:1 1 100%}}
+
+/* ---------- público: secundaria / universidad / docentes ---------- */
+.ma-publico{display:flex;flex-direction:column;gap:14px;text-decoration:none;transition:border-color .15s,box-shadow .15s,transform .15s}
+.ma-publico:hover{border-color:color-mix(in srgb,var(--ma-primario) 40%,var(--ma-linea));box-shadow:var(--ma-sombra-alta);transform:translateY(-2px)}
+.ma-publico h3{font-size:20px;margin:0}
+.ma-publico p{margin:0;color:var(--ma-suave);line-height:1.6;font-size:15px}
+.ma-publico ul{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.ma-publico li{font-size:14.5px;color:var(--ma-texto);padding-left:22px;position:relative}
+.ma-publico li::before{content:"";position:absolute;left:2px;top:7px;width:8px;height:8px;border-radius:2px;background:var(--ma-primario);opacity:.75}
+.ma-publico.docentes li::before{background:var(--ma-acento)}
+.ma-publico .ma-enlace{margin-top:auto}
+.ma-publico.docentes .ma-enlace{color:var(--ma-acento)!important}
+
+/* ---------- herramientas ---------- */
+.ma-herr{display:flex;gap:16px;align-items:flex-start;text-decoration:none;transition:border-color .15s,box-shadow .15s}
+.ma-herr:hover{border-color:color-mix(in srgb,var(--ma-primario) 40%,var(--ma-linea));box-shadow:var(--ma-sombra-alta)}
+.ma-herr h3{font-size:16.5px;margin:2px 0 5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ma-herr p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ma-suave)}
+.ma-chip{font:600 11px/1 var(--ma-letra);letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:6px;background:var(--ma-primario-suave);color:var(--ma-primario)}
+.ma-chip.acento{background:var(--ma-acento-suave);color:var(--ma-acento)}
+
+/* ---------- materias ---------- */
+body .lista-materias-rapida{display:none}
+.ma-materia{display:flex;flex-direction:column;gap:12px;text-decoration:none;padding:22px;transition:border-color .15s,box-shadow .15s,transform .15s}
+.ma-materia:hover{box-shadow:var(--ma-sombra-alta);transform:translateY(-2px);border-color:color-mix(in srgb,var(--c,var(--ma-primario)) 45%,var(--ma-linea))}
+.ma-materia .simbolo{display:grid;place-items:center;width:52px;height:52px;border-radius:13px;font:600 24px/1 'Cambria Math','STIX Two Math','Times New Roman',serif;color:var(--c,var(--ma-primario));background:color-mix(in srgb,var(--c,var(--ma-primario)) 11%,var(--ma-tarjeta))}
+.ma-materia h3{font-size:18px;margin:0}
+.ma-materia p{font-size:14.5px;color:var(--ma-suave);margin:0;line-height:1.5}
+.ma-materia .nivel{margin-top:auto;font-size:12.5px;font-weight:600;color:var(--ma-suave);display:flex;gap:6px;flex-wrap:wrap}
+.ma-materia .nivel span{border:1px solid var(--ma-linea);border-radius:6px;padding:3px 7px}
+
+/* ---------- diagnóstico (componentes de scripts.js) ---------- */
+body .diag-card,body .diag-resultado{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:var(--ma-radio);box-shadow:var(--ma-sombra);color:var(--ma-texto)}
+body .diag-btn-siguiente,body .diag-btn-repetir{background:var(--ma-primario)!important;border-radius:10px}
+body .diag-opcion{border-radius:10px;border-color:var(--ma-linea)}
+body .diag-opcion:hover{border-color:var(--ma-primario)}
+
+/* ---------- planes ---------- */
+body .premium-section{background:var(--ma-fondo-2)!important}
+body .section-title.light,body .section-sub.light{color:inherit}
+body .section-title.light{color:var(--ma-tinta)}
+body .section-sub.light{color:var(--ma-suave)}
+body .plan-card{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:var(--ma-radio);box-shadow:var(--ma-sombra)}
+body .plan-card:hover{transform:none;box-shadow:var(--ma-sombra-alta)}
+body .plan-card-popular{border:2px solid var(--ma-primario);transform:none}
+body .plan-card-popular:hover{transform:none}
+body .plan-card-premium{border-color:color-mix(in srgb,var(--ma-ambar) 45%,var(--ma-linea));background:var(--ma-tarjeta)}
+body .plan-card h3,body .plan-precio{color:var(--ma-tinta);font-family:var(--ma-letra)}
+body .plan-sub{color:var(--ma-suave)}
+body .plan-features li{color:var(--ma-texto);border-color:var(--ma-linea)}
+body .plan-tag{background:var(--ma-primario)!important;letter-spacing:.04em}
+body .plan-btn{border-radius:10px;font-weight:600}
+body .plan-btn-basico{background:var(--ma-primario)}
+body .plan-btn-premium{background:var(--ma-tinta)}
+body.dark .plan-btn-premium{background:var(--ma-primario-2);color:#0b1220}
+body .plan-btn-basico:hover,body .plan-btn-premium:hover{transform:none;opacity:.92}
+
+/* ---------- ranking (más discreto) ---------- */
+.ma-ranking{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;align-items:start}
+.ma-ranking .section-header{margin:0}
+@media (max-width:860px){.ma-ranking{grid-template-columns:1fr;gap:20px}}
+
+/* ---------- sobre el profe ---------- */
+body .sobre-mi{background:var(--ma-fondo);padding:80px 0;border-top:1px solid var(--ma-linea)}
+body .sobre-mi::before,body .sobre-mi::after{display:none}
+.ma-profe{display:grid;grid-template-columns:200px 1fr;gap:40px;align-items:center;max-width:920px;margin:0 auto}
+.ma-profe img{width:200px;height:200px;border-radius:18px;object-fit:cover;border:1px solid var(--ma-linea);box-shadow:var(--ma-sombra)}
+.ma-profe h2{font-size:clamp(24px,3vw,30px);margin:0 0 4px}
+.ma-profe .rol{color:var(--ma-acento);font-weight:600;margin:0 0 14px}
+.ma-profe p{line-height:1.7;margin:0 0 12px}
+.ma-profe .chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 20px}
+.ma-profe .chips span{font-size:13px;font-weight:500;border:1px solid var(--ma-linea);border-radius:99px;padding:5px 11px;color:var(--ma-texto);background:var(--ma-fondo-2)}
+@media (max-width:700px){.ma-profe{grid-template-columns:1fr;text-align:left;gap:20px}.ma-profe img{width:120px;height:120px}}
+
+/* ---------- pie de página ---------- */
+body .footer{background:var(--ma-fondo-2);border-top:1px solid var(--ma-linea);color:var(--ma-texto);padding:56px 0 28px}
+.ma-pie{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px}
+.ma-pie h4{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ma-suave);margin:0 0 12px}
+.ma-pie ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.ma-pie a{color:var(--ma-texto);text-decoration:none;font-size:14.5px}
+.ma-pie a:hover{color:var(--ma-primario)}
+.ma-pie .navbar-brand{margin-bottom:12px}
+.ma-pie p{font-size:14.5px;line-height:1.6;color:var(--ma-suave);margin:0 0 12px;max-width:320px}
+.ma-pie-base{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-top:36px;padding-top:20px;border-top:1px solid var(--ma-linea);font-size:13.5px;color:var(--ma-suave)}
+@media (max-width:860px){.ma-pie{grid-template-columns:1fr 1fr}.ma-pie>div:first-child{grid-column:1/-1}}
+
+/* ---------- botón de contacto y ventanas ---------- */
+body .fab-contacto{background:var(--ma-tinta);box-shadow:var(--ma-sombra-alta);width:52px;height:52px;font-size:22px}
+body.dark .fab-contacto{background:var(--ma-primario-2)}
+body .fab-contacto:hover{transform:none;box-shadow:var(--ma-sombra-alta)}
+body .fab-menu{background:var(--ma-tarjeta);border:1px solid var(--ma-linea)}
+body .fab-menu h4{color:var(--ma-tinta)}
+body .overlay-panel{background:var(--ma-tarjeta);color:var(--ma-texto);border-radius:18px;border:1px solid var(--ma-linea)}
+body .btn-auth.btn-primary{background:var(--ma-primario);border-radius:10px}
+body .btn-auth.btn-secondary{background:var(--ma-tarjeta);color:var(--ma-tinta);border:1px solid var(--ma-linea);border-radius:10px}
+body .form-group input,body .form-group select,body .form-group textarea{border-radius:10px;border-color:var(--ma-linea)}
+body .form-group input:focus{border-color:var(--ma-primario);box-shadow:0 0 0 3px var(--ma-primario-suave)}
+.dark-toggle-fixed{display:none!important}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{.navbar,.fab-contacto,.fab-menu,.footer{display:none!important}}
+
+/* ---------- ajustes de la sección de planes (venía pensada para fondo oscuro) ---------- */
+body #lista-contenidos.lista-materias-rapida{display:none!important}
+body .premium-section .section-title,body .premium-section .section-title.light{color:var(--ma-tinta)!important}
+body .premium-section .section-sub,body .premium-section .section-sub.light{color:var(--ma-suave)!important}
+body .premium-section .cuota-info{color:var(--ma-texto);background:var(--ma-tarjeta);border:1px solid var(--ma-linea)}
+body .premium-section .cuota-info strong{color:var(--ma-ambar)}
+body .premium-section #premium-grid p{color:var(--ma-suave)!important}
+body .premium-banner-estado{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-left:4px solid var(--ma-primario);border-radius:var(--ma-radio);text-align:left;padding:20px 22px;box-shadow:var(--ma-sombra);backdrop-filter:none;display:grid;grid-template-columns:1fr auto;gap:4px 20px;align-items:center}
+body .premium-banner-estado h3{font-size:18px;margin:0;color:var(--ma-tinta)}
+body .premium-banner-estado p{margin:0;color:var(--ma-suave);grid-column:1}
+body .premium-banner-estado .ma-btn{grid-column:2;grid-row:1/span 2}
+body .banner-activo{border-left-color:var(--ma-acento)}
+@media (max-width:640px){body .premium-banner-estado{grid-template-columns:1fr}body .premium-banner-estado .ma-btn{grid-column:1;grid-row:auto;margin-top:10px}}
+body .pago-step-text{color:var(--ma-suave)!important}
+body .pago-step-arrow{color:var(--ma-linea)!important}
+body .plan-calc-suelta{border:1px solid var(--ma-linea)!important;background:var(--ma-tarjeta);border-radius:var(--ma-radio)!important}
+body .plan-medida{border-color:var(--ma-linea)!important;background:var(--ma-tarjeta)!important;border-radius:var(--ma-radio)!important}
+/* sobre el profe: el estilo viejo agregaba márgenes grandes */
+body .ma-profe h2{margin:0 0 4px}
+body .ma-profe img{display:block;background:var(--ma-fondo-2)}
+body .cupon-caja{border:1px solid var(--ma-linea);background:var(--ma-tarjeta);border-radius:var(--ma-radio)}
+body .cupon-caja button,body .cupon-btn{background:var(--ma-tinta)!important;color:#fff!important;border-radius:10px}
+body.dark .cupon-caja button,body.dark .cupon-btn{background:var(--ma-primario-2)!important;color:#0b1220!important}
+
+/* ================================================================
+   ESTILO ELEGIDO: H + A 1 (portada y barra "noche" con brillos,
+   cuerpo claro y académico, pie de página oscuro)
+================================================================ */
+.ma-brillos{background:
+  radial-gradient(700px 380px at 15% 10%,rgba(47,107,255,.45),transparent 70%),
+  radial-gradient(600px 380px at 90% 30%,rgba(6,182,212,.35),transparent 70%),
+  radial-gradient(500px 300px at 60% 100%,rgba(139,92,246,.35),transparent 70%),var(--ma-noche)}
+body .navbar{background:rgba(7,10,25,.82)!important;border-bottom:1px solid rgba(255,255,255,.08)}
+body .navbar-brand,body .navbar-brand strong{color:#fff}
+body .navbar-brand strong{background:linear-gradient(90deg,#60a5fa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+body .navbar-brand .brand-icon{background:linear-gradient(135deg,#2f6bff,#06b6d4)}
+@media (min-width:1025px){body .navbar-links li a{color:rgba(255,255,255,.78)}body .navbar-links li a:hover{color:#fff;background:rgba(255,255,255,.08)}body .navbar-links .nav-dd-menu li a{color:var(--ma-texto)!important}}
+body .navbar-search{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+body .navbar-search input{color:#fff}
+body .dark-toggle,body .menu-toggle{color:#fff;border-color:rgba(255,255,255,.2)}
+body .ma-hero{background:
+  radial-gradient(700px 380px at 15% 10%,rgba(47,107,255,.45),transparent 70%),
+  radial-gradient(600px 380px at 90% 30%,rgba(6,182,212,.35),transparent 70%),
+  radial-gradient(500px 300px at 60% 100%,rgba(139,92,246,.35),transparent 70%),#070a19;border:0}
+body .ma-hero h1{color:#fff;font-weight:700;letter-spacing:-.04em}
+body .ma-hero h1 em{background:linear-gradient(90deg,#60a5fa,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+body .ma-hero .ma-etiqueta{color:#7dd3fc}
+body .ma-hero-sub{color:rgba(226,232,255,.75)}
+body .ma-hero .ma-btn-primario{background:linear-gradient(135deg,#2f6bff,#06b6d4);box-shadow:0 10px 30px rgba(47,107,255,.45)}
+body .ma-hero .ma-btn-borde{background:rgba(255,255,255,.06);color:#fff!important;border-color:rgba(255,255,255,.2)}
+body .ma-hero-niveles li{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#e2e8ff}
+body .ma-hero-niveles li span{color:#22d3ee}
+body .ma-demo{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px);box-shadow:0 30px 80px rgba(0,0,0,.45)}
+body .ma-demo-cab{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
+body .ma-demo-cab strong,body .ma-demo-enunciado,body .ma-demo-pasos b{color:#e2e8ff}
+body .ma-demo-cab span{background:rgba(34,211,238,.15);color:#67e8f9}
+body .ma-demo-pasos li{border-color:rgba(255,255,255,.1)}
+body .ma-demo-pasos code{color:#fff}
+body .ma-demo-pasos li.final code{color:#67e8f9}
+body .ma-demo-pasos li::before{background:rgba(96,165,250,.18);color:#93c5fd}
+body .ma-hero-cifras{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+body .ma-hero-cifras div{border-color:rgba(255,255,255,.12)!important}
+body .ma-hero-cifras strong{color:#fff}
+body .ma-hero-cifras span{color:rgba(226,232,255,.65)}
+body .ma-tarjeta{border-color:var(--ma-linea);position:relative}
+body .ma-tarjeta:hover{border-color:transparent;box-shadow:0 0 0 1.5px #2f6bff,0 16px 40px rgba(47,107,255,.15)}
+body .ma-ico{background:linear-gradient(135deg,#eaf0ff,#e2f8fc);color:var(--ma-primario)}
+body .section-title{letter-spacing:-.035em}
+body .ma-etiqueta{color:var(--ma-primario)}
+body .footer{background:#070a19!important;border:0}
+body .footer .ma-pie a,body .footer .navbar-brand{color:#e2e8ff}
+body .footer .ma-pie h4,body .footer .ma-pie p,body .footer .ma-pie-base{color:#8b93ad;border-color:rgba(255,255,255,.08)}
+
+body .ma-ico{background:var(--ma-primario-suave)}
+body .ma-ico.acento{background:#e2f8fc;color:#0e7490}
+body .ma-ico.ambar{background:#f1ebff;color:#7c3aed}
+body .ma-hero h1{font-weight:800;letter-spacing:-.035em}
+body .ma-tarjeta:hover{box-shadow:0 0 0 1.5px var(--ma-primario),0 16px 40px rgba(29,78,216,.14)}
+
+
+/* barra oscura: menú de celular y buscador abiertos siguen siendo claros */
+@media (max-width:1024px){body .navbar-links li a{color:var(--ma-texto)}}
+body .navbar-search input::placeholder{color:rgba(226,232,255,.55)}
+@media (max-width:900px){body .navbar-inner:has(.navbar-links.open) .navbar-search{background:var(--ma-tarjeta);border-color:var(--ma-linea)}body .navbar-inner:has(.navbar-links.open) .navbar-search input{color:var(--ma-tinta)}}
+body .nav-cta-btn,body .navbar-links li a.nav-cta-btn{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important}
+body .ma-publico.docentes .ma-enlace{color:var(--ma-acento)!important}
+body .ma-publico.docentes li::before{background:var(--ma-acento)}
+body.dark .ma-ico{background:var(--ma-primario-suave)}
+body.dark .ma-ico.acento{background:var(--ma-acento-suave);color:var(--ma-acento)}
+body.dark .ma-ico.ambar{background:var(--ma-ambar-suave);color:var(--ma-ambar)}
+
+/* ---------- cabecera de páginas interiores ---------- */
+.ma-cabecera{color:#e2e8ff;padding:calc(var(--navbar-h) + 48px) 0 52px}
+.ma-cabecera .ma-contenedor{position:relative}
+.ma-cabecera h1{color:#fff;font:800 clamp(30px,4.4vw,48px)/1.08 var(--ma-letra);letter-spacing:-.035em;margin:0 0 14px;max-width:820px}
+.ma-cabecera h1 em{font-style:normal;background:linear-gradient(90deg,#60a5fa,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.ma-cabecera p{color:rgba(226,232,255,.78);font-size:18px;line-height:1.6;margin:0 0 22px;max-width:680px}
+.ma-cabecera .ma-etiqueta{color:#7dd3fc}
+.ma-cabecera .ma-btn-primario{background:linear-gradient(135deg,#2f6bff,#06b6d4);box-shadow:0 10px 30px rgba(47,107,255,.4)}
+.ma-cabecera .ma-btn-borde{background:rgba(255,255,255,.06);color:#fff!important;border-color:rgba(255,255,255,.2)}
+.ma-migas{display:flex;flex-wrap:wrap;gap:6px;font-size:13.5px;color:rgba(226,232,255,.6);margin:0 0 14px;list-style:none;padding:0}
+.ma-migas a{color:rgba(226,232,255,.85);text-decoration:none}
+.ma-migas a:hover{color:#fff;text-decoration:underline}
+.ma-migas li+li::before{content:"/";margin-right:6px;opacity:.5}
+@media (max-width:600px){.ma-cabecera{padding:calc(var(--navbar-h) + 32px) 0 36px}.ma-cabecera p{font-size:16.5px}}
+/* menú del celular abierto: el buscador queda sobre fondo claro */
+@media (max-width:900px){body .navbar-inner:has(.navbar-links.open) .navbar-search input::placeholder{color:var(--ma-suave)}}
+/* modo oscuro: planes */
+body.dark .plan-features li.feature-destacada{background:rgba(124,58,237,.14)!important;border-color:rgba(167,139,250,.35)!important;color:#ddd6fe!important}
+body.dark .plan-card-premium .plan-precio{color:#fbbf24!important}
+body.dark .plan-medida,body.dark .plan-medida p{color:var(--ma-texto)}
+body.dark .pm-linea{color:var(--ma-suave)}
+body.dark .pm-cab p,body.dark .plan-medida .pm-txt small{color:var(--ma-suave)!important}

@@ -1,0 +1,61 @@
+/* ================================================================
+   MATEMÁTICAS ACTIVAS — diseno-materias.css (2026)
+   Páginas de cada materia (materia.js) con el estilo H + A.
+   Se carga después de materia.css y materia-local.css.
+================================================================ */
+body{font-family:var(--ma-letra)!important;background:var(--ma-fondo-2)!important;color:var(--ma-texto)!important;
+  --font:var(--ma-letra);--font-body:var(--ma-letra);--blue:#1d4ed8;--blue2:#1e40af;--radius:12px;--radius-lg:16px;--shadow:var(--ma-sombra)}
+body.dark{background:var(--ma-fondo)!important}
+
+/* barra superior: azul noche con brillos */
+body .mat-header{background:
+  radial-gradient(500px 120px at 10% 0,rgba(47,107,255,.45),transparent 70%),
+  radial-gradient(500px 120px at 90% 100%,rgba(6,182,212,.3),transparent 70%),rgba(7,10,25,.94)!important;
+  backdrop-filter:saturate(1.4) blur(12px);box-shadow:none!important;border-bottom:1px solid rgba(255,255,255,.08);padding:0 max(16px,calc((100% - 1160px)/2 + 24px))!important}
+body .mat-brand-icon{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;border-radius:9px;width:32px;height:32px;font-family:var(--ma-letra)}
+body .mat-brand-text{font-family:var(--ma-letra);font-weight:700;letter-spacing:-.02em}
+body .mat-brand-text strong{background:linear-gradient(90deg,#60a5fa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent!important;margin-left:3px}
+body .mat-header h1{color:#fff!important;font-family:var(--ma-letra)!important;font-weight:800!important;letter-spacing:-.03em!important}
+body .mat-search-wrap{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:9px!important}
+body #mat-buscador{color:#fff}
+body .mat-nav-btn{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;border:0!important;border-radius:9px!important;font-weight:600}
+body .mat-back{border-radius:9px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.15)!important}
+body .mat-nav-puntos{background:rgba(124,58,237,.18)!important;color:#ddd6fe!important;border:1px solid rgba(167,139,250,.35)}
+
+/* contenido */
+body .mat-main{max-width:1160px;padding:40px 24px 56px;gap:24px}
+body .mat-section{background:var(--ma-tarjeta)!important;border:1px solid var(--ma-linea)!important;border-radius:16px!important;box-shadow:var(--ma-sombra)!important;padding:30px}
+body .mat-section-title{font-family:var(--ma-letra)!important;font-weight:700!important;letter-spacing:-.02em;color:var(--ma-tinta)!important;font-size:clamp(20px,2.4vw,26px)}
+body .mat-section-desc{color:var(--ma-suave)!important;font-size:15.5px}
+body .mat-premium-section{border:1px solid var(--ma-linea)!important;background:var(--ma-tarjeta)!important;border-top:4px solid var(--ma-primario)!important}
+body .mat-premium-banner{background:
+  radial-gradient(400px 200px at 0 0,rgba(47,107,255,.4),transparent 70%),
+  radial-gradient(400px 200px at 100% 100%,rgba(6,182,212,.3),transparent 70%),#070a19!important;border-radius:14px!important}
+body .mat-btn{background:var(--ma-primario)!important;border-radius:9px!important;font-family:var(--ma-letra)!important;font-weight:600}
+body .mat-btn:hover{transform:none;background:var(--ma-primario-2)!important;opacity:1}
+body .mat-btn-premium{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important}
+body .mat-premium-banner .mat-btn,body .mat-premium-banner button{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important;border:0;border-radius:9px}
+body .mat-card,body .ej-card{border-radius:14px!important;border:1px solid var(--ma-linea)!important;box-shadow:none!important}
+body .mat-card:hover{box-shadow:0 0 0 1.5px var(--ma-primario),0 14px 32px rgba(29,78,216,.12)!important;transform:none!important}
+body .mat-estado-activa{background:var(--ma-primario-suave)!important;border-color:color-mix(in srgb,var(--ma-primario) 30%,transparent)!important;color:var(--ma-tinta)!important}
+
+/* pestañas de temas (acordeón) */
+body .acc-pill{border-radius:10px!important;font-family:var(--ma-letra)}
+body .acc-pill.acc-activo{background:var(--ma-primario)!important;border-color:var(--ma-primario)!important;color:#fff!important}
+body .acc-panel{border-radius:14px!important;border-color:var(--ma-linea)!important}
+body .subtema-panel{border-radius:18px!important}
+body .subtema-archivo-cta.abrir{background:var(--ma-primario)!important}
+
+/* calculadora de ejercicios dentro de la materia */
+body .ej-dif-btn.activo,body .ej-nivel.activo,body .dif-btn.activo{background:var(--ma-primario)!important;border-color:var(--ma-primario)!important}
+
+/* pie */
+body .mat-footer{background:#070a19!important;color:#8b93ad!important;padding:36px 24px 28px}
+body .mat-footer-link{border-radius:9px!important}
+body .mat-footer-link.wa,body .mat-footer-link.ig{background:rgba(255,255,255,.06)!important;color:#e2e8ff!important;border:1px solid rgba(255,255,255,.1)}
+body .mat-footer-link.wa:hover,body .mat-footer-link.ig:hover{background:rgba(255,255,255,.12)!important}
+body .mat-footer-links a{color:#a3acc5!important}
+body .mat-footer-links a:hover{color:#fff!important}
+/* modo oscuro: tarjeta de la calculadora de ejercicios */
+body.dark #calc-card,body.dark .calc-card{background:var(--ma-tarjeta)!important;border-color:var(--ma-linea)!important;color:var(--ma-texto)}
+body.dark .calc-input,body.dark #calc-input{background:var(--ma-fondo)!important;color:var(--ma-tinta)!important;border-color:var(--ma-linea)!important}

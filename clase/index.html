@@ -9,40 +9,40 @@
 <meta name="theme-color" content="#4c1d95">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;font-family:Nunito,system-ui,sans-serif;color:#fff;background:linear-gradient(160deg,#6d28d9,#4c1d95 45%,#1e1b4b) fixed}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,sans-serif;color:#fff;background:radial-gradient(800px 420px at 15% 0%,rgba(47,107,255,.45),transparent 70%),radial-gradient(700px 420px at 95% 30%,rgba(6,182,212,.3),transparent 70%),radial-gradient(600px 360px at 50% 100%,rgba(139,92,246,.3),transparent 70%),#070a19 fixed}
 body{min-height:100dvh;display:flex;flex-direction:column}
 button,input{font-family:inherit}
 .top{display:flex;justify-content:space-between;align-items:center;padding:max(12px,env(safe-area-inset-top)) 16px 8px;font-weight:800}
 .top .yo{background:rgba(255,255,255,.15);border-radius:999px;padding:6px 14px}
 .fase{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;gap:14px}
 .fase.ver{display:flex}
-.logo{font-family:"Baloo 2";font-weight:800;font-size:clamp(34px,10vw,52px);line-height:1}
+.logo{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(34px,10vw,52px);line-height:1}
 .tarjeta{background:#fff;color:#0f172a;border-radius:22px;padding:22px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:12px}
 .tarjeta input{border:2px solid #e2e8f0;border-radius:14px;padding:14px;font-size:22px;font-weight:800;text-align:center;width:100%;color:#0f172a}
-.tarjeta input:focus{outline:none;border-color:#7c3aed}
-#inPin{letter-spacing:.3em;font-family:"Baloo 2";font-size:30px}
-.btn{border:0;border-radius:14px;padding:14px;font-family:"Baloo 2";font-weight:800;font-size:22px;color:#fff;background:#0f172a;cursor:pointer}
+.tarjeta input:focus{outline:none;border-color:#2f6bff}
+#inPin{letter-spacing:.3em;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-size:30px}
+.btn{border:0;border-radius:14px;padding:14px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:22px;color:#fff;background:#0f172a;cursor:pointer}
 .btn:disabled{opacity:.5}
 .err{color:#dc2626;font-weight:800;font-size:14px;min-height:18px;margin:0}
-.grande{font-family:"Baloo 2";font-weight:800;font-size:clamp(28px,8vw,40px);line-height:1.15}
-.suave{color:#ddd6fe;font-weight:700}
+.grande{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(28px,8vw,40px);line-height:1.15}
+.suave{color:#bfdbfe;font-weight:700}
 .girando{width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,.25);border-top-color:#fff;animation:gira 1s linear infinite}
 @keyframes gira{to{transform:rotate(360deg)}}
 /* Pregunta */
 #fPregunta{justify-content:flex-start;padding-top:6px}
-.enun{background:#fff;color:#0f172a;border-radius:16px;padding:12px 16px;font-family:"Baloo 2";font-weight:800;font-size:clamp(22px,6vw,34px);width:100%;max-width:640px}
+.enun{background:#fff;color:#0f172a;border-radius:16px;padding:12px 16px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(22px,6vw,34px);width:100%;max-width:640px}
 .tiempo{width:100%;max-width:640px;height:10px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden}
 .tiempo i{display:block;height:100%;background:#fde047;transform-origin:left}
 .botones{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:640px;flex:1;max-height:520px}
-.boton{border:0;border-radius:18px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:"Baloo 2";font-weight:800;font-size:clamp(20px,6vw,30px);padding:10px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.2);cursor:pointer;min-height:110px;transition:transform .1s}
+.boton{border:0;border-radius:18px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(20px,6vw,30px);padding:10px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.2);cursor:pointer;min-height:110px;transition:transform .1s}
 .boton:active{transform:scale(.96)}
 .boton svg{width:40px;height:40px}
 .boton span{word-break:break-word}
 .resultado{font-size:90px;line-height:1}
-.puntos{font-family:"Baloo 2";font-weight:800;font-size:34px;background:rgba(0,0,0,.2);border-radius:14px;padding:6px 18px}
+.puntos{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:34px;background:rgba(0,0,0,.2);border-radius:14px;padding:6px 18px}
 body.ok{background:linear-gradient(160deg,#16a34a,#15803d 50%,#14532d) fixed}
 body.mal{background:linear-gradient(160deg,#dc2626,#b91c1c 50%,#7f1d1d) fixed}
 .red{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);background:#fef3c7;color:#92400e;border-radius:12px;padding:8px 14px;font-weight:800;font-size:14px;display:none;z-index:9}

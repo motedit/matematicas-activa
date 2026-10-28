@@ -1067,28 +1067,28 @@ function renderSeccionPremium() {
     let banner = "";
     if (!p) {
         banner = `<div class="premium-banner-estado banner-gratis">
-            <h3 style="color:#fbbf24;margin:0 0 6px">👋 ¡Hola! Ingresá para acceder a más contenido</h3>
-            <p style="color:rgba(255,255,255,.85);margin:0 0 12px">Creá una cuenta gratis y empezá a usar la plataforma.</p>
-            <button type="button" class="btn-hero-main" onclick="abrirAuth(event)" style="margin:0">Registrarme gratis</button>
+            <h3>Creá tu cuenta gratis</h3>
+            <p>Con la cuenta gratis ya podés usar la plataforma. Cuando quieras más, elegí un plan.</p>
+            <button type="button" class="ma-btn ma-btn-primario" onclick="abrirAuth(event)">Registrarme gratis</button>
         </div>`;
     } else if (esPremiumActivo(p)) {
         const nivel = nivelDe(p);
         const nombreNivel = nivel === "premium" ? "PREMIUM" : "BÁSICO";
         banner = `<div class="premium-banner-estado banner-activo">
-            <h3 style="color:#fde68a;margin:0 0 6px">⭐ Sos usuario ${nombreNivel}</h3>
-            <p style="color:rgba(255,255,255,.9);margin:0">Te quedan <strong>${diasRestantes(p)} días</strong> de acceso ${nivel === "premium" ? "completo" : "Básico"} (hasta ${formatearFecha(p.plan_hasta)}).</p>
+            <h3>Tu plan ${nombreNivel} está activo</h3>
+            <p>Te quedan <strong>${diasRestantes(p)} días</strong> de acceso ${nivel === "premium" ? "completo" : "Básico"} (hasta ${formatearFecha(p.plan_hasta)}).</p>
         </div>`;
     } else if (modulosActivos(p).length) {
         const nombres = modulosActivos(p).map(m => (window.MA_PLANES?.MODULOS.find(x => x.id === m.id)?.nombre || m.id) + " (hasta " + formatearFecha(m.hasta) + ")");
         banner = `<div class="premium-banner-estado banner-activo">
-            <h3 style="color:#5eead4;margin:0 0 6px">🧩 Tenés un Plan a Medida</h3>
-            <p style="color:rgba(255,255,255,.9);margin:0">${nombres.join(" · ")}</p>
+            <h3>Tenés un Plan a Medida</h3>
+            <p>${nombres.join(" · ")}</p>
         </div>`;
     } else {
         const v = (p.vistos||[]).length;
         banner = `<div class="premium-banner-estado banner-gratis">
-            <h3 style="color:#fbbf24;margin:0 0 6px">🆓 Estás en el plan Gratis</h3>
-            <p style="color:rgba(255,255,255,.85);margin:0">Tenés acceso limitado a 3 archivos/día. ¿Querés más? Elegí un plan abajo.</p>
+            <h3>Estás en el plan Gratis</h3>
+            <p>Tenés acceso limitado a 3 archivos/día. ¿Querés más? Elegí un plan abajo.</p>
         </div>`;
     }
 

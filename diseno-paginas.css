@@ -1,0 +1,121 @@
+/* ================================================================
+   MATEMÁTICAS ACTIVAS — diseno-paginas.css (2026)
+   Adapta al estilo nuevo (H + A) las páginas que tienen estilos
+   propios: barra .barra, portada .hero, tarjetas, botones y pie .pie.
+   Se carga al final del <head>, después del <style> de cada página.
+================================================================ */
+body{font-family:var(--ma-letra);color:var(--ma-texto);background:var(--ma-fondo-2)}
+h1,h2,h3,h4,.marca,.h-card h3,.seccion h2,.combo .tot strong{font-family:var(--ma-letra)!important;letter-spacing:-.02em}
+h1,h2,h3,h4{color:var(--ma-tinta)}
+
+/* ---------- barra superior ---------- */
+.barra{background:rgba(7,10,25,.9)!important;backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:none!important}
+.barra-in{max-width:var(--ma-ancho)!important;padding:0 24px!important}
+.marca{font-weight:700!important;font-size:17px!important;letter-spacing:-.02em;color:#fff!important;gap:10px!important}
+.marca .sig{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;-webkit-text-fill-color:#fff;font-size:18px!important;font-weight:700}
+.marca strong{background:linear-gradient(90deg,#60a5fa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent!important;margin-left:4px}
+.barra nav a,.barra nav button{color:rgba(255,255,255,.8)!important;font-weight:500}
+.barra nav a:hover,.barra nav button:hover{background:rgba(255,255,255,.08)!important;color:#fff!important}
+.barra nav a.cta{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important;font-weight:600;border-radius:9px}
+@media (max-width:600px){.barra-in{padding:0 16px!important}}
+
+/* ---------- portada de cada página ---------- */
+.hero{background:
+  radial-gradient(700px 380px at 15% 10%,rgba(47,107,255,.45),transparent 70%),
+  radial-gradient(600px 380px at 90% 30%,rgba(6,182,212,.35),transparent 70%),
+  radial-gradient(500px 300px at 60% 100%,rgba(139,92,246,.35),transparent 70%),#070a19!important;
+  color:#e2e8ff!important;text-align:left!important;
+  padding:64px max(24px,calc((100% - var(--ma-ancho))/2 + 24px)) 64px!important}
+.hero h1{color:#fff!important;font-weight:800!important;letter-spacing:-.035em!important;margin-left:0!important;margin-right:0!important;line-height:1.08!important}
+.hero h1 span,.hero h1 em{font-style:normal;background:linear-gradient(90deg,#60a5fa,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent}
+.hero p{color:rgba(226,232,255,.78)!important;margin-left:0!important;margin-right:0!important;font-size:18px}
+.hero .tag{background:transparent!important;border:0!important;padding:0!important;color:#7dd3fc!important;font-size:12.5px!important;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.hero .botones{justify-content:flex-start!important}
+.hero .btn-borde{border:1px solid rgba(255,255,255,.22)!important;background:rgba(255,255,255,.06);color:#fff!important}
+@media (max-width:600px){.hero{padding:44px 16px 48px!important}.hero p{font-size:16.5px}}
+
+/* ---------- botones ---------- */
+.btn{border-radius:10px!important;font-weight:600!important;box-shadow:none}
+.btn:hover{transform:none!important}
+.btn-amarillo,.btn-teal,.btn-primario{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important;box-shadow:0 10px 26px rgba(47,107,255,.3)!important}
+.btn-claro{background:var(--ma-tarjeta)!important;color:var(--ma-tinta)!important;border:1px solid var(--ma-linea)!important}
+.btn-o{border-radius:10px!important}
+
+/* ---------- secciones y tarjetas ---------- */
+.seccion{max-width:var(--ma-ancho)!important;padding:72px 24px!important}
+.seccion h2{text-align:left!important;font-size:clamp(26px,3.2vw,36px)!important;font-weight:700;letter-spacing:-.025em!important;color:var(--ma-tinta)}
+.seccion .sub{text-align:left!important;margin:0 0 32px!important;font-size:17px;color:var(--ma-suave)!important}
+@media (max-width:600px){.seccion{padding:52px 16px!important}}
+.h-card,.paso,.rec,.card,.eje,.kpi,.curso-item,.combo{border-radius:var(--ma-radio)!important;border:1px solid var(--ma-linea)!important;box-shadow:var(--ma-sombra)!important;background:var(--ma-tarjeta)}
+.h-card:hover,.rec:hover{transform:none!important;border-color:transparent!important;box-shadow:0 0 0 1.5px var(--ma-primario),0 16px 40px rgba(29,78,216,.14)!important}
+.h-ico{border-radius:11px!important;font-size:24px!important;width:46px!important;height:46px!important;background:var(--ma-primario-suave)!important}
+.h-card li::before{content:""!important;width:8px;height:8px;border-radius:2px;background:var(--ma-primario);top:8px!important;left:2px!important}
+.h-card .que{color:var(--ma-suave)!important}
+.h-card .ir{background:var(--ma-tinta)!important;border-radius:9px!important}
+.h-card .ir:hover{background:var(--ma-primario)!important}
+.paso::before{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important}
+.rec .ri{display:grid;place-items:center;width:42px;height:42px;border-radius:10px;background:var(--ma-primario-suave);font-size:20px!important;flex:none}
+.plan{background:var(--ma-tarjeta)!important;border:1px solid var(--ma-linea)!important;border-radius:18px!important;box-shadow:var(--ma-sombra-alta)}
+.combo .desc{color:var(--ma-acento)!important}
+.micurso{background:
+  radial-gradient(500px 300px at 10% 0,rgba(47,107,255,.4),transparent 70%),
+  radial-gradient(500px 300px at 100% 100%,rgba(6,182,212,.3),transparent 70%),#070a19!important;border-radius:18px!important}
+.mc-tag{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important}
+.rec-tit{font-size:15px!important;letter-spacing:.02em;color:var(--ma-tinta)!important}
+
+/* pestañas y chips (mapa curricular, mi curso) */
+.tabs button{border-radius:9px!important}
+.tabs button[aria-selected=true],.tabs button[aria-selected="true"]{background:var(--ma-primario)!important;color:#fff!important;border-color:var(--ma-primario)!important}
+.chip a,.chip{border-radius:8px}
+.eje h3{color:var(--ma-tinta)!important}
+
+/* ---------- pie de página ---------- */
+.pie{background:#070a19!important;color:#8b93ad!important;padding:32px 20px!important;font-size:14px}
+.pie a{color:#e2e8ff!important;text-decoration:none}
+.pie a:hover{color:#fff!important;text-decoration:underline}
+.micurso h2,.micurso h3{color:#fff!important}
+
+/* ---------- índice de juegos ---------- */
+.jm-header{background:
+  radial-gradient(600px 160px at 10% 0,rgba(47,107,255,.45),transparent 70%),
+  radial-gradient(600px 160px at 90% 100%,rgba(6,182,212,.3),transparent 70%),#070a19!important;
+  padding:22px max(20px,calc((100% - 980px)/2 + 20px))!important;border-bottom:1px solid rgba(255,255,255,.08)}
+.jm-header h1{color:#fff!important;font-weight:800!important;letter-spacing:-.03em}
+.jm-header a{color:#bfdbfe!important}
+.jm-card{border-radius:14px!important;border:1px solid var(--ma-linea)!important;box-shadow:var(--ma-sombra)}
+.jm-card:hover{transform:translateY(-2px)!important;box-shadow:0 0 0 1.5px var(--ma-primario),0 14px 32px rgba(29,78,216,.14)!important}
+.jm-nuevo{background:
+  radial-gradient(260px 160px at 0 0,rgba(47,107,255,.55),transparent 70%),
+  radial-gradient(260px 160px at 100% 100%,rgba(6,182,212,.45),transparent 70%),#070a19!important;border-color:rgba(255,255,255,.08)!important;box-shadow:0 14px 34px rgba(7,10,25,.25)!important}
+.jm-nuevo p{color:rgba(226,232,255,.78)!important}
+.jm-badge{background:linear-gradient(135deg,#2f6bff,#06b6d4)!important;color:#fff!important}
+.jm-btn{background:var(--ma-primario)!important;border-radius:9px!important;font-weight:600!important}
+.jm-btn.sec{background:var(--ma-fondo-2)!important;color:var(--ma-texto)!important}
+.jm-btn.ok{background:#15803d!important}
+.jm-panel{border-radius:16px!important;border:1px solid var(--ma-linea);box-shadow:var(--ma-sombra)!important}
+.mem-carta:not(.revelada):not(.hecha){background:linear-gradient(135deg,#1d4ed8,#0891b2)!important}
+
+/* ---------- barra (estructura, para páginas que no la traen) ---------- */
+.barra{position:sticky;top:0;z-index:50;color:#fff}
+.barra-in{margin:0 auto;height:64px;display:flex;align-items:center;gap:14px}
+.marca{display:flex;align-items:center;text-decoration:none;white-space:nowrap}
+.barra nav{margin-left:auto;display:flex;gap:4px;flex-wrap:nowrap}
+.barra nav a{text-decoration:none;font-size:14px;padding:7px 12px;border-radius:8px;white-space:nowrap}
+@media(max-width:700px){.barra nav a:not(.cta):not(.volver){display:none}}
+
+/* ---------- documentos: guía de pago, términos, privacidad ---------- */
+.legal-wrap,.guia-wrap{max-width:860px!important;margin:40px auto 56px!important;background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:18px;box-shadow:var(--ma-sombra);padding:44px 52px!important;color:var(--ma-texto);line-height:1.7}
+.legal-back,.guia-back{display:none!important}
+.legal-wrap h1,.guia-wrap h1{font-size:clamp(28px,4vw,40px)!important;font-weight:800!important;letter-spacing:-.03em!important;color:var(--ma-tinta)!important;margin:0 0 6px!important}
+.legal-wrap h2,.guia-wrap h2{font-size:21px!important;font-weight:700!important;color:var(--ma-tinta)!important;border-bottom:1px solid var(--ma-linea)!important;padding-bottom:8px;margin-top:36px!important}
+.legal-wrap a,.guia-wrap a{color:var(--ma-primario)}
+@media(max-width:640px){.legal-wrap,.guia-wrap{margin:0 0 32px!important;border-radius:0;border-left:0;border-right:0;padding:28px 18px!important}}
+
+/* ---------- baja de correos ---------- */
+body:has(> main.tarjeta){background:
+  radial-gradient(700px 380px at 15% 10%,rgba(47,107,255,.35),transparent 70%),
+  radial-gradient(600px 380px at 90% 80%,rgba(6,182,212,.25),transparent 70%),#070a19!important}
+main.tarjeta{border-radius:18px!important;font-family:var(--ma-letra)}
+main.tarjeta button,main.tarjeta .btn,main.tarjeta a.boton{border-radius:10px!important}
+@media(max-width:480px){.barra nav a.volver{display:none}}
+body:has(.legal-wrap),body:has(.guia-wrap){background:var(--ma-fondo-2)!important}

@@ -9,7 +9,7 @@
     <meta name="author" content="Marcos Díaz">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://matematicasactivas.com/">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#ffffff">
     <!-- Structured Data - JSON-LD -->
     <script type="application/ld+json">
     {
@@ -100,11 +100,12 @@
     <link rel="icon" href="img/descarga.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=15">
     <link rel="stylesheet" href="planes.css?v=3">
     <link rel="stylesheet" href="nav.css?v=2">
     <link rel="stylesheet" href="cuenta-extra.css?v=3">
+    <link rel="stylesheet" href="diseno.css?v=3">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -170,131 +171,153 @@
 
     </style>
 </head>
-<body>
+<body class="sin-vidas">
 
-    <!-- Dark mode toggle fijo en mobile -->
-    <button type="button" class="dark-toggle-fixed" id="dark-mode-toggle-mobile" onclick="window.toggleDarkMode()" title="Modo oscuro" aria-label="Cambiar modo oscuro">🌙</button>
     <header>
     <nav class="navbar" aria-label="Navegación principal">
         <div class="navbar-inner">
             <a class="navbar-brand" href="#">
                 <span class="brand-icon" aria-hidden="true">∑</span>
-                <span>Matemáticas<strong>Activas</strong></span>
+                <span>Matemáticas <strong>Activas</strong></span>
             </a>
             <button type="button" class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" onclick="(function(b){var l=document.getElementById('navbar-links');l.classList.toggle('open');b.setAttribute('aria-expanded',l.classList.contains('open'));})(this)">☰</button>
             <div class="navbar-search" role="search">
                 <span class="navbar-search-icon" aria-hidden="true">🔍</span>
                 <label for="buscador-nav" class="sr-only">Buscar tema o subtema</label>
-                <input type="search" id="buscador-nav" placeholder="Buscar tema o subtema…" aria-label="Buscar tema o subtema" autocomplete="off" onkeyup="buscarContenido('nav')">
+                <input type="search" id="buscador-nav" placeholder="Buscar un tema…" aria-label="Buscar tema o subtema" autocomplete="off" onkeyup="buscarContenido('nav')">
                 <div id="buscador-resultados-nav" class="buscador-resultados nav"></div>
             </div>
             <ul class="navbar-links" id="navbar-links">
                 <li><a href="#materias">Materias</a></li>
                 <li class="nav-dd" id="nav-herramientas">
-                    <a href="#" class="nav-dd-btn" aria-haspopup="true" aria-expanded="false" onclick="navDesplegar(event,'nav-herramientas')">🧰 Herramientas <span class="flecha" aria-hidden="true">▾</span></a>
+                    <a href="#" class="nav-dd-btn" aria-haspopup="true" aria-expanded="false" onclick="navDesplegar(event,'nav-herramientas')">Herramientas <span class="flecha" aria-hidden="true">▾</span></a>
                     <ul class="nav-dd-menu">
                         <li class="dd-destacado"><a href="calculadora/index.html"><span class="dd-ico">🧮</span><span class="dd-txt"><span>Calculadora Inteligente</span><small>Resolvé paso a paso · 3 gratis por día</small></span></a></li>
-                        <li><a href="calculadora/temas/index.html"><span class="dd-ico">📚</span><span class="dd-txt"><span>Ejercicios resueltos</span><small>85 temas explicados paso a paso</small></span></a></li>
-                        <li><a href="pizarra/index.html"><span class="dd-ico">🖍️</span><span class="dd-txt"><span>Pizarra virtual</span><small>Para explicar y practicar</small></span></a></li>
-                        <li><a href="materias/Juegos/Juegos.html"><span class="dd-ico">🎮</span><span class="dd-txt"><span>Juegos matemáticos</span><small>Aprendé jugando</small></span></a></li>
+                        <li><a href="calculadora/temas/index.html"><span class="dd-ico">📘</span><span class="dd-txt"><span>Ejercicios resueltos</span><small>85 temas explicados paso a paso</small></span></a></li>
+                        <li><a href="pizarra/index.html"><span class="dd-ico">✏️</span><span class="dd-txt"><span>Pizarra virtual</span><small>Para explicar y practicar</small></span></a></li>
+                        <li id="nav-diagnostico-link"><a href="#diagnostico" onclick="window.iniciarDiagnostico(event)"><span class="dd-ico">🎯</span><span class="dd-txt"><span>Diagnóstico de nivel</span><small>20 preguntas para saber dónde estás</small></span></a></li>
+                        <li><a href="materias/Juegos/Juegos.html"><span class="dd-ico">🎮</span><span class="dd-txt"><span>Juegos matemáticos</span><small>Para practicar jugando</small></span></a></li>
                         <li class="dd-sep" role="separator"></li>
-                        <li><a href="docentes/index.html"><span class="dd-ico">👩‍🏫</span><span class="dd-txt"><span>Para docentes</span><small>Herramientas para el aula</small></span></a></li>
+                        <li><a href="#ranking"><span class="dd-ico">🏆</span><span class="dd-txt"><span>Ranking de estudiantes</span><small>Puntos de la semana</small></span></a></li>
                     </ul>
                 </li>
+                <li><a href="docentes/index.html">Docentes</a></li>
                 <li><a href="#suscripcion">Planes</a></li>
-                <li><a href="#ranking">🏆 Ranking</a></li>
-                <li id="nav-diagnostico-link"><a href="#" onclick="window.iniciarDiagnostico(event)">🧠 Diagnóstico</a></li>
                 <li class="nav-dd" id="nav-cuenta">
                     <a href="#" class="nav-cta-btn nav-dd-btn nav-cuenta-btn" aria-haspopup="true" aria-expanded="false" onclick="navCuentaClick(event)"><span id="nav-cuenta-label">Ingresar</span> <span class="flecha" aria-hidden="true">▾</span></a>
                     <ul class="nav-dd-menu derecha">
-                        <li id="nav-perfil-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirPerfil(event)"><span class="dd-ico">👤</span><span class="dd-txt"><span>Mi perfil</span></span></a></li>
+                        <li id="nav-perfil-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirPerfil(event)"><span class="dd-ico">👤</span><span class="dd-txt"><span>Mi perfil</span><small>Puntos, logros y meta diaria</small></span></a></li>
                         <li id="nav-historias-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirHistorias(event)"><span class="dd-ico">📖</span><span class="dd-txt"><span>Historias</span></span></a></li>
                         <li id="nav-admin-link" style="display:none" class="nav-user-item"><a href="#" onclick="abrirAdmin(event)" class="nav-admin-btn"><span class="dd-ico">🛠️</span><span class="dd-txt"><span>Panel de admin</span><small>Subir archivos y gestionar</small></span></a></li>
                         <li id="nav-salir-link" style="display:none" class="nav-user-item"><a href="#" onclick="cerrarSesion(event)" class="nav-salir-btn"><span class="dd-ico">🚪</span><span class="dd-txt"><span>Salir</span></span></a></li>
                     </ul>
                 </li>
-                <li><span id="nav-puntos" class="nav-puntos" style="display:none" title="Puntos del Ranking"></span></li>
-                <li><button type="button" id="dark-mode-toggle" class="dark-toggle" onclick="window.toggleDarkMode()" title="Modo oscuro">🌙</button></li>
+                <li><span id="nav-puntos" class="nav-puntos" style="display:none" title="Puntos del ranking"></span></li>
+                <li><button type="button" id="dark-mode-toggle" class="dark-toggle" onclick="window.toggleDarkMode()" title="Modo oscuro" aria-label="Cambiar modo oscuro">🌙</button></li>
             </ul>
         </div>
     </nav>
     </header>
     <main>
 
-    <section class="hero">
-        <div class="hero-shapes">
-            <span class="shape s1">π</span><span class="shape s2">∞</span>
-            <span class="shape s3">√</span><span class="shape s4">∑</span>
-            <span class="shape s5">Δ</span><span class="shape s6">θ</span>
-            <span class="shape s7">∫</span><span class="shape s8">÷</span>
-        </div>
-        <div class="hero-content">
-            <div class="hero-badge">📚 Plataforma educativa</div>
-            <h1 class="hero-title">Aprendé Matemáticas<br><span class="hero-gradient">para Secundaria y Universidad en Argentina</span></h1>
-            <p class="hero-sub">Teoría, ejercicios, guías de práctica en PDF, juegos y calculadora paso a paso para secundaria y universidad. Ganá puntos y competí en el ranking.</p>
-            <div class="hero-btns">
-                <a href="#" onclick="abrirAuth(event)" class="btn-hero-main">Crear cuenta gratis →</a>
-                <a href="#materias" class="btn-hero-sec">Explorar materias</a>
+    <!-- PORTADA -->
+    <section class="ma-hero" aria-labelledby="titulo-portada">
+        <div class="ma-contenedor">
+            <div class="ma-hero-grid">
+                <div>
+                    <p class="ma-etiqueta">Plataforma de matemática · Argentina</p>
+                    <h1 id="titulo-portada">Matemática clara, <em>paso a paso</em>.</h1>
+                    <p class="ma-hero-sub">Teoría, ejercicios resueltos, guías de práctica y una calculadora que explica cada paso. Para estudiantes de secundaria y universidad, y para docentes que dan clase.</p>
+                    <div class="ma-hero-btns">
+                        <a href="#" onclick="abrirAuth(event)" class="ma-btn ma-btn-primario">Crear cuenta gratis</a>
+                        <a href="calculadora/index.html" class="ma-btn ma-btn-borde">Probar la calculadora</a>
+                    </div>
+                    <ul class="ma-hero-niveles" aria-label="Para quién es">
+                        <li><span>✓</span>Secundaria</li>
+                        <li><span>✓</span>Universidad</li>
+                        <li><span>✓</span>Docentes</li>
+                    </ul>
+                </div>
+                <div class="ma-demo" aria-label="Ejemplo de resolución paso a paso">
+                    <div class="ma-demo-cab"><strong>Calculadora Inteligente</strong><span>Resuelto en 4 pasos</span></div>
+                    <p class="ma-demo-enunciado">«La suma de dos números es 50 y su diferencia es 10. ¿Cuáles son?»</p>
+                    <ol class="ma-demo-pasos">
+                        <li><b>Traducimos al lenguaje simbólico</b><code>x + y = 50 &nbsp;·&nbsp; x − y = 10</code></li>
+                        <li><b>Despejamos x en la segunda</b><code>x = 10 + y</code></li>
+                        <li><b>Reemplazamos y resolvemos</b><code>10 + 2y = 50 &nbsp;⇒&nbsp; y = 20</code></li>
+                        <li class="final"><b>Respuesta y verificación</b><code>x = 30, &nbsp;y = 20 &nbsp;✓</code></li>
+                    </ol>
+                </div>
             </div>
-            <div class="hero-stats">
-                <div class="hero-stat"><strong>8</strong><span>Materias</span></div>
-                <div class="hero-stat-sep"></div>
-                <div class="hero-stat"><strong>100%</strong><span>Online</span></div>
-                <div class="hero-stat-sep"></div>
-                <div class="hero-stat"><strong>🏆</strong><span>Ranking activo</span></div>
-                <div class="hero-stat-sep"></div>
-                <div class="hero-stat"><strong id="stat-estudiantes">50+</strong><span>Estudiantes</span></div>
-            </div>
-        </div>
-    </section>
-
-    <section class="calc-banner-wrap" aria-label="Calculadora Inteligente">
-        <a class="calc-banner" href="calculadora/index.html">
-            <span class="calc-banner-tag">NUEVO</span>
-            <span class="calc-banner-ico" aria-hidden="true">🧮</span>
-            <span class="calc-banner-txt">
-                <strong>Calculadora Inteligente</strong>
-                <span>Resolvé cualquier ejercicio con todos los pasos explicados. 3 gratis por día.</span>
-            </span>
-            <span class="calc-banner-btn">Probala gratis →</span>
-        </a>
-    </section>
-
-    <section class="calc-banner-wrap" aria-label="Pizarra virtual" style="margin-top:18px">
-        <a class="calc-banner" href="pizarra/index.html" style="background:linear-gradient(135deg,#0f766e,#0e7490)">
-            <span class="calc-banner-tag">NUEVO</span>
-            <span class="calc-banner-ico" aria-hidden="true">🖍️</span>
-            <span class="calc-banner-txt">
-                <strong>Pizarra virtual</strong>
-                <span>Escribí, dibujá y graficá como en el pizarrón: ecuaciones, símbolos, calculadora y escritura a mano.</span>
-            </span>
-            <span class="calc-banner-btn">Abrir pizarra →</span>
-        </a>
-    </section>
-
-    <section class="section" id="que-podes">
-        <div class="section-inner que-podes">
-            <div class="section-header">
-                <h2 class="section-title">¿Qué podés hacer en Matemáticas Activas?</h2>
-                <p class="section-sub">Todo lo que la plataforma te ofrece para aprender mejor</p>
-            </div>
-            <div class="qp-grid">
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📚</div><h3>Estudiá por materias</h3><p>8 áreas de matemática organizadas por niveles, desde aritmética hasta matemática universitaria.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎬</div><h3>Videos y PDFs</h3><p>Explicaciones paso a paso en video y guías descargables para repasar cuando quieras.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🧮</div><h3>Calculadora Inteligente</h3><p>Resolvé ejercicios con todos los pasos explicados y graficá funciones al instante. 3 gratis por día.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🖍️</div><h3>Pizarra virtual</h3><p>Una pizarra para explicar y practicar: dibujá, escribí ecuaciones y graficá funciones.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🎮</div><h3>Juegos matemáticos</h3><p>Sudoku, cálculo mental, wordle matemático y más — aprendé mientras te divertís.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">🏆</div><h3>Puntos y ranking</h3><p>Ganá puntos viendo contenido y comentando. Competí en el ranking semanal de estudiantes.</p></div>
-                <div class="qp-card"><div class="qp-icon" aria-hidden="true">📁</div><h3>Material del profe</h3><p>Guías, PDFs y videos preparados por el profe, ordenados por materia y tema.</p></div>
+            <div class="ma-hero-cifras">
+                <div><strong>8</strong><span>materias organizadas</span></div>
+                <div><strong>85</strong><span>temas con ejercicios resueltos</span></div>
+                <div><strong>374</strong><span>ejercicios paso a paso</span></div>
+                <div><strong id="stat-estudiantes">50+</strong><span>estudiantes registrados</span></div>
             </div>
         </div>
     </section>
 
-    <section class="section" id="materias">
+    <!-- PARA QUIÉN ES -->
+    <section class="section" id="para-quien" aria-labelledby="titulo-publico">
         <div class="section-inner">
             <div class="section-header">
-                <h2 class="section-title">Explorá las Materias</h2>
-                <p class="section-sub">Seleccioná tu área y accedé a todo el contenido</p>
+                <p class="ma-etiqueta">Para cada etapa</p>
+                <h2 class="section-title" id="titulo-publico">Un lugar para aprender y para enseñar</h2>
+                <p class="section-sub">Elegí por dónde empezar según lo que necesitás.</p>
+            </div>
+            <div class="ma-grid ma-grid-3">
+                <a class="ma-tarjeta ma-publico" href="#materias">
+                    <span class="ma-ico" aria-hidden="true">📗</span>
+                    <h3>Secundaria</h3>
+                    <p>Todos los temas del secundario explicados de forma simple, con práctica y autoevaluación.</p>
+                    <ul><li>Teoría y videos por materia</li><li>Guías de práctica con soluciones</li><li>Juegos y diagnóstico de nivel</li></ul>
+                    <span class="ma-enlace">Ver materias →</span>
+                </a>
+                <a class="ma-tarjeta ma-publico" href="calculadora/index.html">
+                    <span class="ma-ico" aria-hidden="true">🎓</span>
+                    <h3>Universidad</h3>
+                    <p>Apoyo para los primeros años: álgebra, cálculo, estadística y resolución de problemas.</p>
+                    <ul><li>Calculadora con cada paso explicado</li><li>Límites, derivadas, integrales y sistemas</li><li>Gráficos de funciones interactivos</li></ul>
+                    <span class="ma-enlace">Abrir la calculadora →</span>
+                </a>
+                <a class="ma-tarjeta ma-publico docentes" href="docentes/index.html">
+                    <span class="ma-ico acento" aria-hidden="true">🧑‍🏫</span>
+                    <h3>Docentes</h3>
+                    <p>Herramientas para preparar y dar clase, y seguir el progreso de cada curso.</p>
+                    <ul><li>Pizarra virtual y clase en vivo</li><li>Fichas con soluciones para imprimir</li><li>Planificaciones y recursos de La Rioja</li></ul>
+                    <span class="ma-enlace">Ir a la sección docentes →</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- HERRAMIENTAS -->
+    <section class="section section-alt" id="que-podes" aria-labelledby="titulo-herramientas">
+        <div class="section-inner">
+            <div class="section-header">
+                <p class="ma-etiqueta">Herramientas</p>
+                <h2 class="section-title" id="titulo-herramientas">Todo lo que necesitás para estudiar</h2>
+                <p class="section-sub">Funcionan en la computadora, la tablet y el celular, sin instalar nada.</p>
+            </div>
+            <div class="ma-grid ma-grid-3">
+                <a class="ma-tarjeta ma-herr" href="calculadora/index.html"><span class="ma-ico" aria-hidden="true">🧮</span><div><h3>Calculadora Inteligente <span class="ma-chip">3 gratis por día</span></h3><p>Resuelve ejercicios y problemas escritos mostrando cada paso, con verificación y gráficos.</p></div></a>
+                <a class="ma-tarjeta ma-herr" href="calculadora/temas/index.html"><span class="ma-ico" aria-hidden="true">📘</span><div><h3>Ejercicios resueltos</h3><p>85 temas, de secundaria a universidad, con ejemplos resueltos paso a paso. Gratis.</p></div></a>
+                <a class="ma-tarjeta ma-herr" href="pizarra/index.html"><span class="ma-ico acento" aria-hidden="true">✏️</span><div><h3>Pizarra virtual</h3><p>Escribí a mano, insertá ecuaciones y graficá. Ideal para explicar o para practicar.</p></div></a>
+                <a class="ma-tarjeta ma-herr" href="#diagnostico"><span class="ma-ico ambar" aria-hidden="true">🎯</span><div><h3>Diagnóstico de nivel</h3><p>20 preguntas que te muestran qué temas dominás y cuáles conviene reforzar.</p></div></a>
+                <a class="ma-tarjeta ma-herr" href="#materias"><span class="ma-ico" aria-hidden="true">📄</span><div><h3>Guías de práctica en PDF</h3><p>Guías con soluciones para cada materia, listas para descargar e imprimir.</p></div></a>
+                <a class="ma-tarjeta ma-herr" href="materias/Juegos/Juegos.html"><span class="ma-ico ambar" aria-hidden="true">🎮</span><div><h3>Juegos matemáticos</h3><p>Cálculo mental, sudoku y desafíos para practicar o empezar la clase.</p></div></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- MATERIAS -->
+    <section class="section" id="materias" aria-labelledby="titulo-materias">
+        <div class="section-inner">
+            <div class="section-header">
+                <p class="ma-etiqueta">Materias</p>
+                <h2 class="section-title" id="titulo-materias">Elegí una materia</h2>
+                <p class="section-sub">Cada materia tiene teoría, videos, guías de práctica y ejercicios ordenados por tema.</p>
             </div>
             <ul id="lista-contenidos" class="lista-materias-rapida" aria-label="Accesos rápidos">
                 <li><a href="materias/Algebra/Algebra.html">Álgebra</a></li>
@@ -306,92 +329,50 @@
                 <li><a href="materias/Razonamiento/Razonamiento.html">Razonamiento Matemático</a></li>
                 <li><a href="materias/Juegos/Juegos.html">Juegos Matemáticos</a></li>
             </ul>
-            <div id="materias-skeleton" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-bottom:20px"><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div></div>
-            <div class="materias-grid" id="areas-matematicas">
-                <a href="materias/Algebra/Algebra.html" class="materia-card" data-color="purple">
-                    <div class="materia-img-wrap"><img src="img/Algebra.jpg?v=2" alt="Álgebra" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">𝑥²</span></div>
-                    <div class="materia-info"><h3>Álgebra</h3><p>Ecuaciones, polinomios y funciones</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Aritmetica/Aritmetica.html" class="materia-card" data-color="blue">
-                    <div class="materia-img-wrap"><img src="img/Aritmetica.jpg?v=2" alt="Aritmética" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">123</span></div>
-                    <div class="materia-info"><h3>Aritmética</h3><p>Fundamentos esenciales</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Geometria/Geometria.html" class="materia-card" data-color="teal">
-                    <div class="materia-img-wrap"><img src="img/Geometria.jpg?v=2" alt="Geometría" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">△</span></div>
-                    <div class="materia-info"><h3>Geometría</h3><p>Figuras, áreas y sólidos</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Estadistica/Estadistica.html" class="materia-card" data-color="orange">
-                    <div class="materia-img-wrap"><img src="img/Estadistica.jpg?v=2" alt="Estadística" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">📊</span></div>
-                    <div class="materia-info"><h3>Estadística</h3><p>Probabilidad y distribuciones</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Trigonometria/Trigonometria.html" class="materia-card" data-color="red">
-                    <div class="materia-img-wrap"><img src="img/Trigonometria.jpg?v=2" alt="Trigonometría" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">θ</span></div>
-                    <div class="materia-info"><h3>Trigonometría</h3><p>Seno, coseno y tangente</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Calculo/Calculo.html" class="materia-card" data-color="indigo">
-                    <div class="materia-img-wrap"><img src="img/Calculo.jpg?v=2" alt="Cálculo" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">∫</span></div>
-                    <div class="materia-info"><h3>Cálculo</h3><p>Funciones, análisis y graficadora</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Razonamiento/Razonamiento.html" class="materia-card" data-color="green">
-                    <div class="materia-img-wrap"><img src="img/Razonamiento.jpg?v=2" alt="Razonamiento" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">🧠</span></div>
-                    <div class="materia-info"><h3>Razonamiento</h3><p>Curiosidades e historia de las matemáticas</p><span class="materia-arrow">→</span></div>
-                </a>
-                <a href="materias/Juegos/Juegos.html" class="materia-card" data-color="pink">
-                    <div class="materia-img-wrap"><img src="img/Juegos.jpg?v=2" alt="Juegos" loading="lazy"><div class="materia-overlay"></div><span class="materia-emoji">🎮</span></div>
-                    <div class="materia-info"><h3>Juegos</h3><p>Aprendé matemáticas jugando</p><span class="materia-arrow">→</span></div>
-                </a>
+            <div class="ma-grid ma-grid-4" id="areas-matematicas">
+                <a href="materias/Aritmetica/Aritmetica.html" class="ma-tarjeta ma-materia" style="--c:#1d4ed8"><span class="simbolo" aria-hidden="true">123</span><h3>Aritmética</h3><p>Operaciones, fracciones, potencias y proporcionalidad.</p><div class="nivel"><span>Secundaria</span></div></a>
+                <a href="materias/Algebra/Algebra.html" class="ma-tarjeta ma-materia" style="--c:#4f46e5"><span class="simbolo" aria-hidden="true">x²</span><h3>Álgebra</h3><p>Ecuaciones, polinomios, sistemas y funciones.</p><div class="nivel"><span>Secundaria</span><span>Universidad</span></div></a>
+                <a href="materias/Geometria/Geometria.html" class="ma-tarjeta ma-materia" style="--c:#0f766e"><span class="simbolo" aria-hidden="true">△</span><h3>Geometría</h3><p>Figuras, áreas, volúmenes y geometría analítica.</p><div class="nivel"><span>Secundaria</span></div></a>
+                <a href="materias/Trigonometria/Trigonometria.html" class="ma-tarjeta ma-materia" style="--c:#be123c"><span class="simbolo" aria-hidden="true">θ</span><h3>Trigonometría</h3><p>Razones trigonométricas, triángulos y funciones.</p><div class="nivel"><span>Secundaria</span></div></a>
+                <a href="materias/Estadistica/Estadistica.html" class="ma-tarjeta ma-materia" style="--c:#c2410c"><span class="simbolo" aria-hidden="true">σ</span><h3>Estadística</h3><p>Análisis de datos, probabilidad y distribuciones.</p><div class="nivel"><span>Secundaria</span><span>Universidad</span></div></a>
+                <a href="materias/Calculo/Calculo.html" class="ma-tarjeta ma-materia" style="--c:#6d28d9"><span class="simbolo" aria-hidden="true">∫</span><h3>Cálculo</h3><p>Límites, derivadas, integrales y gráficos de funciones.</p><div class="nivel"><span>Universidad</span></div></a>
+                <a href="materias/Razonamiento/Razonamiento.html" class="ma-tarjeta ma-materia" style="--c:#15803d"><span class="simbolo" aria-hidden="true">∴</span><h3>Razonamiento</h3><p>Lógica, desafíos e historia de la matemática.</p><div class="nivel"><span>Todos los niveles</span></div></a>
+                <a href="materias/Juegos/Juegos.html" class="ma-tarjeta ma-materia" style="--c:#a21caf"><span class="simbolo" aria-hidden="true">♟</span><h3>Juegos</h3><p>Práctica con juegos de cálculo, lógica y estrategia.</p><div class="nivel"><span>Todos los niveles</span></div></a>
             </div>
         </div>
     </section>
 
-    <!-- HISTORIAS MATEMÁTICAS: oculta del home por defecto. Se muestra solo al
-         hacer clic en "📖 Historias" del menú (usuarios logueados). -->
-    <section class="section" id="historias" style="max-width:1100px;margin:40px auto;padding:0 24px;display:none">
-        <div class="section-header" style="text-align:center;margin-bottom:20px">
-            <h2 class="section-title" style="font-family:'Poppins',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:800">📖 Historias Matemáticas</h2>
-            <p class="section-sub">Aprendé resolviendo problemas dentro de historias reales</p>
+    <!-- HISTORIAS MATEMÁTICAS: oculta del inicio. Se muestra desde "Historias" en el menú de la cuenta. -->
+    <section class="section" id="historias" style="display:none">
+        <div class="section-inner">
+            <div class="section-header">
+                <h2 class="section-title">Historias matemáticas</h2>
+                <p class="section-sub">Aprendé resolviendo problemas dentro de historias reales.</p>
+            </div>
+            <div id="historias-grid"></div>
         </div>
-        <div id="historias-grid"></div>
         <script>document.addEventListener('DOMContentLoaded', function(){ if(window.MA_HISTORIAS) window.MA_HISTORIAS.renderHistoriasLista('historias-grid'); });</script>
     </section>
 
-    <div class="banner-juegos">
-        <div class="bj-emoji" aria-hidden="true">🎮</div>
-        <h2>¡Aprendé matemáticas jugando!</h2>
-        <p>Puzzles, desafíos y juegos interactivos para todas las materias</p>
-        <a href="materias/Juegos/Juegos.html">Jugar ahora →</a>
-    </div>
-
     <!-- EXAMEN DE DIAGNÓSTICO -->
-    <section class="section" id="diagnostico">
+    <section class="section section-alt" id="diagnostico" aria-labelledby="titulo-diagnostico">
         <div class="section-inner">
             <div class="section-header">
-                <div class="section-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🧠</div>
-                <h2 class="section-title">Examen de Diagnóstico</h2>
-                <p class="section-sub">Descubrí tu nivel en cada materia con 20 preguntas aleatorias</p>
+                <p class="ma-etiqueta">Diagnóstico</p>
+                <h2 class="section-title" id="titulo-diagnostico">¿En qué nivel estás?</h2>
+                <p class="section-sub">20 preguntas al azar de todas las materias. Al terminar ves tus puntos fuertes y qué temas reforzar.</p>
             </div>
-            <div id="diagnostico-container" style="max-width:700px;margin:0 auto"></div>
+            <div id="diagnostico-container" style="max-width:760px"></div>
         </div>
     </section>
 
-
-
-    <section class="section section-alt" id="ranking">
+    <!-- PLANES -->
+    <section class="section premium-section" id="suscripcion" aria-labelledby="titulo-planes">
         <div class="section-inner">
             <div class="section-header">
-                <div class="section-icon" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">🏆</div>
-                <h2 class="section-title">Ranking de Estudiantes</h2>
-                <p class="section-sub">Top 10 por puntos · Ganás puntos viendo contenido, comentando y manteniendo tu racha diaria</p>
-            </div>
-            <div id="ranking-grid" style="max-width:560px;margin:0 auto"><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div><div class="skeleton sk-card" style="height:64px;margin-bottom:8px"></div></div>
-        </div>
-    </section>
-
-    <section class="section premium-section" id="suscripcion">
-        <div class="section-inner">
-            <div class="section-header">
-                <h2 class="section-title light">Planes y Contenido Premium ⭐</h2>
-                <p class="section-sub light">Accedé a todo el material exclusivo sin límites</p>
+                <p class="ma-etiqueta">Planes</p>
+                <h2 class="section-title light" id="titulo-planes">Empezá gratis y sumá lo que necesites</h2>
+                <p class="section-sub light">Con la cuenta gratis ya tenés teoría, guías y 3 ejercicios por día en la calculadora. Los planes amplían el acceso.</p>
             </div>
             <div id="suscripcion-info"></div>
             <div id="suscripcion-contenido" style="display:none">
@@ -401,59 +382,79 @@
         </div>
     </section>
 
-    <section class="sobre-mi" id="sobre-mi">
-        <div class="sobre-mi-inner">
-            <h2>¿Quién está detrás de Matemáticas Activas?</h2>
-            <div class="foto-profe" aria-label="Foto de Marcos Diaz">
-                <img src="img/marcos-diaz.jpeg" alt="Marcos Diaz — Profesor de Matemáticas" loading="lazy" width="160" height="160">
+    <!-- RANKING (discreto) -->
+    <section class="section" id="ranking" aria-labelledby="titulo-ranking">
+        <div class="section-inner ma-ranking">
+            <div class="section-header">
+                <p class="ma-etiqueta">Ranking semanal</p>
+                <h2 class="section-title" id="titulo-ranking">Los 10 estudiantes más activos</h2>
+                <p class="section-sub">Se suman puntos viendo contenido, resolviendo ejercicios y manteniendo la racha diaria. Tus puntos y logros están en tu perfil.</p>
             </div>
-            <h3>Marcos Diaz</h3>
-            <p class="tagline">Profesor de Matemáticas · Creador de Matemáticas Activas</p>
-            <p class="bio">Soy profesor de Matemática con formación docente de nivel secundario y una vocación genuina por hacer que las matemáticas tengan sentido. Me especializo en la enseñanza con un enfoque práctico: que entiendas el porqué, no solo el cómo.<br><br>
-            Complementé mi carrera con formación en neurociencias aplicadas a la educación, tecnología educativa y oratoria — porque enseñar bien requiere más que saber matemáticas.<br><br>
-            Matemáticas Activas nació de esa combinación: rigor académico + claridad para explicar + herramientas digitales al servicio del aprendizaje.</p>
-            <div class="sobre-mi-badges">
-                <span class="sobre-mi-badge">🎓 Formación docente</span>
-                <span class="sobre-mi-badge">📊 Estadística</span>
-                <span class="sobre-mi-badge">🧠 Neurociencias educativas</span>
-                <span class="sobre-mi-badge">🎤 Oratoria</span>
-                <span class="sobre-mi-badge">💻 Tecnología educativa</span>
+            <div id="ranking-grid"></div>
+        </div>
+    </section>
+
+    <!-- SOBRE EL PROFE -->
+    <section class="sobre-mi" id="sobre-mi" aria-labelledby="titulo-profe">
+        <div class="ma-contenedor">
+            <div class="ma-profe">
+                <img src="img/marcos-diaz.jpeg" alt="Marcos Diaz, profesor de Matemática" loading="lazy" width="200" height="200">
+                <div>
+                    <p class="ma-etiqueta">Quién está detrás</p>
+                    <h2 id="titulo-profe">Marcos Diaz</h2>
+                    <p class="rol">Profesor de Matemática · Creador de Matemáticas Activas</p>
+                    <p>Soy profesor de Matemática con formación docente de nivel secundario. Me especializo en una enseñanza práctica: que entiendas el porqué, no sólo el cómo.</p>
+                    <p>Complementé mi formación con neurociencias aplicadas a la educación, tecnología educativa y oratoria. Matemáticas Activas reúne todo eso: rigor, claridad para explicar y herramientas digitales al servicio del aprendizaje.</p>
+                    <div class="chips"><span>Formación docente</span><span>Estadística</span><span>Neurociencias educativas</span><span>Tecnología educativa</span><span>Oratoria</span></div>
+                    <a href="https://wa.me/5493827654154" target="_blank" rel="noopener" class="ma-btn ma-btn-borde ma-btn-chico">Escribime por WhatsApp</a>
+                </div>
             </div>
-            <a href="https://wa.me/5493827654154" target="_blank" rel="noopener" class="sobre-mi-cta">💬 Hablemos por WhatsApp</a>
         </div>
     </section>
 
     </main>
 
     <footer class="footer">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <span class="brand-icon">∑</span>
-                <span>Matemáticas<strong>Activas</strong></span>
+        <div class="ma-contenedor">
+            <div class="ma-pie">
+                <div>
+                    <a class="navbar-brand" href="#"><span class="brand-icon" aria-hidden="true">∑</span><span>Matemáticas <strong>Activas</strong></span></a>
+                    <p>Plataforma de matemática para secundaria, universidad y docentes. Hecha en La Rioja, Argentina.</p>
+                    <ul>
+                        <li><a href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activas.%20" target="_blank" rel="noopener">WhatsApp · +54 9 3827 65-4154</a></li>
+                        <li><a href="https://www.instagram.com/matematicas_activa" target="_blank" rel="noopener">Instagram · @matematicas_activa</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Estudiar</h4>
+                    <ul>
+                        <li><a href="#materias">Materias</a></li>
+                        <li><a href="calculadora/temas/index.html">Ejercicios resueltos</a></li>
+                        <li><a href="#diagnostico">Diagnóstico de nivel</a></li>
+                        <li><a href="materias/Juegos/Juegos.html">Juegos</a></li>
+                        <li><a href="#ranking">Ranking</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Herramientas</h4>
+                    <ul>
+                        <li><a href="calculadora/index.html">Calculadora Inteligente</a></li>
+                        <li><a href="pizarra/index.html">Pizarra virtual</a></li>
+                        <li><a href="docentes/index.html">Para docentes</a></li>
+                        <li><a href="#suscripcion">Planes</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Información</h4>
+                    <ul>
+                        <li><a href="#sobre-mi">Sobre el profe</a></li>
+                        <li><a href="guia-pago.html">Guía de pago</a></li>
+                        <li><a href="terminos-servicio.html">Términos de servicio</a></li>
+                        <li><a href="politica-privacidad.html">Política de privacidad</a></li>
+                    </ul>
+                </div>
             </div>
-            <p class="footer-copy">Copyright © 2026 Matemáticas Activas · Todos los derechos reservados</p>
-            <div class="footer-contacto">
-                <a class="footer-contacto-link wa" href="https://wa.me/5493827654154?text=Hola%21%20Te%20escribo%20desde%20Matem%C3%A1ticas%20Activas.%20" target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp">
-                    <span aria-hidden="true">💚</span> WhatsApp · +54 9 3827 65-4154
-                </a>
-                <a class="footer-contacto-link ig" href="https://www.instagram.com/matematicas_activa" target="_blank" rel="noopener" aria-label="Seguinos en Instagram">
-                    <span aria-hidden="true">📷</span> Instagram · @matematicas_activa
-                </a>
-            </div>
-            <div class="footer-links">
-                <a href="#materias">Materias</a>
-                <a href="materias/Juegos/Juegos.html">Juegos</a>
-                <a href="calculadora/index.html">Calculadora Inteligente</a>
-                <a href="calculadora/temas/index.html">Ejercicios resueltos</a>
-                <a href="pizarra/index.html">Pizarra virtual</a>
-                <a href="docentes/index.html">Para docentes</a>
-                <a href="#ranking">Ranking</a>
-                <a href="#suscripcion">Planes</a>
-                <a href="#sobre-mi">Sobre el profe</a>
-                <a href="politica-privacidad.html">Política de Privacidad</a>
-                <a href="terminos-servicio.html">Términos de Servicio</a>
-                <a href="guia-pago.html">Guía de pago</a>
-            </div>
+            <div class="ma-pie-base"><span>© 2026 Matemáticas Activas · Todos los derechos reservados</span><span>Hecho para aprender matemática con sentido.</span></div>
         </div>
     </footer>
 
@@ -763,19 +764,11 @@
         });
     })();
     </script>
-    <script>
-    document.addEventListener("DOMContentLoaded", function(){
-        setTimeout(function(){
-            var sk = document.getElementById("materias-skeleton");
-            if (sk) sk.remove();
-        }, 2000);
-    });
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=15"></script>
     <script src="nav.js?v=1"></script>
     <script src="planes.js?v=3"></script>
-    <script src="scripts.js?v=22"></script>
+    <script src="scripts.js?v=23"></script>
     <script src="cuenta-extra.js?v=1"></script>
     <script src="admin-extra.js?v=4"></script>
     <script>

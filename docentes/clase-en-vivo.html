@@ -9,30 +9,30 @@
 <meta name="theme-color" content="#1e1b4b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--fondo:#1e1b4b;--panel:#ffffff;--tinta:#0f172a;--suave:#64748b;--linea:#e2e8f0;--violeta:#6d28d9;--ok:#16a34a;--mal:#dc2626}
+:root{--fondo:#070a19;--panel:#ffffff;--tinta:#0f172a;--suave:#64748b;--linea:#e2e8f0;--violeta:#1d4ed8;--ok:#16a34a;--mal:#dc2626}
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;font-family:Nunito,system-ui,sans-serif;color:#fff;background:radial-gradient(ellipse at 20% 0%,#4c1d95 0%,#1e1b4b 55%,#0f0a2e 100%) fixed}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,sans-serif;color:#fff;background:radial-gradient(800px 420px at 15% 0%,rgba(47,107,255,.45),transparent 70%),radial-gradient(700px 420px at 95% 30%,rgba(6,182,212,.3),transparent 70%),radial-gradient(600px 360px at 50% 100%,rgba(139,92,246,.3),transparent 70%),#070a19 fixed}
 button{font-family:inherit;cursor:pointer}
 .barra{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:10px}
-.barra a{color:#c4b5fd;text-decoration:none;font-weight:800}
-.marca{font-family:"Baloo 2";font-weight:800;font-size:22px}
+.barra a{color:#bfdbfe;text-decoration:none;font-weight:800}
+.marca{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:22px}
 .icono{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:10px;padding:8px 12px;font-weight:800}
 .fase{display:none;padding:10px 20px 30px;max-width:1200px;margin:0 auto}
 .fase.ver{display:block}
-h1,h2{font-family:"Baloo 2";font-weight:800;margin:.2em 0}
+h1,h2{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;margin:.2em 0}
 .caja{background:var(--panel);color:var(--tinta);border-radius:22px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
 .grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
 @media (max-width:820px){.grid2{grid-template-columns:1fr}}
 label.t{display:block;font-weight:800;margin:14px 0 6px;color:var(--tinta)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:2px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:800;color:var(--tinta)}
-.chip.sel{border-color:var(--violeta);background:#ede9fe;color:var(--violeta)}
+.chip.sel{border-color:var(--violeta);background:#eef3ff;color:var(--violeta)}
 textarea{width:100%;min-height:150px;border:2px solid var(--linea);border-radius:14px;padding:12px;font:15px/1.5 ui-monospace,Consolas,monospace;color:var(--tinta)}
 .ayuda{font-size:13.5px;color:var(--suave);line-height:1.5}
 .err{color:var(--mal);font-weight:800;font-size:14px;min-height:20px}
-.btn{border:0;border-radius:16px;padding:14px 28px;font-family:"Baloo 2";font-weight:800;font-size:22px;color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 10px 24px rgba(124,58,237,.4)}
+.btn{border:0;border-radius:16px;padding:14px 28px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:22px;color:#fff;background:linear-gradient(135deg,#2f6bff,#06b6d4);box-shadow:0 10px 24px rgba(47,107,255,.4)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.sec{background:rgba(255,255,255,.14);box-shadow:none;font-size:17px;padding:10px 18px}
 .caja .btn.sec{background:#f1f5f9;color:var(--tinta)}
@@ -42,7 +42,7 @@ textarea{width:100%;min-height:150px;border:2px solid var(--linea);border-radius
 /* Sala */
 .sala{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
 @media (max-width:820px){.sala{grid-template-columns:1fr}}
-.pin{font-family:"Baloo 2";font-weight:800;font-size:clamp(64px,11vw,130px);letter-spacing:.08em;line-height:1;color:var(--violeta)}
+.pin{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(64px,11vw,130px);letter-spacing:.08em;line-height:1;color:var(--violeta)}
 .url{font-size:clamp(20px,2.6vw,30px);font-weight:800;color:var(--tinta)}
 .qr{background:#fff;border-radius:16px;padding:8px;width:220px;height:220px;display:grid;place-items:center}
 .qr svg{width:100%;height:100%}
@@ -51,18 +51,18 @@ textarea{width:100%;min-height:150px;border:2px solid var(--linea);border-radius
 .alumno:hover{background:rgba(225,29,72,.55)}
 .alumno:hover::after{content:" ✕"}
 @keyframes entra{from{transform:scale(.3);opacity:0}}
-.contador{font-family:"Baloo 2";font-weight:800;font-size:28px}
+.contador{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:28px}
 /* Pregunta */
 .cab{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-.enunciado{background:#fff;color:var(--tinta);border-radius:22px;padding:22px 26px;font-family:"Baloo 2";font-weight:800;font-size:clamp(34px,6vw,72px);text-align:center;line-height:1.15;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.enunciado{background:#fff;color:var(--tinta);border-radius:22px;padding:22px 26px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(34px,6vw,72px);text-align:center;line-height:1.15;box-shadow:0 20px 50px rgba(0,0,0,.35)}
 .medio{display:flex;justify-content:space-between;align-items:center;margin:18px 6px}
-.reloj{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;font-family:"Baloo 2";font-weight:800;font-size:46px;background:conic-gradient(#a78bfa var(--p,100%),rgba(255,255,255,.12) 0);position:relative}
+.reloj{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:46px;background:conic-gradient(#22d3ee var(--p,100%),rgba(255,255,255,.12) 0);position:relative}
 .reloj::before{content:"";position:absolute;inset:10px;border-radius:50%;background:#1e1b4b}
 .reloj span{position:relative}
-.respondieron{text-align:center;font-family:"Baloo 2";font-weight:800;font-size:30px;line-height:1}
-.respondieron small{display:block;font-family:Nunito;font-size:14px;color:#c4b5fd}
+.respondieron{text-align:center;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:30px;line-height:1}
+.respondieron small{display:block;font-family:Inter,sans-serif;font-size:14px;color:#93c5fd}
 .opciones{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.op{display:flex;align-items:center;gap:16px;border-radius:18px;padding:18px 22px;font-family:"Baloo 2";font-weight:800;font-size:clamp(26px,3.6vw,44px);color:#fff;min-height:96px;position:relative;transition:opacity .3s,transform .3s}
+.op{display:flex;align-items:center;gap:16px;border-radius:18px;padding:18px 22px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(26px,3.6vw,44px);color:#fff;min-height:96px;position:relative;transition:opacity .3s,transform .3s}
 .op svg{width:44px;height:44px;flex:none}
 .op .cant{margin-left:auto;font-size:.8em;opacity:.95}
 .op.apagada{opacity:.28}
@@ -74,15 +74,15 @@ textarea{width:100%;min-height:150px;border:2px solid var(--linea);border-radius
 /* Ranking */
 .ranking{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 .fila{display:flex;align-items:center;gap:14px;background:#fff;color:var(--tinta);border-radius:16px;padding:14px 20px;font-weight:800;font-size:24px;animation:entra .4s both}
-.fila .pos{font-family:"Baloo 2";width:44px;color:var(--violeta)}
-.fila .pts{margin-left:auto;font-family:"Baloo 2"}
+.fila .pos{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;width:44px;color:var(--violeta)}
+.fila .pts{margin-left:auto;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em}
 .fila .racha{font-size:16px;color:#ea580c}
 /* Podio */
 .podio{display:flex;justify-content:center;align-items:flex-end;gap:16px;margin:30px 0 20px;min-height:340px}
 .escalon{width:min(220px,28vw);text-align:center}
-.escalon .nom{font-family:"Baloo 2";font-weight:800;font-size:clamp(20px,3vw,32px);margin-bottom:6px;word-break:break-word}
-.escalon .pts{color:#c4b5fd;font-weight:800;margin-bottom:8px}
-.escalon .bloque{border-radius:16px 16px 0 0;display:grid;place-items:start center;padding-top:10px;font-family:"Baloo 2";font-weight:800;font-size:60px;color:#fff;animation:sube 1s cubic-bezier(.3,1.2,.5,1) both}
+.escalon .nom{font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:clamp(20px,3vw,32px);margin-bottom:6px;word-break:break-word}
+.escalon .pts{color:#93c5fd;font-weight:800;margin-bottom:8px}
+.escalon .bloque{border-radius:16px 16px 0 0;display:grid;place-items:start center;padding-top:10px;font-family:Inter,system-ui,sans-serif;letter-spacing:-.02em;font-weight:800;font-size:60px;color:#fff;animation:sube 1s cubic-bezier(.3,1.2,.5,1) both}
 @keyframes sube{from{transform:scaleY(0);transform-origin:bottom}}
 table{width:100%;border-collapse:collapse;font-size:15px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--linea)}
@@ -155,7 +155,7 @@ La raíz cuadrada de 81 es… | 9 | 8 | 18 | 40,5"></textarea>
     <div class="contador">👥 <span id="nAlumnos">0</span> alumnos</div>
     <button class="btn" id="btnEmpezar" disabled>Empezar ▶</button>
   </div>
-  <div class="alumnos" id="alumnos"><span style="color:#c4b5fd;font-weight:700">Esperando que entren los alumnos…</span></div>
+  <div class="alumnos" id="alumnos"><span style="color:#93c5fd;font-weight:700">Esperando que entren los alumnos…</span></div>
   <div class="aviso-red" id="avisoRed"></div>
 </section>
 
@@ -287,7 +287,7 @@ La raíz cuadrada de 81 es… | 9 | 8 | 18 | 40,5"></textarea>
     $("btnEmpezar").disabled = !activos.length;
     if (P.fase !== "sala") return;
     $("alumnos").innerHTML = activos.length ? activos.map(([id, a]) => `<button class="alumno" data-id="${L(id)}" title="Sacar de la sala">${L(a.nombre)}</button>`).join("")
-      : '<span style="color:#c4b5fd;font-weight:700">Esperando que entren los alumnos…</span>';
+      : '<span style="color:#93c5fd;font-weight:700">Esperando que entren los alumnos…</span>';
     $("alumnos").querySelectorAll(".alumno").forEach((b) => b.onclick = () => {
       const id = b.dataset.id; echados.add(id); alumnos.delete(id); canal && canal.enviar("expulsar", { id }); pintarAlumnos();
     });

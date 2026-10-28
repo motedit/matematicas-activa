@@ -396,7 +396,7 @@
             <header class="mat-header">
                 <a href="../../index.html" class="mat-brand" title="Volver al inicio">
                     <span class="mat-brand-icon" aria-hidden="true">∑</span>
-                    <span class="mat-brand-text">Matemáticas<strong>Activa</strong></span>
+                    <span class="mat-brand-text">Matemáticas <strong>Activas</strong></span>
                 </a>
                 <h1>${EMOJI} ${esc(NOMBRE)}</h1>
                 <div class="mat-header-right">
@@ -458,7 +458,7 @@
                     <a href="../../politica-privacidad.html">Privacidad</a>
                     <a href="../../terminos-servicio.html">Términos</a>
                 </div>
-                <p>Copyright © 2025 Matemáticas Activas · Todos los derechos reservados</p>
+                <p>© 2026 Matemáticas Activas · Todos los derechos reservados</p>
             </footer>
 
             <!-- VISOR -->
