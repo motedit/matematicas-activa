@@ -381,3 +381,66 @@ body.dark .plan-card-premium .plan-precio{color:#fbbf24!important}
 body.dark .plan-medida,body.dark .plan-medida p{color:var(--ma-texto)}
 body.dark .pm-linea{color:var(--ma-suave)}
 body.dark .pm-cab p,body.dark .plan-medida .pm-txt small{color:var(--ma-suave)!important}
+
+/* ================================================================
+   DIAGNÓSTICO DE NIVEL (diagnostico.js)
+================================================================ */
+.dg-card{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:18px;box-shadow:var(--ma-sombra);padding:28px;color:var(--ma-texto);max-width:820px}
+.dg-card h3{font-size:22px;margin:0 0 8px;color:var(--ma-tinta);letter-spacing:-.02em}
+.dg-card h4{font-size:15px;margin:24px 0 12px;color:var(--ma-tinta)}
+.dg-inicio-cab{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;margin-bottom:22px}
+.dg-inicio-cab p{margin:0;line-height:1.6;color:var(--ma-suave)}
+.dg-datos{list-style:none;margin:0;padding:0;display:flex;gap:10px}
+.dg-datos li{min-width:76px;text-align:center;border:1px solid var(--ma-linea);border-radius:12px;padding:10px 8px;background:var(--ma-fondo-2)}
+.dg-datos b{display:block;font-size:24px;color:var(--ma-primario);line-height:1.1}
+.dg-datos span{font-size:12.5px;color:var(--ma-suave)}
+.dg-form{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.dg-form label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:var(--ma-tinta)}
+.dg-form label:first-child{grid-column:1/-1}
+.dg-form small{font-weight:400;color:var(--ma-suave)}
+.dg-form input,.dg-form select{font:500 15px/1.2 var(--ma-letra);padding:12px 14px;border:1px solid var(--ma-linea);border-radius:10px;background:var(--ma-fondo);color:var(--ma-tinta)}
+.dg-form input:focus,.dg-form select:focus{outline:none;border-color:var(--ma-primario);box-shadow:0 0 0 3px var(--ma-primario-suave)}
+.dg-form .dg-btn{grid-column:1/-1;justify-self:start}
+.dg-nota{grid-column:1/-1;margin:0;font-size:13.5px;color:var(--ma-suave)}
+.dg-btn{font:600 15px/1 var(--ma-letra);padding:13px 22px;border-radius:10px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#2f6bff,#06b6d4);box-shadow:0 8px 22px rgba(47,107,255,.28)}
+.dg-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.dg-btn-borde{background:var(--ma-tarjeta);color:var(--ma-tinta);border:1px solid var(--ma-linea);box-shadow:none}
+.dg-progreso{height:8px;border-radius:99px;background:var(--ma-fondo-2);overflow:hidden;margin-bottom:14px}
+.dg-progreso i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2f6bff,#06b6d4);transition:width .3s}
+.dg-contador{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--ma-suave);margin:0 0 10px}
+.dg-chip{font-size:12.5px;font-weight:600;color:var(--ma-primario);background:var(--ma-primario-suave);border-radius:99px;padding:4px 10px}
+.dg-pregunta{font-size:clamp(19px,2.4vw,23px)!important;line-height:1.4;margin:0 0 18px!important}
+.dg-opciones{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dg-op{display:flex;align-items:center;gap:12px;text-align:left;font:500 16px/1.35 var(--ma-letra);padding:14px 16px;border:1.5px solid var(--ma-linea);border-radius:12px;background:var(--ma-tarjeta);color:var(--ma-tinta);cursor:pointer;transition:border-color .15s,background .15s}
+.dg-op:hover{border-color:color-mix(in srgb,var(--ma-primario) 50%,var(--ma-linea))}
+.dg-op.sel{border-color:var(--ma-primario);background:var(--ma-primario-suave)}
+.dg-letra{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--ma-fondo-2);color:var(--ma-suave);font-weight:700;font-size:13px}
+.dg-op.sel .dg-letra{background:var(--ma-primario);color:#fff}
+.dg-nose{grid-column:1/-1;color:var(--ma-suave)}
+.dg-acciones{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.dg-res-cab{display:flex;gap:20px;align-items:center;margin-bottom:6px}
+.dg-res-cab p{margin:0;color:var(--ma-suave);line-height:1.55}
+.dg-res-nivel{flex:none;min-width:150px;text-align:center;border-radius:14px;padding:16px 14px;color:#fff;background:var(--c)}
+.dg-res-nivel small{display:block;font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.06em}
+.dg-res-nivel b{font-size:19px;line-height:1.2}
+.dg-filas{display:grid;gap:14px}
+.dg-fila-cab{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.dg-fila-cab a{font-weight:600;color:var(--ma-tinta);text-decoration:none}
+.dg-fila-cab a:hover{color:var(--ma-primario)}
+.dg-nivel{font-size:12.5px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);border-radius:99px;padding:4px 10px;white-space:nowrap}
+.dg-barra{height:8px;border-radius:99px;background:var(--ma-fondo-2);overflow:hidden}
+.dg-barra i{display:block;height:100%;border-radius:99px}
+.dg-fila small{display:block;margin-top:5px;font-size:13px;color:var(--ma-suave)}
+.dg-recom{margin-top:20px;padding:14px 16px;border-radius:12px;background:var(--ma-primario-suave);font-size:14.5px;line-height:1.6}
+.dg-recom a{color:var(--ma-primario);font-weight:600}
+.dg-envio{margin:14px 0 0;font-size:14px;color:var(--ma-acento);min-height:1em}
+@media (max-width:640px){
+  .dg-card{padding:20px 16px;border-radius:14px}
+  .dg-inicio-cab{grid-template-columns:1fr}
+  .dg-form{grid-template-columns:1fr}
+  .dg-opciones{grid-template-columns:1fr}
+  .dg-res-cab{flex-direction:column;align-items:stretch}
+  .dg-acciones .dg-btn{flex:1}
+}
+.dg-form input,.dg-form select{width:100%;min-width:0;box-sizing:border-box;margin:0}
+.dg-card *{box-sizing:border-box}

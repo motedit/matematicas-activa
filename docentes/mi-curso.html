@@ -97,7 +97,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .pie{text-align:center;color:var(--muted);font-size:13px;padding:24px}
 .pie a{color:var(--soft)}
 </style>
-<link rel="stylesheet" href="../diseno.css?v=3">
+<link rel="stylesheet" href="../diseno.css?v=5">
 <link rel="stylesheet" href="../diseno-paginas.css?v=2">
 </head>
 <body>
@@ -171,6 +171,11 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
             <input id="dLink" readonly aria-label="Enlace para los alumnos">
             <button type="button" class="btn btn-teal" id="btnCopiar">Copiar enlace</button>
           </div>
+          <p style="margin-top:14px"><b>Diagnóstico de nivel:</b> compartí este otro enlace para que cada alumno haga un diagnóstico de 20 preguntas. Su nivel aparece en la pestaña «Diagnóstico de nivel».</p>
+          <div class="fila-link">
+            <input id="dLinkDiag" readonly aria-label="Enlace del diagnóstico para los alumnos">
+            <button type="button" class="btn btn-teal" id="btnCopiarDiag">Copiar enlace</button>
+          </div>
           <ol class="pasos-alumno">
             <li>El alumno abre el enlace y escribe su nombre en <b>“Mi progreso”</b> (abajo, en la calculadora).</li>
             <li>Cada ejercicio que resuelve aparece acá. Si tiene la calculadora completa, también ves si lo comprobó bien o mal.</li>
@@ -190,6 +195,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
             <button type="button" role="tab" data-vista="alumnos" aria-selected="true">Por alumno</button>
             <button type="button" role="tab" data-vista="temas" aria-selected="false">Por tema</button>
             <button type="button" role="tab" data-vista="actividad" aria-selected="false">Última actividad</button>
+            <button type="button" role="tab" data-vista="diagnostico" aria-selected="false">Diagnóstico de nivel</button>
           </div>
           <select id="periodo" aria-label="Período">
             <option value="7">Últimos 7 días</option>
@@ -223,7 +229,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   var CLAVE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZHJwdWl6Z3RxcHN3ZWZ3ZGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzk4MTcsImV4cCI6MjA5NDYxNTgxN30.kRuZoCIkvXhDNdlfumkWY7JK2qsU1nObr6eegBboFds";
   var AREAS = { arit: "Aritmética", alg: "Álgebra", geo: "Geometría analítica", trig: "Geometría y trigonometría", calc: "Cálculo diferencial", integ: "Cálculo integral", est: "Estadística" };
   var $ = function (id) { return document.getElementById(id); };
-  var sb = null, usuario = null, cursos = [], cursoActual = null, filas = [], vista = "alumnos";
+  var sb = null, usuario = null, cursos = [], cursoActual = null, filas = [], filasDiag = [], vista = "alumnos";
 
   function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function mostrar(v) { ["vCargando", "vIngreso", "vPanel"].forEach(function (x) { $(x).hidden = x !== v; }); }
@@ -235,6 +241,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
                     : d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
   }
   function linkAlumnos(c) { return "https://matematicasactivas.com/calculadora/?curso=" + encodeURIComponent(c.id); }
+  function linkDiagnostico(c) { return "https://matematicasactivas.com/diagnostico/?curso=" + encodeURIComponent(c.id); }
   function generarCodigo(nombre) {
     var base = (nombre || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4) || "CURS";
     var letras = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = "";
@@ -312,6 +319,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     $("dEscuela").textContent = cursoActual.escuela || "Sin escuela";
     $("dCodigo").textContent = cursoActual.id; $("dCodigo2").textContent = cursoActual.id;
     $("dLink").value = linkAlumnos(cursoActual);
+    $("dLinkDiag").value = linkDiagnostico(cursoActual);
     await cargarProgreso();
   }
 
@@ -324,7 +332,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     if (dias) q = q.gte("creado_en", new Date(Date.now() - dias * 86400000).toISOString());
     var r = await q;
     if (r.error) { $("tabla").innerHTML = '<tr><td class="vacio">No se pudo cargar el progreso.</td></tr>'; console.warn(r.error); return; }
-    filas = r.data || [];
+    var todas = r.data || [];
+    filasDiag = todas.filter(function (f) { return f.area === "diagnostico"; });
+    filas = todas.filter(function (f) { return f.area !== "diagnostico"; });
     pintar();
   }
   function nombreAlumno(f) { return (f.alumno_nombre || "").trim() || "Sin nombre"; }
@@ -350,7 +360,32 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     return Object.values(g);
   }
 
+  var MAT_DIAG = [["aritmetica", "Aritmética"], ["algebra", "Álgebra"], ["geometria", "Geometría"], ["trigonometria", "Trigon."], ["estadistica", "Estadística"], ["calculo", "Funciones"]];
+  var COL_NIVEL = { "Inicial": "var(--bad)", "Ciclo básico": "var(--mid)", "Ciclo orientado": "#1d4ed8", "Inicio universitario": "#0e7490" };
+  function nivelDe(f) { var t = (f && f.nombre_tema) || ""; var i = t.lastIndexOf(": "); return i >= 0 ? t.slice(i + 2) : ""; }
+  function chipNivel(n) { return n ? '<span class="chip" style="color:' + (COL_NIVEL[n] || "inherit") + ';font-weight:700">' + esc(n) + "</span>" : '<span style="color:var(--muted)">–</span>'; }
+  function pintarDiagnostico() {
+    var gen = filasDiag.filter(function (f) { return f.tema === "general"; });
+    if (!gen.length) {
+      $("tabla").innerHTML = '<tr><td class="vacio" style="white-space:normal">Todavía nadie hizo el diagnóstico en este período. Compartí el enlace del diagnóstico (arriba) con tus alumnos y acá vas a ver el nivel de cada uno.</td></tr>';
+      return;
+    }
+    var ult = {};
+    gen.forEach(function (f) { var k = f.alumno_codigo || nombreAlumno(f); if (!ult[k] || f.creado_en > ult[k].creado_en) ult[k] = f; });
+    var lista = Object.values(ult).sort(function (a, b) { return nombreAlumno(a).localeCompare(nombreAlumno(b)); });
+    var h = "<thead><tr><th>Alumno</th><th>Nivel general</th>" + MAT_DIAG.map(function (m) { return "<th>" + m[1] + "</th>"; }).join("") + "<th>Correctas</th><th>Fecha</th></tr></thead><tbody>" +
+      lista.map(function (g) {
+        var t0 = new Date(g.creado_en).getTime();
+        var mismas = filasDiag.filter(function (f) { return (f.alumno_codigo || nombreAlumno(f)) === (g.alumno_codigo || nombreAlumno(g)) && Math.abs(new Date(f.creado_en).getTime() - t0) < 120000; });
+        return "<tr><td><b>" + esc(nombreAlumno(g)) + "</b></td><td>" + chipNivel(nivelDe(g)) + "</td>" +
+          MAT_DIAG.map(function (m) { var f = mismas.find(function (x) { return x.tema === m[0]; }); return '<td title="' + esc(f ? f.ejercicio : "") + '">' + chipNivel(f ? nivelDe(f) : "") + "</td>"; }).join("") +
+          '<td style="white-space:normal;min-width:120px;font-size:13px">' + esc((g.ejercicio || "").split(" · ")[0]) + "</td><td>" + fecha(g.creado_en) + "</td></tr>";
+      }).join("") + "</tbody>";
+    $("tabla").innerHTML = h;
+  }
+
   function pintar() {
+    if (vista === "diagnostico") { pintarDiagnostico(); return; }
     var alumnos = agrupar(nombreAlumno);
     var comp = filas.filter(function (f) { return f.tipo === "comprobado"; });
     var oks = comp.filter(function (f) { return f.correcto; }).length;
@@ -401,6 +436,13 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
       $("btnCopiar").textContent = "¡Copiado!"; setTimeout(function () { $("btnCopiar").textContent = "Copiar enlace"; }, 1800);
     }).catch(function () { $("dLink").select(); });
+  });
+
+  $("btnCopiarDiag").addEventListener("click", function () {
+    var t = $("dLinkDiag").value;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      $("btnCopiarDiag").textContent = "¡Copiado!"; setTimeout(function () { $("btnCopiarDiag").textContent = "Copiar enlace"; }, 1800);
+    }).catch(function () { $("dLinkDiag").select(); });
   });
 
   $("btnCsv").addEventListener("click", function () {

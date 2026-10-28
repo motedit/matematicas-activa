@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><script src="../errores.js?v=5"></script><script src="../visitas.js?v=1" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de nivel de matemática · Matemáticas Activas</title>
+<meta name="description" content="Diagnóstico gratuito de 20 preguntas que se adaptan a tu nivel: Aritmética, Álgebra, Geometría, Trigonometría, Estadística y Funciones. Ciclo básico, ciclo orientado o inicio universitario.">
+<link rel="canonical" href="https://matematicasactivas.com/diagnostico/">
+<meta property="og:title" content="Diagnóstico de nivel de matemática · Matemáticas Activas">
+<meta property="og:description" content="20 preguntas que se adaptan a tu nivel. Al terminar ves tu nivel en cada materia y qué temas repasar.">
+<meta property="og:url" content="https://matematicasactivas.com/diagnostico/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta name="theme-color" content="#070a19">
+<link rel="icon" href="../img/descarga.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../diseno.css?v=5">
+<link rel="stylesheet" href="../diseno-paginas.css?v=2">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0}
+  .hero{padding-bottom:110px!important}
+  .zona{max-width:var(--ma-ancho);margin:-80px auto 64px;padding:0 24px;position:relative}
+  .zona .dg-card{margin:0;max-width:880px}
+  .como{max-width:880px;margin:28px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .como div{background:var(--ma-tarjeta);border:1px solid var(--ma-linea);border-radius:14px;padding:16px 18px}
+  .como b{display:block;color:var(--ma-tinta);margin-bottom:4px}
+  .como span{font-size:14px;color:var(--ma-suave);line-height:1.55}
+  @media(max-width:760px){.como{grid-template-columns:1fr}.zona{padding:0 12px;margin-top:-70px}}
+</style>
+</head>
+<body data-raiz="../">
+
+<header class="barra">
+  <div class="barra-in">
+    <a class="marca" href="../index.html"><span class="sig" aria-hidden="true">∑</span><span>Matemáticas <strong>Activas</strong></span></a>
+    <nav aria-label="Navegación">
+      <a class="volver" href="../index.html">← Inicio</a>
+      <a href="../index.html#materias">Materias</a>
+      <a href="../calculadora/temas/index.html">Ejercicios resueltos</a>
+      <a class="cta" href="../calculadora/index.html">Calculadora</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="tag">Diagnóstico gratuito</span>
+  <h1>¿En qué nivel de <span>matemática</span> estás?</h1>
+  <p>20 preguntas que se adaptan a tus respuestas. Al terminar ves tu nivel general, tu nivel en cada materia y qué temas te conviene repasar.</p>
+</section>
+
+<main class="zona">
+  <div id="diagnostico-container"></div>
+  <div class="como" aria-label="Cómo funciona">
+    <div><b>1 · Se adapta a vos</b><span>Si acertás, la pregunta siguiente es más difícil; si no, más fácil. Así se encuentra tu nivel con pocas preguntas.</span></div>
+    <div><b>2 · Tres niveles</b><span>Ciclo básico (1.º y 2.º año), ciclo orientado (3.º a 5.º año) e inicio universitario, en seis materias.</span></div>
+    <div><b>3 · Para tu profe</b><span>Si tu profe te dio un código de curso, tu resultado le llega directo a su panel «Mi curso».</span></div>
+  </div>
+</main>
+
+<footer class="pie">© 2026 Matemáticas Activas · <a href="../index.html">Inicio</a> · <a href="../docentes/index.html">Docentes</a> · <a href="../politica-privacidad.html">Privacidad</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js?v=20261014"></script>
+<script src="../diagnostico.js?v=1"></script>
+</body>
+</html>

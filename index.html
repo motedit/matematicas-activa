@@ -105,7 +105,7 @@
     <link rel="stylesheet" href="planes.css?v=3">
     <link rel="stylesheet" href="nav.css?v=2">
     <link rel="stylesheet" href="cuenta-extra.css?v=3">
-    <link rel="stylesheet" href="diseno.css?v=3">
+    <link rel="stylesheet" href="diseno.css?v=5">
     <style>
       .nav-puntos{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:white;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}
       .perfil-section{margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px}
@@ -304,7 +304,7 @@
                 <a class="ma-tarjeta ma-herr" href="calculadora/index.html"><span class="ma-ico" aria-hidden="true">🧮</span><div><h3>Calculadora Inteligente <span class="ma-chip">3 gratis por día</span></h3><p>Resuelve ejercicios y problemas escritos mostrando cada paso, con verificación y gráficos.</p></div></a>
                 <a class="ma-tarjeta ma-herr" href="calculadora/temas/index.html"><span class="ma-ico" aria-hidden="true">📘</span><div><h3>Ejercicios resueltos</h3><p>85 temas, de secundaria a universidad, con ejemplos resueltos paso a paso. Gratis.</p></div></a>
                 <a class="ma-tarjeta ma-herr" href="pizarra/index.html"><span class="ma-ico acento" aria-hidden="true">✏️</span><div><h3>Pizarra virtual</h3><p>Escribí a mano, insertá ecuaciones y graficá. Ideal para explicar o para practicar.</p></div></a>
-                <a class="ma-tarjeta ma-herr" href="#diagnostico"><span class="ma-ico ambar" aria-hidden="true">🎯</span><div><h3>Diagnóstico de nivel</h3><p>20 preguntas que te muestran qué temas dominás y cuáles conviene reforzar.</p></div></a>
+                <a class="ma-tarjeta ma-herr" href="#diagnostico"><span class="ma-ico ambar" aria-hidden="true">🎯</span><div><h3>Diagnóstico de nivel</h3><p>20 preguntas que se adaptan a tu nivel y te muestran qué temas dominás y cuáles repasar.</p></div></a>
                 <a class="ma-tarjeta ma-herr" href="#materias"><span class="ma-ico" aria-hidden="true">📄</span><div><h3>Guías de práctica en PDF</h3><p>Guías con soluciones para cada materia, listas para descargar e imprimir.</p></div></a>
                 <a class="ma-tarjeta ma-herr" href="materias/Juegos/Juegos.html"><span class="ma-ico ambar" aria-hidden="true">🎮</span><div><h3>Juegos matemáticos</h3><p>Cálculo mental, sudoku y desafíos para practicar o empezar la clase.</p></div></a>
             </div>
@@ -360,7 +360,7 @@
             <div class="section-header">
                 <p class="ma-etiqueta">Diagnóstico</p>
                 <h2 class="section-title" id="titulo-diagnostico">¿En qué nivel estás?</h2>
-                <p class="section-sub">20 preguntas al azar de todas las materias. Al terminar ves tus puntos fuertes y qué temas reforzar.</p>
+                <p class="section-sub">20 preguntas que se adaptan a tus respuestas: si acertás, la siguiente es más difícil. Al terminar ves tu nivel en cada materia y qué temas repasar. Si sos docente, compartilo con tu curso desde <a class="ma-enlace" href="docentes/mi-curso.html">Mi curso</a>.</p>
             </div>
             <div id="diagnostico-container" style="max-width:760px"></div>
         </div>
@@ -770,6 +770,7 @@
     <script src="planes.js?v=3"></script>
     <script src="scripts.js?v=23"></script>
     <script src="cuenta-extra.js?v=1"></script>
+    <script src="diagnostico.js?v=1"></script>
     <script src="admin-extra.js?v=4"></script>
     <script>
       (function(){ var c=document.getElementById("modal-planes"); if(c && window.MA_PLANES){ c.innerHTML=window.MA_PLANES.tarjetasHtml("modal"); window.pmInit("modal"); } })();
